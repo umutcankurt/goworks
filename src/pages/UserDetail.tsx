@@ -1113,7 +1113,7 @@ export const UserDetail: React.FC = () => {
                                                     </button>
                                                 </div>
                                                 <iframe
-                                                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:8px;font-family:Arial,sans-serif;font-size:14px;}</style></head><body>${currentSignature}</body></html>`}
+                                                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:8px;font-family:Arial,sans-serif;font-size:14px;background:#ffffff;color:#000000;}</style></head><body>${currentSignature}</body></html>`}
                                                     className="w-full border-0"
                                                     style={{ minHeight: 200 }}
                                                     title="Current Signature"

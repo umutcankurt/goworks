@@ -68,7 +68,7 @@ export function SignaturePreview({ html, variables = {} }: SignaturePreviewProps
         {t('preview.heading')}
       </div>
       <iframe
-        srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:8px;font-family:Arial,sans-serif;font-size:14px;}</style></head><body>${rendered}</body></html>`}
+        srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:8px;font-family:Arial,sans-serif;font-size:14px;background:#ffffff;color:#000000;}</style></head><body>${rendered}</body></html>`}
         className="w-full border-0"
         style={{ height: iframeHeight }}
         title="Signature Preview"
