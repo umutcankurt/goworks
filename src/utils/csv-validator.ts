@@ -1,5 +1,6 @@
 import type { BulkActionType } from '../types/admin';
 import { BULK_ACTION_CONFIGS } from '../config/bulk-action-config';
+import { canonicalColumn } from './bulkColumns';
 
 export function validateCsvColumns(
   rows: Record<string, string>[],
@@ -14,9 +15,10 @@ export function validateCsvColumns(
     return { valid: false, missingColumns: [] };
   }
 
-  const existingColumns = Object.keys(rows[0]).map(c => c.trim().toLowerCase());
+  // CSV başlıkları TR veya EN olabilir → kanonik forma çevirip karşılaştır.
+  const existingColumns = Object.keys(rows[0]).map(c => canonicalColumn(c));
   const missingColumns = config.requiredColumns.filter(
-    col => !existingColumns.includes(col.toLowerCase())
+    col => !existingColumns.includes(col)
   );
 
   return {

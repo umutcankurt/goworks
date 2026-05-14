@@ -10,6 +10,7 @@ import { useToast } from '../contexts/ToastContext';
 import { bulkApi } from '../services/server-api';
 import type { BulkActionType, BulkAnalyzeResponseDto, ValidatedRow } from '../types/admin';
 import { HelpGuide } from '../components/HelpGuide';
+import { normalizeRowColumns } from '../utils/bulkColumns';
 
 type WizardStep = 'select-action' | 'upload-csv' | 'analysis' | 'executing';
 
@@ -33,7 +34,7 @@ const STEP_ORDER: WizardStep[] = ['select-action', 'upload-csv', 'analysis', 'ex
 
 export function BulkOperations() {
     const { addToast } = useToast();
-    const { t } = useTranslation('bulk');
+    const { t, i18n } = useTranslation('bulk');
     const { t: tToast } = useTranslation('toast');
     const [analyzing, setAnalyzing] = useState(false);
 
@@ -69,6 +70,7 @@ export function BulkOperations() {
             const result = await bulkApi.analyze({
                 actionType: state.action,
                 rows,
+                lang: i18n.language as 'tr' | 'en',
             });
             setState(prev => ({
                 ...prev,
@@ -80,7 +82,9 @@ export function BulkOperations() {
             addToast(tToast('bulk.analyzeFailed', { error: err.message }), 'error');
             setState(prev => ({
                 ...prev,
-                validRows: rows.map((data, i) => ({ rowNumber: i + 1, data })),
+                // Analiz başarısız oldu: worker'a giden satırları yine de kanonik
+                // forma çevir (TR/EN başlıklar normalize edilmiş olsun).
+                validRows: rows.map((data, i) => ({ rowNumber: i + 1, data: normalizeRowColumns(data) })),
                 step: 'executing',
             }));
         } finally {

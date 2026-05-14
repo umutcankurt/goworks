@@ -6,6 +6,7 @@ import { validateCsvColumns } from '../../utils/csv-validator';
 import { BULK_ACTION_CONFIGS } from '../../config/bulk-action-config';
 import { bulkApi, templatesApi } from '../../services/server-api';
 import type { BulkActionType } from '../../types/admin';
+import { localeColumn, localeColumnsForAction, canonicalColumn } from '../../utils/bulkColumns';
 
 interface CsvUploadStepProps {
     action: BulkActionType;
@@ -18,7 +19,7 @@ export const CsvUploadStep: React.FC<CsvUploadStepProps> = ({ action, onBack, on
     const [columnError, setColumnError] = useState<string | null>(null);
     const [templates, setTemplates] = useState<any[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
-    const { t } = useTranslation('bulk');
+    const { t, i18n } = useTranslation('bulk');
 
     const config = BULK_ACTION_CONFIGS[action];
 
@@ -40,7 +41,9 @@ export const CsvUploadStep: React.FC<CsvUploadStepProps> = ({ action, onBack, on
         if (!valid) {
             setColumnError(
                 missingColumns.length > 0
-                    ? t('csvStep.missingColumns', { columns: missingColumns.join(', ') })
+                    ? t('csvStep.missingColumns', {
+                          columns: missingColumns.map(c => localeColumn(c, i18n.language)).join(', '),
+                      })
                     : t('csvStep.csvEmpty')
             );
             setRows([]);
@@ -51,7 +54,7 @@ export const CsvUploadStep: React.FC<CsvUploadStepProps> = ({ action, onBack, on
     };
 
     const handleDownloadTemplate = async () => {
-        await bulkApi.downloadTemplate(action);
+        await bulkApi.downloadTemplate(action, i18n.language as 'tr' | 'en');
     };
 
     const canContinue = rows.length > 0 && !columnError &&
@@ -106,7 +109,7 @@ export const CsvUploadStep: React.FC<CsvUploadStepProps> = ({ action, onBack, on
                 <div className="p-3 bg-eth-danger/10 border border-eth-danger/30 rounded-lg text-sm text-eth-danger">
                     {columnError}
                     <p className="mt-1 text-xs text-eth-danger">
-                        {t('csvStep.requiredColumns', { columns: config.requiredColumns.join(', ') })}
+                        {t('csvStep.requiredColumns', { columns: localeColumnsForAction(action, i18n.language).join(', ') })}
                     </p>
                 </div>
             )}
@@ -130,7 +133,7 @@ export const CsvUploadStep: React.FC<CsvUploadStepProps> = ({ action, onBack, on
                                 <tr className="bg-surface-container-low">
                                     {Object.keys(rows[0]).map(col => (
                                         <th key={col} className="px-3 py-2 text-left text-xs font-medium text-on-surface-variant uppercase">
-                                            {col}
+                                            {localeColumn(canonicalColumn(col), i18n.language)}
                                         </th>
                                     ))}
                                 </tr>

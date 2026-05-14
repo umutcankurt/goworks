@@ -32,8 +32,8 @@ export interface BulkAnalyzeResponse {
 const REQUIRED_COLUMNS: Record<string, string[]> = {
     suspend: ['email'],
     delete: ['email'],
-    // Yeni standart sütun: kurum_adi. Geri uyum için kampus_adi de kabul edilir
-    // (normalize sırasında kurum_adi'ye çevrilir).
+    // Kanonik (TR) sütunlar. CSV'de İngilizce başlıklar (first_name vb.) veya
+    // eski kampus_adi de kabul edilir — normalizeColumns() kanonik forma çevirir.
     signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
 };
 
@@ -41,19 +41,97 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const TURKISH_CHARS = /[çşğüöıİÇŞĞÜÖ]/;
 
 /**
- * Geri uyum: CSV'de eski `kampus_adi` sütunu varsa `kurum_adi`'na taşınır.
- * Mutator: orijinal objeyi de eski anahtarı silmeden bırakır (template renderer
- * eski token kullanırsa hâlâ erişebilsin).
+ * `src/utils/bulkColumns.ts`'in Electron main eşdeğeri — bu süreç renderer
+ * modüllerini import edemez; iki dosya birlikte güncel tutulmalıdır.
+ * (Aynı pattern: `signatureTokens.ts` ↔ `template-renderer.ts`.)
  */
-function normalizeLegacyColumns(row: Record<string, string>): Record<string, string> {
-    if (row.kampus_adi !== undefined && row.kurum_adi === undefined) {
-        return { ...row, kurum_adi: row.kampus_adi };
-    }
-    return row;
+type ColumnLang = 'tr' | 'en';
+
+/** Alias → kanonik (TR) sütun anahtarı: İngilizce başlıklar + legacy `kampus_adi`. */
+const COLUMN_ALIAS: Record<string, string> = {
+    first_name: 'ad',
+    last_name: 'soyad',
+    title: 'unvan',
+    institution_name: 'kurum_adi',
+    phone: 'telefon',
+    kampus_adi: 'kurum_adi', // geri uyum (legacy)
+};
+
+/** Kanonik anahtar → dile göre sütun başlığı. */
+const COLUMN_I18N: Record<string, Record<ColumnLang, string>> = {
+    email: { tr: 'email', en: 'email' },
+    ad: { tr: 'ad', en: 'first_name' },
+    soyad: { tr: 'soyad', en: 'last_name' },
+    unvan: { tr: 'unvan', en: 'title' },
+    kurum_adi: { tr: 'kurum_adi', en: 'institution_name' },
+    telefon: { tr: 'telefon', en: 'phone' },
+};
+
+/** Kanonik anahtar için aktif dile uygun sütun başlığı (bilinmeyen → olduğu gibi). */
+export function localeColumn(canonical: string, lang: ColumnLang): string {
+    return COLUMN_I18N[canonical]?.[lang] ?? canonical;
 }
 
-export function analyzeBulkCsv(actionType: string, rows: Record<string, string>[]): BulkAnalyzeResponse {
+/** Bir action için dile göre lokalize sütun başlık listesi (CSV şablonu / UI). */
+export function localeColumnsForAction(actionType: string, lang: ColumnLang): string[] {
+    return (REQUIRED_COLUMNS[actionType] || ['email']).map(c => localeColumn(c, lang));
+}
+
+/** CSV doğrulama hata mesajları — Electron main `t()` kullanamaz, inline TR/EN. */
+const MESSAGES: Record<ColumnLang, {
+    missingRequired: (field: string) => string;
+    invalidEmail: (email: string) => string;
+    turkishChars: (email: string) => string;
+    duplicate: (firstRow: number) => string;
+    institutionNotFound: (name: string) => string;
+}> = {
+    tr: {
+        missingRequired: (field) => `'${field}' alanı zorunludur.`,
+        invalidEmail: (email) => `Geçersiz e-posta formatı: '${email}'`,
+        turkishChars: (email) => `E-posta adresi Türkçe karakter içeriyor: '${email}'`,
+        duplicate: (firstRow) => `Bu e-posta CSV'de tekrar ediyor (ilk görülme: satır ${firstRow}).`,
+        institutionNotFound: (name) => `Kurum bulunamadı: '${name}'. Lütfen CSV'yi kontrol edin.`,
+    },
+    en: {
+        missingRequired: (field) => `The '${field}' field is required.`,
+        invalidEmail: (email) => `Invalid email format: '${email}'`,
+        turkishChars: (email) => `Email address contains Turkish characters: '${email}'`,
+        duplicate: (firstRow) => `This email is duplicated in the CSV (first seen: row ${firstRow}).`,
+        institutionNotFound: (name) => `Institution not found: '${name}'. Please check the CSV.`,
+    },
+};
+
+/**
+ * Satır anahtarlarını kanonik (TR) forma çevirir. İki geçişli: önce doğrudan
+ * kanonik anahtarlar, sonra alias'lar — böylece hem `kurum_adi` hem `kampus_adi`
+ * (ya da `institution_name`) varsa doğrudan kanonik anahtar EZİLMEZ. Hem eski
+ * `kampus_adi` hem İngilizce başlıkları (`first_name` vb.) kanonik forma çözer.
+ */
+function normalizeColumns(row: Record<string, string>): Record<string, string> {
+    const result: Record<string, string> = {};
+    // 1. geçiş: doğrudan kanonik (alias olmayan) anahtarlar.
+    for (const [key, value] of Object.entries(row)) {
+        const k = key.trim().toLowerCase();
+        if (COLUMN_ALIAS[k] === undefined) result[k] = value;
+    }
+    // 2. geçiş: alias anahtarlar — yalnızca kanonik hedef henüz yoksa yaz.
+    for (const [key, value] of Object.entries(row)) {
+        const k = key.trim().toLowerCase();
+        const canonical = COLUMN_ALIAS[k];
+        if (canonical !== undefined && result[canonical] === undefined) {
+            result[canonical] = value;
+        }
+    }
+    return result;
+}
+
+export function analyzeBulkCsv(
+    actionType: string,
+    rows: Record<string, string>[],
+    lang: ColumnLang = 'tr',
+): BulkAnalyzeResponse {
     const requiredCols = REQUIRED_COLUMNS[actionType] || ['email'];
+    const msg = MESSAGES[lang] ?? MESSAGES.tr;
     const validRows: ValidatedRow[] = [];
     const invalidRows: InvalidRowDetail[] = [];
     const seenEmails = new Map<string, number>();
@@ -66,7 +144,7 @@ export function analyzeBulkCsv(actionType: string, rows: Record<string, string>[
     }
 
     for (let i = 0; i < rows.length; i++) {
-        const row = normalizeLegacyColumns(rows[i]);
+        const row = normalizeColumns(rows[i]);
         const rowNumber = i + 1;
         const errors: FieldError[] = [];
 
@@ -77,23 +155,23 @@ export function analyzeBulkCsv(actionType: string, rows: Record<string, string>[
 
         for (const col of requiredCols) {
             if (!trimmedRow[col]) {
-                errors.push({ field: col, errorType: 'MISSING_REQUIRED', message: `'${col}' alanı zorunludur.` });
+                errors.push({ field: col, errorType: 'MISSING_REQUIRED', message: msg.missingRequired(localeColumn(col, lang)) });
             }
         }
 
         const email = trimmedRow.email;
         if (email) {
             if (!EMAIL_REGEX.test(email)) {
-                errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: `Geçersiz e-posta formatı: '${email}'` });
+                errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: msg.invalidEmail(email) });
             } else if (TURKISH_CHARS.test(email)) {
-                errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: `E-posta adresi Türkçe karakter içeriyor: '${email}'` });
+                errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: msg.turkishChars(email) });
             }
             const emailLower = email.toLowerCase();
             if (seenEmails.has(emailLower)) {
                 errors.push({
                     field: 'email',
                     errorType: 'DUPLICATE_IN_CSV',
-                    message: `Bu e-posta CSV'de tekrar ediyor (ilk görülme: satır ${seenEmails.get(emailLower)}).`,
+                    message: msg.duplicate(seenEmails.get(emailLower)!),
                 });
             } else {
                 seenEmails.set(emailLower, rowNumber);
@@ -111,7 +189,7 @@ export function analyzeBulkCsv(actionType: string, rows: Record<string, string>[
                 errors.push({
                     field: 'kurum_adi',
                     errorType: 'NOT_FOUND',
-                    message: `Kurum bulunamadı: '${trimmedRow.kurum_adi}'. Lütfen CSV'yi kontrol edin.`,
+                    message: msg.institutionNotFound(trimmedRow.kurum_adi),
                 });
             }
         }

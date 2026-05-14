@@ -1023,34 +1023,39 @@ app.whenReady().then(async () => {
   });
 
   // Bulk CSV analysis (yerel SQLite + lookup)
-  ipcMain.handle('bulk:analyze', async (_, payload: { actionType: string; rows: Record<string, string>[] }) => {
+  ipcMain.handle('bulk:analyze', async (_, payload: { actionType: string; rows: Record<string, string>[]; lang?: 'tr' | 'en' }) => {
     try {
       const { analyzeBulkCsv } = await import('./services/csv-analysis');
-      return { success: true, data: analyzeBulkCsv(payload.actionType, payload.rows) };
+      return { success: true, data: analyzeBulkCsv(payload.actionType, payload.rows, payload.lang ?? 'tr') };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   });
 
-  ipcMain.handle('bulk:downloadTemplate', async (_, { actionType }: { actionType: string }) => {
+  ipcMain.handle('bulk:downloadTemplate', async (_, { actionType, lang }: { actionType: string; lang?: 'tr' | 'en' }) => {
     try {
       const { dialog } = await import('electron');
       const { writeFile } = await import('node:fs/promises');
       const { appConfigService } = await import('./services/app-config-service');
+      const { localeColumnsForAction } = await import('./services/csv-analysis');
+      const resolvedLang: 'tr' | 'en' = lang === 'en' ? 'en' : 'tr';
       const domain = appConfigService.get('allowedDomain') || 'example.com';
-      const sampleEmail = `ornek@${domain}`;
-      const headersByAction: Record<string, string[]> = {
-        suspend: ['email'],
-        delete: ['email'],
-        signature_push: ['email', 'ad', 'soyad', 'unvan', 'kampus_adi', 'telefon'],
+      const sampleEmail = resolvedLang === 'en' ? `sample@${domain}` : `ornek@${domain}`;
+      // Başlıklar dile göre lokalize (TR: kurum_adi / EN: institution_name).
+      const headers = localeColumnsForAction(actionType, resolvedLang);
+      const exampleByAction: Record<'tr' | 'en', Record<string, string[]>> = {
+        tr: {
+          suspend: [sampleEmail],
+          delete: [sampleEmail],
+          signature_push: [sampleEmail, 'Ali', 'Yılmaz', 'Öğretmen', 'Merkez', '05551234567'],
+        },
+        en: {
+          suspend: [sampleEmail],
+          delete: [sampleEmail],
+          signature_push: [sampleEmail, 'John', 'Doe', 'Manager', 'Head Office', '5551234567'],
+        },
       };
-      const exampleByAction: Record<string, string[]> = {
-        suspend: [sampleEmail],
-        delete: [sampleEmail],
-        signature_push: [sampleEmail, 'Ali', 'Yilmaz', 'Ogretmen', 'Merkez', '05551234567'],
-      };
-      const headers = headersByAction[actionType] || ['email'];
-      const example = exampleByAction[actionType] || [sampleEmail];
+      const example = exampleByAction[resolvedLang][actionType] || [sampleEmail];
       const csv = '﻿' + headers.join(',') + '\n' + example.join(',') + '\n';
       const result = await dialog.showSaveDialog(win!, {
         title: 'CSV şablonunu kaydet',

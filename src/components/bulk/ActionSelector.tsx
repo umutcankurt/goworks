@@ -3,6 +3,7 @@ import { UserX, Trash2, FileSignature, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { BulkActionType } from '../../types/admin';
 import { BULK_ACTION_CONFIGS } from '../../config/bulk-action-config';
+import { localeColumn } from '../../utils/bulkColumns';
 
 interface ActionSelectorProps {
     onSelect: (action: BulkActionType) => void;
@@ -16,7 +17,7 @@ const ICONS: Record<string, React.ElementType> = {
 
 export const ActionSelector: React.FC<ActionSelectorProps> = ({ onSelect }) => {
     const actions = Object.values(BULK_ACTION_CONFIGS);
-    const { t } = useTranslation('bulk');
+    const { t, i18n } = useTranslation('bulk');
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -47,7 +48,7 @@ export const ActionSelector: React.FC<ActionSelectorProps> = ({ onSelect }) => {
                         <div className="flex flex-wrap gap-1.5 mb-3">
                             {config.requiredColumns.map(col => (
                                 <span key={col} className="text-xs bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-md font-mono">
-                                    {col}
+                                    {localeColumn(col, i18n.language)}
                                 </span>
                             ))}
                         </div>

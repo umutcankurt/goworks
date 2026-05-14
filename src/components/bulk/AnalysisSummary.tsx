@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronLeft, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { BulkAnalyzeResponseDto } from '../../types/admin';
+import { localeColumn } from '../../utils/bulkColumns';
 
 interface AnalysisSummaryProps {
     result: BulkAnalyzeResponseDto;
@@ -12,7 +13,7 @@ interface AnalysisSummaryProps {
 export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ result, onBack, onContinue }) => {
     const { summary, invalidRows } = result;
     const allInvalid = summary.validCount === 0;
-    const { t } = useTranslation('bulk');
+    const { t, i18n } = useTranslation('bulk');
 
     return (
         <div className="space-y-6">
@@ -71,7 +72,7 @@ export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ result, onBack
                                             <td className="px-4 py-2 text-on-surface-variant font-mono text-xs">{row.rowNumber}</td>
                                             <td className="px-4 py-2 text-on-surface truncate max-w-[200px]">{row.rawData?.email || '-'}</td>
                                             <td className="px-4 py-2">
-                                                <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-xs font-mono">{err.field}</span>
+                                                <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-xs font-mono">{localeColumn(err.field, i18n.language)}</span>
                                             </td>
                                             <td className="px-4 py-2 text-eth-danger text-xs">{err.message}</td>
                                         </tr>

@@ -124,12 +124,12 @@ export const signaturesApi = {
 
 // Bulk operations — Electron IPC
 export const bulkApi = {
-  analyze: (data: { actionType: string; rows: Record<string, string>[] }) =>
+  analyze: (data: { actionType: string; rows: Record<string, string>[]; lang?: 'tr' | 'en' }) =>
     ipcInvoke('bulk:analyze', data),
 
   // CSV şablonunu kaydetmek için kullanıcıya dosya seçici açar; URL döndürmez.
-  downloadTemplate: (actionType: string) =>
-    ipcInvoke<{ canceled?: boolean; path?: string }>('bulk:downloadTemplate', { actionType }),
+  downloadTemplate: (actionType: string, lang?: 'tr' | 'en') =>
+    ipcInvoke<{ canceled?: boolean; path?: string }>('bulk:downloadTemplate', { actionType, lang }),
 
   // Job raporu için aynı yaklaşım: kullanıcıya dosya seçici açar.
   downloadReport: (jobId: string, format: 'csv' | 'json' = 'csv') =>
