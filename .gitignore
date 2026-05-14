@@ -1,0 +1,55 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+dist-electron
+*.local
+
+# Secrets
+secrets/
+# electron/secrets/ altındaki TS source dosyaları kod tabanına aittir; secrets/ deseninden hariç tut.
+!electron/secrets/
+!electron/secrets/*.ts
+server/secrets/
+*.pem
+*.p12
+service-account*.json
+
+# Server build output
+server/dist/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment Variables
+.env
+.env.local
+.env.production
+server/.env
+
+# Agent data
+.agents/
+.claude/
+
+# Release builds (electron-builder output)
+release/
+
+# Database backups
+*.dump
+

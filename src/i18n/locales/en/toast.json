@@ -1,0 +1,98 @@
+{
+  "settings": {
+    "titlesLoadFailed": "Failed to load titles: {{error}}",
+    "titleAdded": "Title added",
+    "titleUpdated": "Title updated",
+    "titleDeleted": "Title deleted",
+    "titlesImported": "{{created}} title(s) added, {{skipped}} skipped",
+    "institutionsLoadFailed": "Failed to load institutions: {{error}}",
+    "institutionAdded": "Institution added",
+    "institutionUpdated": "Institution updated",
+    "institutionDeleted": "Institution deleted",
+    "institutionsImported": "{{created}} institution(s) added, {{skipped}} skipped",
+    "domainUpdated": "Allowed domain updated",
+    "logoTooLarge": "Logo file cannot exceed 1 MB",
+    "logoFormatInvalid": "Only PNG, JPG, SVG or WEBP can be uploaded",
+    "logoUploaded": "Logo uploaded",
+    "logoUploadFailed": "Failed to upload logo",
+    "logoDeleted": "Logo deleted",
+    "logoDeleteFailed": "Failed to delete logo",
+    "serviceAccountUploaded": "Service Account uploaded successfully",
+    "serviceAccountUploadFailed": "Upload error: {{error}}",
+    "serviceAccountDeleted": "Service Account deleted",
+    "serviceAccountDeleteFailed": "Delete error: {{error}}"
+  },
+  "media": {
+    "loadFailed": "Failed to load media: {{error}}",
+    "added": "Media added",
+    "deleted": "Media deleted",
+    "urlCopied": "URL copied"
+  },
+  "csv": {
+    "parseError": "CSV parse error: {{error}}",
+    "emptyOrInvalid": "CSV file is empty or invalid.",
+    "loaded": "{{count}} rows loaded successfully.",
+    "readError": "File read error: {{error}}"
+  },
+  "groups": {
+    "deleted": "Group deleted",
+    "deleteFailed": "Failed to delete group",
+    "created": "Group created",
+    "updated": "Group updated",
+    "createdWithFailedMembers": "Group created but {{count}} members could not be added",
+    "saveFailed": "Could not save",
+    "memberRemoved": "Member removed",
+    "memberRemoveFailed": "Could not remove member",
+    "memberAddFailed": "Could not add member",
+    "membersAdded": "{{count}} members added",
+    "membersPartialAdd": "{{succeeded}} members added, {{failed}} errors",
+    "aliasAdded": "Alias added",
+    "aliasDeleted": "Alias deleted",
+    "aliasDeleteFailed": "Could not delete alias",
+    "settingsSaved": "Access settings saved",
+    "settingsSaveFailed": "Could not save settings",
+    "roleUpdated": "Role updated",
+    "roleUpdateFailed": "Could not update role"
+  },
+  "bulk": {
+    "analyzeFailed": "Analysis error: {{error}}",
+    "jobQueued": "Job added to server queue.",
+    "jobStartFailed": "Failed to start server job: {{error}}",
+    "cancelling": "Cancelling job...",
+    "cancelFailed": "Cancel failed: {{error}}"
+  },
+  "signatures": {
+    "loadFailed": "Failed to load templates: {{error}}",
+    "nameAndContentRequired": "Template name and HTML content are required",
+    "updated": "Template updated",
+    "created": "Template created",
+    "deleted": "Template deleted",
+    "defaultSet": "Default template set",
+    "pushed": "Signature pushed successfully.",
+    "pushFailed": "Failed to push signature: {{error}}",
+    "saved": "Signature saved successfully.",
+    "saveFailed": "Failed to save signature: {{error}}",
+    "previewFailed": "Failed to generate preview: {{error}}"
+  },
+  "offboard": {
+    "groupsRemoved": "Removed from {{count}} groups.",
+    "allCompleted": "All offboard steps completed successfully.",
+    "forwardingMissing": "Enter a target address for email forwarding.",
+    "orgUnitMissing": "Select an org unit for the change."
+  },
+  "userDetail": {
+    "profileUpdated": "User profile updated successfully.",
+    "profileUpdatedNewEmail": "User profile updated. New email: {{email}}",
+    "passwordUpdated": "Password updated successfully.",
+    "userDeleted": "User deleted successfully.",
+    "groupsAdded": "Groups added successfully.",
+    "groupAddFailed": "Failed to add to \"{{name}}\" group.",
+    "aliasExists": "This alias already exists.",
+    "aliasAdded": "Alias added: {{alias}}",
+    "aliasAddFailed": "Failed to add alias: {{error}}",
+    "aliasAddDefault": "Failed to add alias.",
+    "aliasRemoved": "Alias removed: {{alias}}",
+    "aliasRemoveFailed": "Failed to remove alias: {{error}}",
+    "aliasRemoveDefault": "Failed to remove alias."
+  }
+}

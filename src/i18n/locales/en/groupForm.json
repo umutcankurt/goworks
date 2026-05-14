@@ -1,0 +1,105 @@
+{
+  "createTitle": "Create New Group",
+  "editTitle": "Edit Group",
+  "loading": "Loading...",
+  "tabs": {
+    "general": "General",
+    "members": "Members",
+    "access": "Access Settings",
+    "aliases": "Alias"
+  },
+  "general": {
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "e.g. Teachers",
+    "groupEmail": "Group Email",
+    "groupEmailPlaceholder": "group-name",
+    "description": "Description",
+    "descriptionPlaceholder": "Briefly describe the purpose of the group...",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "create": "Create Group",
+    "save": "Save"
+  },
+  "members": {
+    "existingHeading": "Current Members ({{count}})",
+    "empty": "No members in this group yet.",
+    "newMembers": "Members",
+    "addNew": "Add New Member",
+    "removeMember": "Remove member",
+    "clear": "Clear",
+    "addingMembers": "Adding...",
+    "addMembers": "Add {{count}} members",
+    "createHelper": "These members will be added when the group is created."
+  },
+  "access": {
+    "save": "Save Access Settings",
+    "saving": "Saving...",
+    "selectPlaceholder": "— Select —",
+    "whoCanJoin": "Who can join the group?",
+    "whoCanJoinOptions": {
+      "INVITED_CAN_JOIN": "Only invited",
+      "CAN_REQUEST_TO_JOIN": "On request",
+      "ALL_IN_DOMAIN_CAN_JOIN": "Everyone in domain",
+      "ANYONE_CAN_JOIN": "Anyone"
+    },
+    "whoCanPostMessage": "Who can post messages?",
+    "whoCanPostOptions": {
+      "NONE_CAN_POST": "Nobody",
+      "ALL_OWNERS_CAN_POST": "Owners only",
+      "ALL_MANAGERS_CAN_POST": "Managers only",
+      "ALL_MEMBERS_CAN_POST": "All members",
+      "ALL_IN_DOMAIN_CAN_POST": "Everyone in domain",
+      "ANYONE_CAN_POST": "Anyone"
+    },
+    "whoCanViewGroup": "Who can view the group?",
+    "whoCanViewMembership": "Who can view the member list?",
+    "whoCanViewOptions": {
+      "ALL_OWNERS_CAN_VIEW": "Owners",
+      "ALL_MANAGERS_CAN_VIEW": "Managers",
+      "ALL_MEMBERS_CAN_VIEW": "Members",
+      "ALL_IN_DOMAIN_CAN_VIEW": "Everyone in domain",
+      "ANYONE_CAN_VIEW": "Anyone"
+    },
+    "whoCanContactOwner": "Who can contact the owner?",
+    "whoCanContactOptions": {
+      "ALL_MANAGERS_CAN_CONTACT": "Managers",
+      "ALL_MEMBERS_CAN_CONTACT": "Members",
+      "ALL_IN_DOMAIN_CAN_CONTACT": "Everyone in domain",
+      "ANYONE_CAN_CONTACT": "Anyone"
+    },
+    "messageModerationLevel": "Message moderation level",
+    "moderationOptions": {
+      "MODERATE_NONE": "No moderation",
+      "MODERATE_NEW_MEMBERS": "Moderate messages from new members",
+      "MODERATE_NON_MEMBERS": "Moderate non-members",
+      "MODERATE_ALL_MESSAGES": "Moderate all messages"
+    },
+    "toggles": {
+      "allowExternalMembers": "Allow external members",
+      "allowWebPosting": "Allow posting via web",
+      "isArchived": "Archive group",
+      "archiveOnly": "Archive only (no new messages)"
+    }
+  },
+  "aliases": {
+    "existingHeading": "Existing Aliases ({{count}})",
+    "empty": "This group has no aliases.",
+    "deleteAlias": "Delete alias",
+    "addNewHeading": "Add New Alias",
+    "aliasPlaceholder": "alias-name",
+    "adding": "Adding...",
+    "add": "Add"
+  },
+  "errors": {
+    "loadFailed": "Failed to load group",
+    "groupNameRequired": "Group name is required.",
+    "localPartRequired": "Group email is required.",
+    "localPartInvalid": "Only letters, numbers, ., _, - are allowed.",
+    "domainRequired": "Select a domain.",
+    "saveFailed": "Could not save",
+    "aliasLocalRequired": "Alias email required",
+    "aliasInvalid": "Only letters, numbers, ., _, - are allowed",
+    "aliasDomainRequired": "Select a domain",
+    "aliasAddFailed": "Could not add alias"
+  }
+}

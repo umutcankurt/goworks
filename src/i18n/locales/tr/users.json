@@ -1,0 +1,62 @@
+{
+  "pageTitle": "Kullanıcı Yönetimi",
+  "searchPlaceholder": "İsim veya e-posta ile ara...",
+  "search": "Ara",
+  "clear": "Temizle",
+  "resultsTitle": "Arama Sonuçları",
+  "loadedCount": "({{count}} kullanıcı yüklendi)",
+  "loading": "Kullanıcılar yükleniyor...",
+  "promptSearch": "Kullanıcıları görmek için yukarıdan arama yapın.",
+  "noResults": "Arama kriterlerinize uygun kullanıcı bulunamadı.",
+  "loadFailed": "Kullanıcılar getirilemedi",
+  "table": {
+    "user": "Kullanıcı Bilgileri",
+    "email": "E-posta Adresi",
+    "status": "Durum",
+    "action": "İşlem"
+  },
+  "status": {
+    "suspended": "Askıya Alındı",
+    "active": "Aktif Hesap",
+    "superAdmin": "Super Admin"
+  },
+  "viewDetails": "Detayları Gör",
+  "loadMore": "Daha Fazla Göster ({{count}} yüklendi)",
+  "loadingShort": "Yükleniyor...",
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Kullanıcılar sayfası, Google Workspace dizinindeki hesapları aramanızı ve görüntülemenizi sağlar."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Arama",
+        "paragraphs": ["Liste görünmesi için önce bir arama yapmanız gerekir:"],
+        "bullets": [
+          { "term": "Sorgu:", "desc": "Ad, soyad veya e-posta adresinin bir bölümünü yazın." },
+          { "term": "En az 3 karakter:", "desc": "Daha kısa sorgular kabul edilmez." },
+          { "term": "Temizle:", "desc": "Arama sonuçlarını sıfırlamak için Temizle butonunu kullanın." }
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Sonuç Tablosu",
+        "bullets": [
+          { "term": "Sütunlar:", "desc": "Ad, e-posta ve hesap durumu (aktif / askıda) gösterilir." },
+          { "term": "Daha Fazla Göster:", "desc": "Sonuçlar sayfalıdır; sonraki grubu yüklemek için listenin altındaki butonu kullanın." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Kullanıcı Detayı",
+        "paragraphs": [
+          "Bir kullanıcı satırına tıklayarak detay sayfasını açabilirsiniz. Detay sayfasından kullanıcıyı düzenleyebilir, askıya alabilir, gruplarını yönetebilir ve Gmail imzası atayabilirsiniz."
+        ]
+      }
+    ]
+  }
+}

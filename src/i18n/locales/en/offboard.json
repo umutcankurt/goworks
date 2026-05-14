@@ -1,0 +1,110 @@
+{
+  "title": "Offboard",
+  "subtitle": "Manage the account closure steps for departing personnel.",
+  "search": {
+    "label": "User Email Address",
+    "placeholder": "example@{{domain}}",
+    "button": "Search",
+    "userNotFound": "User not found."
+  },
+  "user": {
+    "suspended": "Suspended",
+    "active": "Active",
+    "profile": "Profile"
+  },
+  "progress": {
+    "label": "Progress",
+    "completed": "{{done}}/{{total}} completed"
+  },
+  "stepsHeading": "Offboard Steps",
+  "stepsHelper": "Select the steps you want to apply and start.",
+  "steps": {
+    "org_unit": {
+      "label": "Change Org Unit",
+      "description": "Moves the user to the specified org unit."
+    },
+    "suspend": {
+      "label": "Suspend Account",
+      "description": "Blocks the user from signing in."
+    },
+    "groups": {
+      "label": "Remove from All Groups",
+      "description": "Removes the user from every group they belong to."
+    },
+    "reset_pwd": {
+      "label": "Reset Password",
+      "description": "Replaces the password with a random complex one for security."
+    },
+    "forward": {
+      "label": "Email Forwarding",
+      "description": "Forwards incoming emails to the specified address."
+    },
+    "directory": {
+      "label": "Remove from Directory",
+      "description": "Hides the user from the global address list."
+    }
+  },
+  "stepStatus": {
+    "done": "Completed",
+    "error": "Error",
+    "running": "Running..."
+  },
+  "forwardingLabel": "Forwarding Email Address",
+  "forwardingPlaceholder": "manager@{{domain}}",
+  "orgUnitLabel": "Target Org Unit",
+  "orgUnitPlaceholder": "Search org unit...",
+  "orgUnitEmpty": "No matching unit found.",
+  "allDone": "All steps completed successfully.",
+  "reset": "Reset",
+  "running": "In Progress...",
+  "resume": "Resume from Last Step",
+  "start": "Start Offboard",
+  "errors": {
+    "suspend": "Suspend failed.",
+    "groupsList": "Could not load groups.",
+    "passwordReset": "Could not reset password.",
+    "forwardingMissing": "Forwarding address not specified.",
+    "forwardingFailed": "Could not set email forwarding.",
+    "directoryFailed": "Could not remove from directory.",
+    "orgUnitMissing": "Org unit not selected.",
+    "orgUnitFailed": "Could not change org unit."
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "Offboard collects every step needed to close the account of a departing employee into a single screen."
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Selecting the User",
+        "paragraphs": [
+          "Enter the email address of the user to offboard in the search box and search. Once found, their profile and current status (active / suspended) are shown."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Offboard Steps",
+        "paragraphs": ["You can choose which steps to apply:"],
+        "bullets": [
+          { "term": "Suspend Account:", "desc": "Blocks the user from signing in." },
+          { "term": "Reset Password:", "desc": "Replaces the password with a random complex value." },
+          { "term": "Remove from All Groups:", "desc": "Removes the user from every group they belong to." },
+          { "term": "Email Forwarding:", "desc": "Forwards incoming emails to an address you specify." },
+          { "term": "Change Org Unit / Remove from Directory:", "desc": "Moves the user to a target OU or hides them from the address list." }
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Execution",
+        "paragraphs": [
+          "Apply the selected steps in sequence with \"Start Offboard\"; the result of each step is shown instantly. If a step fails, you can fix it and resume from where it stopped."
+        ],
+        "callout": { "tone": "warning", "text": "These actions cannot be undone. Make sure you have selected the correct user before applying the <b>remove from groups</b> and <b>suspend</b> steps in particular." }
+      }
+    ]
+  }
+}

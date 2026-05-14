@@ -1,0 +1,174 @@
+import { BrowserWindow } from 'electron';
+import { jobQueue } from './queue';
+import type { JobRecord, ProgressEventPayload } from './types';
+import { getLogger } from '../services/logger';
+import { getDb } from '../db';
+
+type WorkerHandler = (
+    job: JobRecord,
+    ctx: WorkerContext,
+) => Promise<{ executionReport: import('./types').JobExecutionReport; status: 'COMPLETED' | 'FAILED' }>;
+
+export interface WorkerContext {
+    isCancelled: () => boolean;
+    emitProgress: (patch: Partial<ProgressEventPayload>) => void;
+    saveProgress: (patch: { progress?: number; succeeded?: number; failed?: number }) => void;
+    setReport: (report: import('./types').JobExecutionReport) => void;
+}
+
+class JobRunner {
+    private cancelled = new Set<string>();
+    private running = new Set<string>();
+    private handlers = new Map<string, WorkerHandler>();
+    // type başına concurrency
+    private concurrency = new Map<string, number>([
+        ['BULK_SIGNATURE_PUSH', 3],
+        ['BULK_SUSPEND', 1],
+        ['BULK_DELETE', 1],
+        ['SIGNATURE_AUDIT', 1],
+    ]);
+    private activeByType = new Map<string, number>();
+    private mainWindow: BrowserWindow | null = null;
+    private dispatchScheduled = false;
+
+    setWindow(win: BrowserWindow | null) {
+        this.mainWindow = win;
+    }
+
+    registerHandler(type: string, handler: WorkerHandler) {
+        this.handlers.set(type, handler);
+    }
+
+    cancel(id: string): boolean {
+        const job = jobQueue.cancel(id);
+        if (!job) return false;
+        this.cancelled.add(id);
+        return true;
+    }
+
+    /**
+     * Uygulama açılışında çağrılır:
+     * - PENDING jobları kuyrukta bırakır
+     * - RUNNING jobları (önceki seansta tamamlanmadan kapanan) PENDING'e çekip resume eder
+     * - Stale execution: RUNNING ama uygulama bu sefer bunları çalıştırmamış → PENDING
+     */
+    resumeOnStartup(): void {
+        const log = getLogger();
+        const stale = jobQueue.listByStatus(['RUNNING']);
+        for (const job of stale) {
+            log.warn(`[runner] Resuming stale RUNNING job ${job.id} (progress=${job.progress}/${job.total})`);
+            // İlerlemeyi koru, sadece status'ü PENDING'e çek ki dispatch tekrar yakalasın
+            try {
+                getDb().prepare("UPDATE jobs SET status = 'PENDING' WHERE id = ?").run(job.id);
+            } catch (e) {
+                log.error('Resume status reset failed', e);
+            }
+        }
+        this.scheduleDispatch();
+    }
+
+    enqueueAndStart(record: JobRecord): void {
+        this.scheduleDispatch();
+        void record;
+    }
+
+    private scheduleDispatch() {
+        if (this.dispatchScheduled) return;
+        this.dispatchScheduled = true;
+        setImmediate(() => {
+            this.dispatchScheduled = false;
+            this.dispatch();
+        });
+    }
+
+    private dispatch() {
+        const pending = jobQueue.listByStatus(['PENDING']);
+        for (const job of pending) {
+            if (this.running.has(job.id)) continue;
+            const max = this.concurrency.get(job.type) ?? 1;
+            const active = this.activeByType.get(job.type) ?? 0;
+            if (active >= max) continue;
+            const handler = this.handlers.get(job.type);
+            if (!handler) {
+                getLogger().warn(`[runner] No handler for job type ${job.type}`);
+                continue;
+            }
+            this.startJob(job, handler);
+        }
+    }
+
+    private startJob(job: JobRecord, handler: WorkerHandler) {
+        this.running.add(job.id);
+        this.activeByType.set(job.type, (this.activeByType.get(job.type) ?? 0) + 1);
+        jobQueue.markRunning(job.id);
+
+        const ctx: WorkerContext = {
+            isCancelled: () => this.cancelled.has(job.id),
+            emitProgress: (patch) => this.emit({ jobId: job.id, total: job.total, progress: 0, succeeded: 0, failed: 0, ...patch } as ProgressEventPayload),
+            saveProgress: (patch) => jobQueue.updateProgress(job.id, patch),
+            setReport: (report) => jobQueue.setExecutionReport(job.id, report),
+        };
+
+        // Resume case: payload zaten kayıtlı; handler içinde job.progress kontrol edilebilir
+        const fresh = jobQueue.get(job.id) ?? job;
+
+        handler(fresh, ctx)
+            .then((result) => {
+                const final = this.cancelled.has(job.id) ? 'CANCELLED' : result.status;
+                if (final === 'CANCELLED') {
+                    // already cancelled in queue
+                    jobQueue.setExecutionReport(job.id, result.executionReport);
+                } else {
+                    jobQueue.complete(job.id, final, result.executionReport);
+                }
+                this.emit({
+                    jobId: job.id,
+                    total: result.executionReport.totalProcessed,
+                    progress: result.executionReport.totalProcessed,
+                    succeeded: result.executionReport.successCount,
+                    failed: result.executionReport.failedCount,
+                });
+                this.sendDoneEvent(job.id, final);
+                this.fireCompletionEmail(job.id);
+            })
+            .catch((err) => {
+                getLogger().error(`[runner] Job ${job.id} crashed`, err);
+                jobQueue.complete(job.id, 'FAILED', null);
+                this.sendDoneEvent(job.id, 'FAILED');
+                this.fireCompletionEmail(job.id);
+            })
+            .finally(() => {
+                this.running.delete(job.id);
+                this.cancelled.delete(job.id);
+                this.activeByType.set(job.type, Math.max(0, (this.activeByType.get(job.type) ?? 1) - 1));
+                this.scheduleDispatch();
+            });
+    }
+
+    private emit(payload: ProgressEventPayload) {
+        if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
+        try {
+            this.mainWindow.webContents.send('jobs:progress', payload);
+        } catch (e) {
+            getLogger().error('[runner] Progress emit failed', e);
+        }
+    }
+
+    private sendDoneEvent(jobId: string, status: string) {
+        if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
+        try {
+            this.mainWindow.webContents.send('jobs:done', { jobId, status });
+        } catch (e) {
+            getLogger().error('[runner] Done emit failed', e);
+        }
+    }
+
+    private fireCompletionEmail(jobId: string): void {
+        // Lazy import: email servisi bu dosyaya circular import'a sebep olmasın.
+        import('../services/email-notification-service')
+            .then(({ sendJobCompletionEmail }) => sendJobCompletionEmail(jobId))
+            .catch((err) => getLogger().error('[runner] Email send failed', err));
+    }
+}
+
+export const jobRunner = new JobRunner();

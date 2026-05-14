@@ -1,0 +1,54 @@
+{
+  "title": "Sistem Raporları ve İstatistikler",
+  "refresh": "Verileri Yenile",
+  "refreshing": "Yenileniyor...",
+  "metrics": {
+    "totalUsers": "Toplam Kullanıcı",
+    "activeUsers": "Aktif Kullanıcı",
+    "suspendedUsers": "Askıya Alınan (Suspend)"
+  },
+  "audit": {
+    "title": "Son Giriş Aktiviteleri (Audit Logs)",
+    "empty": "Henüz kayıt bulunamadı veya Reports API yetkisi tam değil.",
+    "delayNote": "NOT: Reports API verileri 24 saate kadar gecikmeli yansıyabilir.",
+    "table": { "date": "Tarih", "email": "Kullanıcı E-Posta", "ip": "IP Adresi" }
+  },
+  "suspended": {
+    "title": "Askıya Alınan Kullanıcılar",
+    "empty": "Hiçbir askıya alınan kullanıcı yok.",
+    "badge": "Askıda"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Raporlar sayfası, organizasyonunuzun denetim ve durum özetini sunar; kullanıcı metrikleri, son giriş aktiviteleri ve askıya alınmış hesaplar tek ekranda toplanır."
+        ]
+      },
+      {
+        "icon": "layers",
+        "heading": "Metrikler",
+        "paragraphs": [
+          "Sayfanın üstündeki kartlar toplam kullanıcı, aktif kullanıcı ve askıya alınan kullanıcı sayılarını gösterir."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Son Giriş Aktiviteleri",
+        "paragraphs": [
+          "Reports API üzerinden son oturum açma kayıtları (tarih, kullanıcı, IP adresi) listelenir."
+        ],
+        "callout": { "tone": "info", "text": "Reports API verileri Google tarafında <b>24 saate kadar gecikmeli</b> yansıyabilir; liste boşsa veya eksikse bu normaldir." }
+      },
+      {
+        "icon": "users",
+        "heading": "Askıya Alınan Kullanıcılar ve Yenileme",
+        "paragraphs": [
+          "Hâlen askıda olan kullanıcılar ayrı bir bölümde listelenir. \"Verileri Yenile\" butonuyla tüm raporları güncel haliyle yeniden çekebilirsiniz."
+        ]
+      }
+    ]
+  }
+}

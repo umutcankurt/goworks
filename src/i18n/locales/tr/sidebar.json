@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "dashboard": "Gösterge Paneli",
+    "users": "Kullanıcılar",
+    "newUser": "Yeni Kullanıcı",
+    "groups": "Google Grupları",
+    "bulkOperations": "Toplu İşlemler",
+    "jobHistory": "Görev Geçmişi",
+    "offboard": "İlişik Kesme (Offboard)",
+    "reports": "Raporlar",
+    "signatures": "İmza Yönetimi",
+    "signatureAudit": "İmza Denetimi",
+    "settings": "Ayarlar"
+  },
+  "logout": "Oturumu Kapat",
+  "logoAlt": "Logo"
+}

@@ -1,0 +1,150 @@
+{
+  "createdModal": {
+    "title": "Kullanıcı Başarıyla Oluşturuldu",
+    "fields": {
+      "fullName": "Ad Soyad",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "jobTitle": "Ünvan",
+      "institution": "Kurum",
+      "password": "Şifre"
+    },
+    "showPassword": "Göster",
+    "hidePassword": "Gizle",
+    "copy": "Kopyala",
+    "groups": "Gruplar",
+    "moreGroups": "+{{count}} daha",
+    "signature": "İmza",
+    "signatureStatus": {
+      "pending": "Bekleniyor...",
+      "success": "Başarıyla oluşturuldu",
+      "failed": "Gönderilemedi",
+      "skipped": "Atlandı"
+    },
+    "close": "Kapat",
+    "edit": "Düzenle"
+  },
+  "title": "Yeni Kullanıcı Oluştur",
+  "subtitle": "Google Workspace'e yeni bir kullanıcı hesabı ekleyin.",
+  "loading": "Veriler yükleniyor...",
+  "sections": {
+    "personal": "Kişisel Bilgiler",
+    "account": "Hesap Bilgileri",
+    "contact": "İletişim ve Organizasyon Bilgileri",
+    "groups": "Grup Yönetimi",
+    "signature": "Standart E-posta İmzası"
+  },
+  "fields": {
+    "firstName": "Ad",
+    "firstNamePlaceholder": "Umut",
+    "lastName": "Soyad",
+    "lastNamePlaceholder": "KURT",
+    "email": "E-posta Adresi",
+    "emailPlaceholder": "ad.soyad",
+    "password": "Şifre",
+    "passwordPlaceholder": "En az 8 karakter",
+    "showPassword": "Göster",
+    "hidePassword": "Gizle",
+    "forceChange": "Sonraki girişte şifre değiştirmesini iste",
+    "orgUnit": "Kuruluş Birimi (OU)",
+    "rootOrg": "/ (Kök Organizasyon)",
+    "phone": "Telefon Numarası",
+    "phonePlaceholder": "90 5XX XXX XX XX",
+    "jobTitle": "Unvan",
+    "jobTitleSearch": "Unvan ara...",
+    "jobTitleEmpty": "Eşleşen unvan bulunamadı.",
+    "institution": "Kurum/Şube Adı",
+    "institutionSearch": "Kurum/Şube ara...",
+    "institutionEmpty": "Eşleşen kurum bulunamadı."
+  },
+  "email": {
+    "checking": "Kontrol ediliyor...",
+    "taken": "Bu e-posta adresi zaten kullanılıyor!",
+    "available": "Bu e-posta adresi kullanılabilir."
+  },
+  "groupsHelper": "Kullanıcıyı oluşturulduktan sonra eklenecek grupları seçin.",
+  "signatureSection": {
+    "description": "Kullanıcı hesabı başarıyla oluşturulduktan sonra, arka planda seçtiğiniz e-posta imzası tanımlanır.",
+    "toggle": "İmzayı Ata",
+    "templateLabel": "İmza Şablonu",
+    "defaultSuffix": "(Varsayılan)",
+    "preview": "Önizleme",
+    "noTemplates": "Sistemde kayıtlı imza şablonu bulunamadı.",
+    "saMissingTitle": "Service Account yapılandırılmamış",
+    "saMissingHelp": "Bu özelliği kullanabilmek için Ayarlar sayfasından Service Account yapılandırmasını tamamlamalısınız."
+  },
+  "actions": {
+    "cancel": "İptal",
+    "submit": "Kullanıcı Oluştur",
+    "submitting": "Oluşturuluyor..."
+  },
+  "errors": {
+    "firstNameRequired": "Ad alanı zorunludur.",
+    "lastNameRequired": "Soyad alanı zorunludur.",
+    "usernameRequired": "E-posta kullanıcı adı zorunludur.",
+    "usernameInvalid": "Kullanıcı adı sadece harf, rakam, nokta, tire ve alt çizgi içerebilir.",
+    "usernameChecking": "E-posta adresi kontrol ediliyor, lütfen bekleyin.",
+    "usernameTaken": "Bu e-posta adresi zaten kullanılıyor.",
+    "passwordRequired": "Şifre zorunludur.",
+    "passwordTooShort": "Şifre en az 8 karakter olmalıdır.",
+    "phoneInvalid": "Lütfen geçerli bir telefon numarası giriniz. (Örn: 90 532 123 45 67 veya 90 212 599 83 00)",
+    "loadFailed": "Veriler yüklenirken hata oluştu: {{error}}",
+    "createFailed": "Kullanıcı oluşturulamadı.",
+    "unexpected": "Beklenmeyen bir hata oluştu."
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Bu sayfa yeni bir Google Workspace kullanıcısı oluşturur. Kişisel bilgiler, hesap bilgileri, kurum/unvan/telefon, e-posta imzası ve grup atamasını tek formda toplar. Form gönderildiğinde hesap doğrudan Google Workspace'te açılır."
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Kişisel ve Hesap Bilgileri",
+        "bullets": [
+          { "term": "Ad / Soyad:", "desc": "Kullanıcının Google profilinde görünecek adı oluşturur." },
+          { "term": "E-posta:", "desc": "Kullanıcı adı ve domain birleşerek giriş e-posta adresini oluşturur." },
+          { "term": "Şifre:", "desc": "İlk giriş şifresidir; istenirse kullanıcı ilk girişte değiştirmeye zorlanabilir." },
+          { "term": "Kuruluş Birimi (OU):", "desc": "Kullanıcının yerleştirileceği organizasyon birimi." }
+        ]
+      },
+      {
+        "icon": "building",
+        "heading": "Kurum",
+        "paragraphs": [
+          "Kurum, kullanıcının çalıştığı şube veya lokasyondur. Seçtiğiniz kurumun adı, adresi ve telefonu Google'da kullanıcının kuruluş (organizations) bilgisine yazılır.",
+          "Bu değerler e-posta imza şablonunda <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> ve <code>{{kurum_telefon}}</code> değişkenleri olarak kullanılır — yani kullanıcının imzası otomatik olarak doğru şube bilgisini taşır."
+        ],
+        "callout": { "tone": "info", "text": "Kurumlar <b>Ayarlar → Kurumlar</b> sekmesinden yönetilir. Bu özellik <b>birden çok şubesi veya kampüsü olan yapılar</b> içindir; her şube kendi adı, adresi ve telefonuyla ayrı bir kurum olarak tanımlanır. Tek lokasyonlu firmalar tek bir kurum tanımlayabilir." }
+      },
+      {
+        "icon": "tag",
+        "heading": "Unvan",
+        "paragraphs": [
+          "Unvan, kullanıcının görevidir (Müdür, Öğretmen, Uzman vb.). Google'da kullanıcının \"İş unvanı\" alanına yazılır ve e-posta imzasında <code>{{unvan}}</code> değişkeni olarak görünür."
+        ],
+        "callout": { "tone": "info", "text": "Unvan listesi <b>Ayarlar → Ünvanlar</b> sekmesinden yönetilir; oradan yeni unvan ekleyebilir veya CSV ile toplu içe aktarabilirsiniz." }
+      },
+      {
+        "icon": "phone",
+        "heading": "Telefon",
+        "paragraphs": [
+          "Telefon numarası Google'da kullanıcının telefon alanına yazılır ve e-posta imzasında <code>{{telefon}}</code> değişkeni olarak kullanılır. Numara girildiği anda otomatik olarak biçimlendirilir."
+        ],
+        "callout": { "tone": "tip", "text": "Telefon opsiyoneldir. Boş bırakılırsa, imza şablonundaki koşullu telefon satırı o kullanıcı için otomatik gizlenir." }
+      },
+      {
+        "icon": "mail",
+        "heading": "İmza ve Gruplar",
+        "bullets": [
+          { "term": "E-posta İmzası:", "desc": "Bir imza şablonu seçtiğinizde, kullanıcı oluşturulduktan sonra Gmail imzası arka planda otomatik atanır." },
+          { "term": "Gruplar:", "desc": "Kullanıcıyı oluşturulurken bir veya daha fazla Google grubuna ekleyebilirsiniz." }
+        ],
+        "callout": { "tone": "warning", "text": "İmza gönderimi için Servis Hesabı yapılandırılmış olmalıdır. Yapılandırılmamışsa imza adımı atlanır." }
+      }
+    ]
+  }
+}

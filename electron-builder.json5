@@ -1,0 +1,66 @@
+// @see - https://www.electron.build/configuration/configuration
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.goworks.app",
+  "asar": true,
+  "afterSign": "./afterSign.cjs",
+  "productName": "GoWorks",
+  "directories": {
+    "output": "release/${version}"
+  },
+  "files": [
+    "dist",
+    "dist-electron"
+  ],
+  "extraResources": [
+    {
+      "from": "electron/db/schema.sql",
+      "to": "db/schema.sql"
+    }
+  ],
+  "asarUnpack": [
+    "node_modules/googleapis/**",
+    "node_modules/google-auth-library/**",
+    "node_modules/gaxios/**",
+    "node_modules/gcp-metadata/**",
+    "node_modules/google-logging-utils/**",
+    "node_modules/better-sqlite3/**",
+    "node_modules/bindings/**",
+    "node_modules/file-uri-to-path/**"
+  ],
+  "mac": {
+    "target": [
+      "dmg"
+    ],
+    "icon": "build/icon.png",
+    "artifactName": "${productName}-Mac-${version}-Installer.${ext}",
+    "identity": "-",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "build/entitlements.mac.plist",
+    "entitlementsInherit": "build/entitlements.mac.plist"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "build/icon.png",
+    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+  },
+  "nsis": {
+    "oneClick": true,
+    "perMachine": false,
+    "deleteAppDataOnUninstall": false
+  },
+  "linux": {
+    "target": [
+      "AppImage"
+    ],
+    "artifactName": "${productName}-Linux-${version}.${ext}"
+  }
+}

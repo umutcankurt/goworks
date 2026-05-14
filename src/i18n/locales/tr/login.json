@@ -1,0 +1,13 @@
+{
+  "title": "GoWorks",
+  "titleWithCompany": "{{company}} · GoWorks",
+  "prompt": "Lütfen devam etmek için kurumsal Google Workspace hesabınızla yetkilendirme yapın.",
+  "signInWithGoogle": "Google ile Oturum Aç",
+  "unexpectedError": "Giriş sırasında beklenmeyen bir hata oluştu.",
+  "footer": {
+    "tagline": "GoWorks · Workspace Yönetim Aracı",
+    "lastUpdate": "Son Güncelleme: 17 Nisan 2026",
+    "author": "umutcankurt",
+    "authorUrl": "https://github.com/umutcankurt"
+  }
+}

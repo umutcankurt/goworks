@@ -1,0 +1,79 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Google Workspace organization overview",
+  "lastUpdate": "Last update: {{value}}",
+  "relativeTime": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago"
+  },
+  "loadFailed": "Failed to load data.",
+  "authError": "You don't have permission to access this data. Please <b>sign out</b> and sign in again.",
+  "storage": {
+    "title": "Storage Usage",
+    "totalUsed": "Total used space",
+    "unlimited": "This organization has no quota limit (Unlimited)",
+    "used": "Used",
+    "free": "Free"
+  },
+  "userCounts": {
+    "title": "User Counts",
+    "active": "Active",
+    "suspended": "Suspended"
+  },
+  "recentUsers": {
+    "title": "Recently Created Users",
+    "empty": "No new users created yet.",
+    "details": "Details"
+  },
+  "activeJobs": {
+    "title": "Active Jobs",
+    "viewAll": "View all →",
+    "cancel": "Cancel",
+    "successCount": "{{count}} succeeded",
+    "failedCount": "{{count}} failed",
+    "types": {
+      "BULK_SIGNATURE_PUSH": "Bulk Signature",
+      "BULK_SUSPEND": "Bulk Suspend",
+      "BULK_DELETE": "Bulk Delete"
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "The Dashboard gives you a real-time snapshot of your Google Workspace organization. All data is pulled live from Google using the permissions of the signed-in admin account."
+        ]
+      },
+      {
+        "icon": "layers",
+        "heading": "Information Cards",
+        "paragraphs": ["The page consists of four information cards:"],
+        "bullets": [
+          { "term": "Storage Usage:", "desc": "The organization's total, used and free storage space." },
+          { "term": "User Counts:", "desc": "Number of active and suspended users." },
+          { "term": "Recently Created Users:", "desc": "The latest accounts with quick access to their details." },
+          { "term": "Active Jobs:", "desc": "Currently running bulk operations and their progress." }
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Active Jobs",
+        "paragraphs": [
+          "Track the progress of running bulk operations from this card and cancel them if needed. The \"View all\" link takes you to the Job History page."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Data Refresh",
+        "paragraphs": [
+          "Data refreshes automatically each time the page opens; the last update time is shown under each card."
+        ],
+        "callout": { "tone": "warning", "text": "If a card shows a permission error, <b>sign out and sign back in</b> — some data requires additional consent." }
+      }
+    ]
+  }
+}

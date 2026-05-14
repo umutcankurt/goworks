@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 dark mode — HTML root'a `dark` class eklendiğinde aktive olur.
+ * ThemeContext bu class'ı senkronize eder (sistem tercihi + localStorage override).
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Mavi primary scale — eski sayfalar (Login öncesi standart) bunu kullanır.
+     Faz 5 boyunca yerini Ethereal token'larına bırakacak; Faz 6 cleanup'ta deprecate. */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  /*
+   * Ethereal Command Center — light mode default.
+   * :root.dark scope'unda aşağıda dark variant override edilir.
+   * `bg-surface`, `text-on-surface-variant`, `bg-eth-primary-container` gibi
+   * Tailwind utility'leri her iki modda da otomatik tema-aware çalışır.
+   */
+  --color-surface: #f8fafc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #f1f5f9;
+  --color-surface-container-highest: #e2e8f0;
+
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-outline: #94a3b8;
+  --color-outline-variant: #cbd5e1;
+
+  --color-eth-primary: #0891b2;
+  --color-eth-primary-container: #06b6d4;
+  --color-on-eth-primary-container: #ffffff;
+  --color-eth-secondary: #059669;
+  --color-eth-danger: #dc2626;
+}
+
+/* Dark variant override — root'a `.dark` class eklenince aktive olur. */
+:root.dark {
+  --color-surface: #0e1416;
+  --color-surface-container-lowest: #090f11;
+  --color-surface-container-low: #171d1e;
+  --color-surface-container: #1b2123;
+  --color-surface-container-high: #252b2c;
+  --color-surface-container-highest: #303638;
+
+  --color-on-surface: #dee3e6;
+  --color-on-surface-variant: #bcc9cd;
+  --color-outline: #869397;
+  --color-outline-variant: #3f4849;
+
+  --color-eth-primary: #acedff;
+  --color-eth-primary-container: #4cd7f6;
+  --color-on-eth-primary-container: #005b6b;
+  --color-eth-secondary: #4edea3;
+  --color-eth-danger: #ff6b6b;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+/*
+ * .eth-app — Ethereal-themed root container.
+ * Hem light hem dark mode için ambient gradient ayarlanmış; renk tonu mode'a göre değişir.
+ */
+.eth-app {
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--color-eth-primary-container) 5%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 100% 100%, color-mix(in srgb, var(--color-eth-secondary) 4%, transparent), transparent 60%);
+  color: var(--color-on-surface);
+  min-height: 100vh;
+}
+
+:root.dark .eth-app {
+  background-image:
+    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--color-eth-primary-container) 8%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 100% 100%, color-mix(in srgb, var(--color-eth-secondary) 5%, transparent), transparent 60%);
+}
+
+/* Glassmorphic surface — Card primitive bunu reuse eder.
+   Border light'ta hafif slate, dark'ta white/8 — color-mix ile mode-aware. */
+.eth-glass {
+  background-color: color-mix(in srgb, var(--color-surface-container-high) 70%, transparent);
+  backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+  border-radius: 0.75rem;
+}
+
+/* Cyan ambient — sidebar / hero kart */
+.eth-glow-cyan-ambient {
+  box-shadow: 0 0 30px color-mix(in srgb, var(--color-eth-primary-container) 8%, transparent);
+}
+/* Cyan accent — primary buton */
+.eth-glow-cyan {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-eth-primary-container) 35%, transparent);
+}
+.eth-glow-cyan-strong {
+  box-shadow: 0 0 25px color-mix(in srgb, var(--color-eth-primary-container) 55%, transparent);
+}
+/* Active step circle LED */
+.eth-glow-cyan-led {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-eth-primary-container) 45%, transparent);
+}
+/* Active step panel */
+.eth-glow-cyan-panel {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-eth-primary-container) 18%, transparent);
+}
+/* Success badge — final step */
+.eth-glow-success {
+  box-shadow: 0 0 40px color-mix(in srgb, var(--color-eth-secondary) 18%, transparent);
+}
+
+/* Ghost border — Material'ın 1px white/8% reuse'u, light'ta slate karşılığı. */
+.eth-border-ghost {
+  border: 1px solid color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+}
+.eth-border-ghost-soft {
+  border: 1px solid color-mix(in srgb, var(--color-on-surface) 5%, transparent);
+}

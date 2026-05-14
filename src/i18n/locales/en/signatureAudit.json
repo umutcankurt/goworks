@@ -1,0 +1,172 @@
+{
+  "title": "Signature Audit",
+  "subtitle": "Compare people's signatures against current system data and bulk-update the ones that drifted.",
+  "steps": {
+    "configure": "Configure",
+    "scanning": "Scanning",
+    "review": "Review",
+    "applying": "Applying",
+    "done": "Done"
+  },
+  "config": {
+    "loading": "Loading templates, groups and org units…",
+    "scope": {
+      "heading": "Scope — whose signatures should be checked?",
+      "all": "All users",
+      "group": "Mail group",
+      "orgUnit": "Org unit",
+      "groupPlaceholder": "Select a mail group…",
+      "orgUnitPlaceholder": "Select an org unit…"
+    },
+    "template": {
+      "heading": "Target template — signatures are evaluated against this template",
+      "placeholder": "Select a signature template…",
+      "defaultSuffix": "(default)",
+      "empty": "No signature templates yet. Create one first under Signature Management."
+    },
+    "depth": {
+      "heading": "Check depth",
+      "fast": {
+        "label": "Fast",
+        "desc": "Compares only against the internal state record. Quick; does not touch Gmail."
+      },
+      "deep": {
+        "label": "Deep",
+        "desc": "Also fetches the live Gmail signature. Catches manual edits and missing signatures too; slower."
+      }
+    },
+    "start": "Start Check"
+  },
+  "progress": {
+    "scanning": "Scanning signatures",
+    "applying": "Updating signatures",
+    "preparing": "Resolving audience…",
+    "processing": "Processing: {{user}}",
+    "cancel": "Cancel"
+  },
+  "category": {
+    "ok": "Up to date",
+    "drift": "Needs update",
+    "no_signature": "No signature",
+    "missing_data": "Missing data",
+    "error": "Error"
+  },
+  "reason": {
+    "no_state": "Signature was never pushed from the system",
+    "template_changed": "Template has changed",
+    "data_changed": "User/institution data has changed",
+    "manual_edit": "Signature was edited manually",
+    "no_signature": "User has no signature",
+    "missing_fields": "Title or phone is empty",
+    "institution_unmatched": "Department does not match a defined institution",
+    "resolve_error": "Could not fetch profile information",
+    "scan_error": "An error occurred during the scan"
+  },
+  "review": {
+    "selectAllUpdatable": "Select updatable ({{count}})",
+    "clearSelection": "Clear selection",
+    "clearFilter": "Clear filter",
+    "newAudit": "New Audit",
+    "applySelected": "Update Selected ({{count}})",
+    "empty": "No records in this category.",
+    "toggleDetail": "Toggle detail",
+    "col": {
+      "email": "Email",
+      "category": "Status",
+      "reason": "Reason"
+    },
+    "diff": {
+      "variable": "Variable",
+      "previous": "Previous",
+      "current": "Current"
+    }
+  },
+  "done": {
+    "heading": "Update complete",
+    "summary": "{{succeeded}} signatures updated, {{failed}} failed.",
+    "downloadReport": "Download error report",
+    "newAudit": "New Audit"
+  },
+  "toast": {
+    "loadFailed": "Could not load options: {{error}}",
+    "scanFailed": "Could not start scan: {{error}}",
+    "itemsFailed": "Could not fetch scan results: {{error}}",
+    "applyFailed": "Could not start update: {{error}}",
+    "cancelling": "Cancelling operation…",
+    "cancelFailed": "Could not cancel: {{error}}"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "eye",
+        "heading": "Overview",
+        "paragraphs": [
+          "Signature Audit checks whether people's Gmail signatures match the <b>current system data</b> (title, phone, institution details and the selected template). Instead of hunting for stale signatures one by one, you can find and fix them in bulk."
+        ],
+        "bullets": [
+          { "term": "1. Configure:", "desc": "Pick the scope, target template and check depth." },
+          { "term": "2. Scanning:", "desc": "For each person the expected signature is computed and compared to the current state." },
+          { "term": "3. Review:", "desc": "Results are grouped into categories; expand a row to see what changed." },
+          { "term": "4. Apply:", "desc": "Select the people to update and start a bulk update." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Scope and Depth",
+        "paragraphs": [
+          "You choose <b>who</b> the check covers and <b>how deep</b> it looks."
+        ],
+        "bullets": [
+          { "term": "All users", "desc": "— every active user in the domain." },
+          { "term": "Mail group", "desc": "— members of the selected Google group." },
+          { "term": "Org unit", "desc": "— users under the selected OU." },
+          { "term": "Fast", "desc": "— compares only against the internal \"last pushed signature\" record; does not connect to Gmail, quick." },
+          { "term": "Deep", "desc": "— also fetches each person's live Gmail signature; catches manual edits and empty signatures, but is slower." }
+        ],
+        "callout": {
+          "tone": "tip",
+          "text": "Running it for the first time? Pick <b>Deep</b> — Fast mode has no records yet, so it would mark everyone as \"Needs update\"."
+        }
+      },
+      {
+        "icon": "list",
+        "heading": "Result Categories",
+        "paragraphs": [
+          "After the scan, each person falls into a category:"
+        ],
+        "table": {
+          "columns": ["Category", "Meaning"],
+          "rows": [
+            ["<b>Up to date</b>", "The signature is as it should be — no action needed."],
+            ["<b>Needs update</b>", "Data or template has changed; the signature is stale."],
+            ["<b>No signature</b>", "The person's Gmail signature is empty (reliably detected only in Deep mode)."],
+            ["<b>Missing data</b>", "Title, phone or institution match is missing — skipped, no signature is pushed."],
+            ["<b>Error</b>", "Profile or signature information could not be fetched."]
+          ]
+        }
+      },
+      {
+        "icon": "zap",
+        "heading": "Drift Detection and Update",
+        "paragraphs": [
+          "On every successful signature push the system stores a <b>fingerprint</b> of the signature. The scan compares the target signature computed from current data against this record — if they differ, the person is marked \"Needs update\".",
+          "On the review screen you can use \"Select updatable\" to check all drifted people and click <b>Update Selected</b>. The update always overwrites — the system is the single source of truth."
+        ],
+        "callout": {
+          "tone": "warning",
+          "text": "The update <b>overwrites</b> each person's existing signature. Manual customizations are replaced too."
+        }
+      },
+      {
+        "icon": "info",
+        "heading": "Notes",
+        "bullets": [
+          { "desc": "Suspended users are excluded from the audit." },
+          { "desc": "People missing a title, phone or institution match are marked \"Missing data\" and are not updated — no half-filled signature is pushed." },
+          { "desc": "This feature does not run on a schedule; you always start the audit yourself." },
+          { "desc": "The update also appears in Job History; if there are errors you can download a report." }
+        ]
+      }
+    ]
+  }
+}

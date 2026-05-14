@@ -1,0 +1,162 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "titles": "Titles",
+    "institutions": "Institutions"
+  },
+  "serverRequired": "Server connection required.",
+  "general": {
+    "company": {
+      "heading": "Company Information",
+      "description": "Brand details shown in the app header, email notifications, and the login screen. Changes are saved automatically."
+    },
+    "companyName": {
+      "label": "Company name",
+      "placeholder": "e.g. Acme Inc.",
+      "helperWith": "Shown in the header as \"<b>{{name}}</b> Workspace Management\".",
+      "helperEmpty": "When left empty, the header shows only \"<b>GoWorks · Workspace Management</b>\"."
+    },
+    "sidebarAbbr": {
+      "label": "Sidebar abbreviation",
+      "helper": "If left empty, it is generated automatically from the initials of the company name. Preview:"
+    },
+    "allowedDomain": {
+      "label": "Allowed email domain",
+      "placeholder": "e.g. acme.com",
+      "helperWith": "Only email addresses ending with this domain can sign in to the application.",
+      "helperEmpty": "⚠ Empty — currently any Workspace account can sign in. Set your domain right after the first admin login.",
+      "helperBlur": "Changes are saved when you leave the field.",
+      "requiredError": "Allowed domain is required. It cannot be empty."
+    },
+    "emailSenderName": {
+      "label": "Email notification sender name",
+      "placeholder": "e.g. GoWorks",
+      "helper": "Appears as \"{{name}}\" in the subject and body of the email sent when a bulk job completes."
+    },
+    "language": {
+      "heading": "Application Language",
+      "description": "Change the UI language from here or via the switch in the top-right corner.",
+      "label": "Language",
+      "options": {
+        "tr": "Turkish (Türkçe)",
+        "en": "English"
+      }
+    },
+    "logo": {
+      "heading": "Logo",
+      "description": "Shown at the top of the sidebar as the company logo. PNG / JPG / SVG / WEBP, max 1 MB.",
+      "upload": "Upload Logo",
+      "replace": "Replace Logo",
+      "uploading": "Uploading...",
+      "deleteButton": "Delete Logo",
+      "confirmDelete": "Are you sure you want to delete the logo?"
+    },
+    "serviceAccount": {
+      "heading": "Google Service Account",
+      "description": "Required for Gmail signature management via Domain-wide Delegation. Your JSON key is stored locally under <code>userData/secrets/</code>.",
+      "configured": "Configured",
+      "notConfigured": "Not configured",
+      "notConfiguredHelp": "Upload your Google Cloud Service Account JSON key below.",
+      "deleteKey": "Delete Key",
+      "uploadJson": "Upload JSON Key",
+      "uploadNew": "Upload New Key",
+      "uploading": "Uploading...",
+      "checking": "Checking...",
+      "disabled": "This feature is currently disabled.",
+      "confirmDelete": "Are you sure you want to delete the Service Account key? Signature management will be disabled.",
+      "selectJsonFile": "Please select a .json Service Account key file"
+    },
+    "dwd": {
+      "heading": "Domain-Wide Delegation",
+      "description": "The Service Account must be authorized in Admin Console for these OAuth scopes to act domain-wide.",
+      "clientIdLabel": "Service Account Client ID",
+      "clientIdMissing": "Upload the Service Account JSON first to display its Client ID.",
+      "scopesLabel": "OAuth scopes (8)",
+      "copy": "Copy",
+      "copyAll": "Copy all",
+      "copied": "Copied",
+      "openConsole": "Open Admin Console",
+      "testButton": "Test DWD connection",
+      "testing": "Testing...",
+      "testSuccess": "All scopes verified (as {{adminEmail}})",
+      "testFail": "DWD verification failed: {{error}}",
+      "testHelper": "The test verifies that the Service Account can read admin.directory.user as {{adminEmail}}.",
+      "unauthorizedClientHint": {
+        "heading": "What to do:",
+        "step1": "Copy the Client ID above.",
+        "step2": "Click \"Open Admin Console\", add a new client to the DWD list.",
+        "step3": "Paste the scope list (Copy All) and save, then run the test again."
+      }
+    },
+    "resetWizard": {
+      "heading": "Setup Wizard",
+      "description": "Restart the onboarding wizard if you'd like to walk through the steps again. Existing configuration is preserved; only the wizard reopens.",
+      "button": "Restart wizard",
+      "confirm": "Restart the setup wizard? Your existing settings will be preserved."
+    }
+  },
+  "titles": {
+    "newPlaceholder": "New title name...",
+    "tableHeader": "Title",
+    "searchPlaceholder": "Search titles...",
+    "csvFormat": "CSV format: <code>name</code> or <code>unvan</code> column",
+    "csvPlaceholder": "name\nManager\nTeacher\nClerk",
+    "noMatches": "No matching title found",
+    "empty": "No titles added yet",
+    "searchSummary": "{{matches}} / {{total}} results",
+    "totalSummary": "Total {{total}} titles",
+    "filteredSummary": "Showing {{matches}} / {{total}} titles"
+  },
+  "institutions": {
+    "namePlaceholder": "Institution name",
+    "addressPlaceholder": "Address (optional)",
+    "phonePlaceholder": "Phone (optional)",
+    "csvFormat": "CSV format: <code>name/kurum/kampus</code>, <code>address/adres</code>, <code>phone/telefon</code> columns",
+    "csvPlaceholder": "name,address,phone\nMain Campus,Istanbul,02121234567",
+    "headers": {
+      "name": "Institution",
+      "address": "Address",
+      "phone": "Phone"
+    },
+    "searchPlaceholder": "Search institutions...",
+    "noMatches": "No matching institution found",
+    "empty": "No institutions added yet",
+    "totalSummary": "Total {{total}} institutions",
+    "filteredSummary": "Showing {{matches}} / {{total}} institutions"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "The Settings page consists of three tabs: <b>General</b>, <b>Titles</b> and <b>Institutions</b>. From these tabs you manage the app's branding and the reference data used in the New User / signature flow."
+        ]
+      },
+      {
+        "icon": "settings",
+        "heading": "General Tab",
+        "paragraphs": [
+          "Company name, sidebar abbreviation, logo, email notification sender name, allowed sign-in domain and the app language are set here. The Google Service Account and Domain-Wide Delegation configuration is also on this tab."
+        ],
+        "callout": { "tone": "info", "text": "When branding info is changed, the sidebar and header update <b>instantly</b>; the same app is adapted to different organizations from this tab." }
+      },
+      {
+        "icon": "tag",
+        "heading": "Titles Tab",
+        "paragraphs": [
+          "Manage the list of titles that can be assigned to users (Manager, Teacher, etc.) here, and bulk-import them via CSV. Defined titles are selected on the New User page and used in the signature template as the <code>{{unvan}}</code> variable."
+        ]
+      },
+      {
+        "icon": "building",
+        "heading": "Institutions Tab",
+        "paragraphs": [
+          "Each institution's name, address and phone are defined here. Defined institutions are selected on the New User page and appear in the signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables. Bulk import via CSV is supported."
+        ],
+        "callout": { "tone": "info", "text": "<b>The Institutions feature is meant for organizations with multiple branches or campuses.</b> Each branch/location is defined as a separate institution, so every user's signature carries their own branch details. Single-location companies can define just one institution." }
+      }
+    ]
+  }
+}

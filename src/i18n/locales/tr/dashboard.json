@@ -1,0 +1,79 @@
+{
+  "title": "Gösterge Paneli",
+  "subtitle": "Google Workspace organizasyon özeti",
+  "lastUpdate": "Son güncelleme: {{value}}",
+  "relativeTime": {
+    "justNow": "Az önce",
+    "minutesAgo": "{{count}} dakika önce",
+    "hoursAgo": "{{count}} saat önce",
+    "daysAgo": "{{count}} gün önce"
+  },
+  "loadFailed": "Veri alınamadı.",
+  "authError": "Bu veriye erişim yetkiniz bulunmuyor. Lütfen <b>Çıkış Yap</b> yapıp tekrar giriş yapın.",
+  "storage": {
+    "title": "Depolama Kullanımı",
+    "totalUsed": "Toplam kullanılan alan",
+    "unlimited": "Bu organizasyonda kota sınırı bulunmamaktadır (Limitsiz)",
+    "used": "Kullanılan",
+    "free": "Boş"
+  },
+  "userCounts": {
+    "title": "Kullanıcı Sayıları",
+    "active": "Aktif",
+    "suspended": "Askıya Alınan"
+  },
+  "recentUsers": {
+    "title": "Son Oluşturulan Kullanıcılar",
+    "empty": "Henüz yeni kullanıcı oluşturulmadı.",
+    "details": "Detaylar"
+  },
+  "activeJobs": {
+    "title": "Aktif Görevler",
+    "viewAll": "Tümünü Gör →",
+    "cancel": "İptal Et",
+    "successCount": "{{count}} başarılı",
+    "failedCount": "{{count}} başarısız",
+    "types": {
+      "BULK_SIGNATURE_PUSH": "Toplu İmza",
+      "BULK_SUSPEND": "Toplu Askıya Alma",
+      "BULK_DELETE": "Toplu Silme"
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Gösterge Paneli, Google Workspace organizasyonunuzun anlık bir özetini sunar. Tüm veriler giriş yaptığınız yönetici hesabının yetkileriyle Google'dan canlı olarak çekilir."
+        ]
+      },
+      {
+        "icon": "layers",
+        "heading": "Bilgi Kartları",
+        "paragraphs": ["Sayfa dört bilgi kartından oluşur:"],
+        "bullets": [
+          { "term": "Depolama Kullanımı:", "desc": "Organizasyonun toplam, kullanılan ve boş depolama alanı." },
+          { "term": "Kullanıcı Sayıları:", "desc": "Aktif ve askıya alınmış kullanıcı sayıları." },
+          { "term": "Son Oluşturulan Kullanıcılar:", "desc": "En son eklenen hesaplar ve detaylarına hızlı erişim." },
+          { "term": "Aktif Görevler:", "desc": "Şu anda çalışan toplu işlemler ve ilerleme durumları." }
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Aktif Görevler",
+        "paragraphs": [
+          "Çalışmakta olan toplu işlemlerin ilerlemesini bu karttan izleyebilir, gerekirse iptal edebilirsiniz. \"Tümünü Gör\" bağlantısı sizi Görev Geçmişi sayfasına götürür."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Veri Yenileme",
+        "paragraphs": [
+          "Veriler sayfa her açıldığında otomatik yenilenir; her kartın altında son güncelleme zamanı görünür."
+        ],
+        "callout": { "tone": "warning", "text": "Bir karta erişim yetkisi hatası gelirse <b>çıkış yapıp tekrar giriş yapın</b> — bazı veriler ek izin gerektirir." }
+      }
+    ]
+  }
+}

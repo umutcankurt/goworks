@@ -1,0 +1,13 @@
+{
+  "title": "GoWorks",
+  "titleWithCompany": "{{company}} · GoWorks",
+  "prompt": "Please authorize with your corporate Google Workspace account to continue.",
+  "signInWithGoogle": "Sign in with Google",
+  "unexpectedError": "An unexpected error occurred during sign-in.",
+  "footer": {
+    "tagline": "GoWorks · Workspace Management Tool",
+    "lastUpdate": "Last Updated: April 17, 2026",
+    "author": "umutcankurt",
+    "authorUrl": "https://github.com/umutcankurt"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "roles": {
+    "OWNER": "Sahip",
+    "MANAGER": "Yönetici",
+    "MEMBER": "Üye"
+  },
+  "memberPicker": {
+    "searchPlaceholder": "Kullanıcı ara veya e-posta gir..."
+  },
+  "userPicker": {
+    "defaultPlaceholder": "Kullanıcı ara (ad veya e-posta)...",
+    "externalEmail": "Harici e-posta ekle",
+    "noUserMatch": "Eşleşen kullanıcı bulunamadı."
+  },
+  "groupPicker": {
+    "searchPlaceholder": "Grup ara (ad veya e-posta)...",
+    "noMatch": "Eşleşen grup bulunamadı."
+  },
+  "list": {
+    "title": "Google Grupları",
+    "searchPlaceholder": "Grup adı veya e-posta...",
+    "search": "Ara",
+    "clear": "Temizle",
+    "newGroup": "Yeni Grup",
+    "loading": "Gruplar yükleniyor...",
+    "loadFailed": "Gruplar getirilemedi",
+    "table": {
+      "name": "Grup Adı",
+      "email": "E-posta",
+      "description": "Açıklama",
+      "action": "İşlem"
+    },
+    "noResults": "Arama kriterlerinize uygun grup bulunamadı.",
+    "empty": "Henüz grup yok.",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "loadMore": "Daha Fazla Göster ({{count}} yüklendi)",
+    "loadingShort": "Yükleniyor...",
+    "deleteDialog": {
+      "title": "Grubu sil",
+      "message": "<b>{{name}}</b> ({{email}}) grubunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      "cancel": "Vazgeç",
+      "confirm": "Sil",
+      "deleting": "Siliniyor..."
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Google Grupları sayfası, Google Workspace gruplarınızı (e-posta listelerini) oluşturmanızı, düzenlemenizi ve silmenizi sağlar."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Listeleme ve Arama",
+        "bullets": [
+          { "term": "Arama:", "desc": "Grup adı veya e-posta adresine göre filtreleyin." },
+          { "term": "Sayfalama:", "desc": "Uzun listeler sayfalıdır; \"Daha Fazla Göster\" ile devamını yükleyin." },
+          { "term": "Satır aksiyonları:", "desc": "Her satırda düzenleme ve silme butonları bulunur." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Grup Oluşturma ve Düzenleme",
+        "paragraphs": [
+          "\"Yeni Grup\" butonuyla grup oluşturabilirsiniz. Bir grubu düzenlerken form sekmelidir:"
+        ],
+        "bullets": [
+          { "term": "Genel:", "desc": "Grup adı, e-posta ve açıklama." },
+          { "term": "Üyeler:", "desc": "Üye ekleme/çıkarma ve rol (Sahip / Yönetici / Üye) atama." },
+          { "term": "Erişim Ayarları:", "desc": "Kimlerin gruba mesaj gönderebileceği ve içeriği görebileceği." },
+          { "term": "Alias:", "desc": "Gruba ek (takma) e-posta adresleri tanımlama." }
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Denetim",
+        "paragraphs": [
+          "Tüm grup işlemleri giriş yapan yöneticinin yetkisiyle gerçekleştirilir."
+        ],
+        "callout": { "tone": "info", "text": "Workspace denetim kaydında işlemi yapan kişi olarak <b>her zaman siz</b> görünürsünüz — bir servis hesabı değil." }
+      }
+    ]
+  }
+}

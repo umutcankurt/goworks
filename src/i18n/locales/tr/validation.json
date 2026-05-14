@@ -1,0 +1,17 @@
+{
+  "required": "Bu alan zorunludur",
+  "invalidEmail": "Geçerli bir e-posta adresi giriniz",
+  "invalidPhone": "Lütfen geçerli bir telefon numarası giriniz",
+  "firstNameRequired": "Ad alanı zorunludur",
+  "lastNameRequired": "Soyad alanı zorunludur",
+  "emailRequired": "E-posta kullanıcı adı zorunludur",
+  "passwordRequired": "Şifre zorunludur",
+  "passwordTooShort": "Şifre en az 8 karakter olmalı",
+  "domainRequired": "Domain zorunludur",
+  "titleRequired": "Ünvan seçimi zorunludur",
+  "institutionRequired": "Kurum seçimi zorunludur",
+  "groupNameRequired": "Grup adı zorunludur",
+  "groupEmailRequired": "Grup e-postası zorunludur",
+  "invalidDomain": "Geçersiz domain formatı",
+  "duplicateEmail": "Bu e-posta adresi zaten kullanılıyor"
+}

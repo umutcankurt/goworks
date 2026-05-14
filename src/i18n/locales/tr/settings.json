@@ -1,0 +1,162 @@
+{
+  "title": "Ayarlar",
+  "tabs": {
+    "general": "Genel",
+    "titles": "Ünvanlar",
+    "institutions": "Kurumlar"
+  },
+  "serverRequired": "Sunucu bağlantısı gerekli.",
+  "general": {
+    "company": {
+      "heading": "Firma Bilgileri",
+      "description": "Uygulama başlığında, e-posta bildirimlerinde ve giriş ekranında gösterilen marka bilgileridir. Değişiklikler otomatik kaydedilir."
+    },
+    "companyName": {
+      "label": "Firma adı",
+      "placeholder": "Örn: Acme A.Ş.",
+      "helperWith": "Header'da \"<b>{{name}}</b> Workspace Yönetim\" olarak görünür.",
+      "helperEmpty": "Boş bırakıldığında Header'da yalnızca \"<b>GoWorks · Workspace Yönetim</b>\" görünür."
+    },
+    "sidebarAbbr": {
+      "label": "Sidebar kısaltması",
+      "helper": "Boş bırakırsanız firma adının baş harflerinden otomatik üretilir. Önizleme:"
+    },
+    "allowedDomain": {
+      "label": "İzin verilen e-posta domain'i",
+      "placeholder": "örn: acme.com",
+      "helperWith": "Sadece bu domain ile biten e-posta adresleri uygulamaya giriş yapabilir.",
+      "helperEmpty": "⚠ Boş — şu an her Workspace hesabı giriş yapabilir. İlk admin girişinden sonra kendi domain'inizi tanımlayın.",
+      "helperBlur": "Değişiklik alandan çıkınca kaydedilir.",
+      "requiredError": "İzin verilen domain zorunludur. Boş bırakılamaz."
+    },
+    "emailSenderName": {
+      "label": "E-posta bildirim gönderici adı",
+      "placeholder": "örn: GoWorks",
+      "helper": "Toplu işlem bittiğinde gönderilen e-postanın başlığında ve gövdesinde \"{{name}}\" olarak görünür."
+    },
+    "language": {
+      "heading": "Uygulama Dili",
+      "description": "Uygulama arayüzünün dilini buradan veya sağ üst köşedeki anahtardan değiştirebilirsiniz.",
+      "label": "Dil",
+      "options": {
+        "tr": "Türkçe",
+        "en": "İngilizce (English)"
+      }
+    },
+    "logo": {
+      "heading": "Logo",
+      "description": "Sidebar üst köşesinde firma logosu olarak gösterilir. PNG / JPG / SVG / WEBP, max 1 MB.",
+      "upload": "Logo Yükle",
+      "replace": "Logoyu Değiştir",
+      "uploading": "Yükleniyor...",
+      "deleteButton": "Logoyu Sil",
+      "confirmDelete": "Logoyu silmek istediğinize emin misiniz?"
+    },
+    "serviceAccount": {
+      "heading": "Google Service Account",
+      "description": "Domain-wide Delegation ile Gmail imza yönetimi için gereklidir. JSON anahtarınız bu cihazda <code>userData/secrets/</code> altında saklanır.",
+      "configured": "Yapılandırıldı",
+      "notConfigured": "Yapılandırılmamış",
+      "notConfiguredHelp": "Aşağıdan Google Cloud Service Account JSON anahtarını yükleyin.",
+      "deleteKey": "Anahtarı Sil",
+      "uploadJson": "JSON Anahtarı Yükle",
+      "uploadNew": "Yeni Anahtar Yükle",
+      "uploading": "Yükleniyor...",
+      "checking": "Kontrol ediliyor...",
+      "disabled": "Bu özellik şu an devre dışı.",
+      "confirmDelete": "Service Account anahtarını silmek istediğinize emin misiniz? İmza yönetimi devre dışı kalır.",
+      "selectJsonFile": "Lütfen .json uzantılı bir Service Account anahtar dosyası seçin"
+    },
+    "dwd": {
+      "heading": "Domain-Wide Delegation",
+      "description": "Service Account'ın bu OAuth scope'larıyla domain genelinde işlem yapabilmesi için Admin Console'da yetkilendirilmiş olması gerekir.",
+      "clientIdLabel": "Service Account Client ID",
+      "clientIdMissing": "Client ID görüntülenebilmesi için önce Service Account JSON yüklenmeli.",
+      "scopesLabel": "OAuth scope'ları (8)",
+      "copy": "Kopyala",
+      "copyAll": "Tümünü kopyala",
+      "copied": "Kopyalandı",
+      "openConsole": "Admin Console'u Aç",
+      "testButton": "DWD bağlantısını test et",
+      "testing": "Test ediliyor...",
+      "testSuccess": "Tüm scope'lar doğrulandı ({{adminEmail}} olarak)",
+      "testFail": "DWD doğrulanamadı: {{error}}",
+      "testHelper": "Test, Service Account'ın {{adminEmail}} olarak admin.directory.user üzerinden okuma yapabildiğini doğrular.",
+      "unauthorizedClientHint": {
+        "heading": "Yapılması gerekenler:",
+        "step1": "Yukarıdaki Client ID'yi kopyalayın.",
+        "step2": "\"Admin Console'u Aç\" bağlantısına tıklayın, DWD listesine yeni istemci ekleyin.",
+        "step3": "Yukarıdaki scope listesini (Tümünü kopyala) yapıştırıp kaydedin, ardından testi tekrar çalıştırın."
+      }
+    },
+    "resetWizard": {
+      "heading": "Kurulum Sihirbazı",
+      "description": "Onboarding adımlarını yeniden çalıştırmak istiyorsanız sihirbazı sıfırlayın. Mevcut yapılandırma silinmez; sadece sihirbaz tekrar açılır.",
+      "button": "Sihirbazı tekrar başlat",
+      "confirm": "Kurulum sihirbazını tekrar başlatmak istiyor musunuz? Mevcut ayarlarınız korunacak."
+    }
+  },
+  "titles": {
+    "newPlaceholder": "Yeni ünvan adı...",
+    "tableHeader": "Ünvan",
+    "searchPlaceholder": "Ünvanlarda ara...",
+    "csvFormat": "CSV formatı: <code>name</code> veya <code>unvan</code> sütunu",
+    "csvPlaceholder": "name\nMüdür\nÖğretmen\nMemur",
+    "noMatches": "Eşleşen ünvan bulunamadı",
+    "empty": "Henüz ünvan eklenmemiş",
+    "searchSummary": "{{matches}} / {{total}} sonuç",
+    "totalSummary": "Toplam {{total}} ünvan",
+    "filteredSummary": "{{matches}} / {{total}} ünvan listeleniyor"
+  },
+  "institutions": {
+    "namePlaceholder": "Kurum adı",
+    "addressPlaceholder": "Adres (opsiyonel)",
+    "phonePlaceholder": "Telefon (opsiyonel)",
+    "csvFormat": "CSV formatı: <code>name/kurum/kampus</code>, <code>address/adres</code>, <code>phone/telefon</code> sütunları",
+    "csvPlaceholder": "name,address,phone\nMerkez Kurum,İstanbul,02121234567",
+    "headers": {
+      "name": "Kurum",
+      "address": "Adres",
+      "phone": "Telefon"
+    },
+    "searchPlaceholder": "Kurumlarda ara...",
+    "noMatches": "Eşleşen kurum bulunamadı",
+    "empty": "Henüz kurum eklenmemiş",
+    "totalSummary": "Toplam {{total}} kurum",
+    "filteredSummary": "{{matches}} / {{total}} kurum listeleniyor"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Ayarlar sayfası üç sekmeden oluşur: <b>Genel</b>, <b>Ünvanlar</b> ve <b>Kurumlar</b>. Bu sekmelerden uygulamanın markasını ve Yeni Kullanıcı / imza akışında kullanılan referans verileri yönetirsiniz."
+        ]
+      },
+      {
+        "icon": "settings",
+        "heading": "Genel Sekmesi",
+        "paragraphs": [
+          "Firma adı, sidebar kısaltması, logo, e-posta bildirim gönderici adı, izin verilen giriş domaini ve uygulama dili buradan ayarlanır. Ayrıca Google Service Account ve Domain-Wide Delegation yapılandırması da bu sekmededir."
+        ],
+        "callout": { "tone": "info", "text": "Marka bilgileri değiştirildiğinde sidebar ve header <b>anında</b> güncellenir; aynı uygulama farklı kurumlara bu sekmeden uyarlanır." }
+      },
+      {
+        "icon": "tag",
+        "heading": "Ünvanlar Sekmesi",
+        "paragraphs": [
+          "Kullanıcılara atanabilecek unvan listesini (Müdür, Öğretmen vb.) buradan yönetir, CSV ile toplu içe aktarabilirsiniz. Tanımlı unvanlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{unvan}}</code> değişkeni olarak kullanılır."
+        ]
+      },
+      {
+        "icon": "building",
+        "heading": "Kurumlar Sekmesi",
+        "paragraphs": [
+          "Her kurumun adı, adresi ve telefonu burada tanımlanır. Tanımlanan kurumlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code>, <code>{{kurum_telefon}}</code> değişkenleri olarak görünür. CSV ile toplu içe aktarma desteklenir."
+        ],
+        "callout": { "tone": "info", "text": "<b>Kurumlar özelliği, birden çok şubesi veya kampüsü olan yapılar içindir.</b> Her şube/lokasyon ayrı bir kurum olarak tanımlanır; böylece her kullanıcının imzası kendi şubesinin bilgilerini taşır. Tek lokasyonlu firmalar tek bir kurum tanımlayabilir." }
+      }
+    ]
+  }
+}

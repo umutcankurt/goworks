@@ -1,0 +1,62 @@
+{
+  "pageTitle": "User Management",
+  "searchPlaceholder": "Search by name or email...",
+  "search": "Search",
+  "clear": "Clear",
+  "resultsTitle": "Search Results",
+  "loadedCount": "({{count}} users loaded)",
+  "loading": "Loading users...",
+  "promptSearch": "Search above to view users.",
+  "noResults": "No users matched your search.",
+  "loadFailed": "Failed to fetch users",
+  "table": {
+    "user": "User Info",
+    "email": "Email Address",
+    "status": "Status",
+    "action": "Action"
+  },
+  "status": {
+    "suspended": "Suspended",
+    "active": "Active",
+    "superAdmin": "Super Admin"
+  },
+  "viewDetails": "View Details",
+  "loadMore": "Load More ({{count}} loaded)",
+  "loadingShort": "Loading...",
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "The Users page lets you search and view accounts in the Google Workspace directory."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Search",
+        "paragraphs": ["You need to run a search before any list appears:"],
+        "bullets": [
+          { "term": "Query:", "desc": "Type part of a first name, last name or email address." },
+          { "term": "At least 3 characters:", "desc": "Shorter queries are not accepted." },
+          { "term": "Clear:", "desc": "Use the Clear button to reset the search results." }
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Results Table",
+        "bullets": [
+          { "term": "Columns:", "desc": "Name, email and account status (active / suspended) are shown." },
+          { "term": "Load More:", "desc": "Results are paginated; use the button below the list to load the next batch." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "User Detail",
+        "paragraphs": [
+          "Click a user row to open its detail page. From there you can edit the user, suspend the account, manage groups and assign a Gmail signature."
+        ]
+      }
+    ]
+  }
+}

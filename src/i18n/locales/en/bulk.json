@@ -1,0 +1,113 @@
+{
+  "csv": {
+    "dropzonePrompt": "Click or drag and drop",
+    "dropzoneActive": "Drop the CSV file here",
+    "dropzoneSubtitle": "CSV file",
+    "parsing": "Parsing..."
+  },
+  "title": "Bulk Operations",
+  "steps": {
+    "selectAction": "Select Action",
+    "uploadCsv": "Upload CSV",
+    "analysis": "Analysis",
+    "executing": "Execute"
+  },
+  "analyzing": "Analyzing CSV...",
+  "actions": {
+    "suspend": {
+      "label": "Suspend",
+      "description": "Suspends the selected users"
+    },
+    "delete": {
+      "label": "Delete",
+      "description": "Permanently deletes the selected users"
+    },
+    "signature_push": {
+      "label": "Push Signature",
+      "description": "Updates the Gmail signature and syncs the profile"
+    }
+  },
+  "actionSelector": {
+    "select": "Select"
+  },
+  "analysis": {
+    "back": "Back",
+    "title": "Analysis Result",
+    "totalRows": "Total Rows",
+    "validRows": "Valid",
+    "invalidRows": "Invalid",
+    "invalidTitle": "Invalid Rows ({{count}})",
+    "table": {
+      "row": "Row",
+      "email": "Email",
+      "field": "Field",
+      "error": "Error"
+    },
+    "cancelFix": "Cancel & Fix",
+    "continueWithSkip": "Skip Invalid & Continue ({{count}})",
+    "continue": "Continue ({{count}})",
+    "allInvalidTitle": "All rows are invalid"
+  },
+  "csvStep": {
+    "back": "Back",
+    "downloadTemplate": "Download CSV Template",
+    "templateLabel": "Signature Template:",
+    "selectTemplate": "-- Select template --",
+    "noTemplates": "No templates defined yet",
+    "defaultSuffix": " (Default)",
+    "missingColumns": "Missing columns: {{columns}}",
+    "csvEmpty": "CSV file is empty or invalid.",
+    "requiredColumns": "Required columns: {{columns}}",
+    "rowsLoadedTemplate": "Total <b>{{count}}</b> rows loaded (first 5 rows):",
+    "continue": "Continue"
+  },
+  "execution": {
+    "progressLabel": "Progress",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancel": "Cancel",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "processing": "Now processing: {{user}}",
+    "newOperation": "Start New Operation",
+    "errorReportCsv": "Error Report (CSV)",
+    "errorReportJson": "JSON"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "Bulk Operations lets you apply an action to many users at once from a CSV file: pushing Gmail signatures, suspending or permanently deleting accounts."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Step by Step",
+        "paragraphs": ["The page is a four-step wizard:"],
+        "bullets": [
+          { "term": "1. Select Action:", "desc": "Choose Push Signature, Suspend or Delete." },
+          { "term": "2. Upload CSV:", "desc": "Upload the CSV file containing the users to process." },
+          { "term": "3. Analysis:", "desc": "Valid and invalid rows are listed; you can skip invalid rows and continue." },
+          { "term": "4. Execute:", "desc": "The operation starts and progress is shown in real time." }
+        ]
+      },
+      {
+        "icon": "file",
+        "heading": "CSV Template",
+        "paragraphs": [
+          "Each action type has its own columns. Use the \"Download CSV Template\" button on the Upload step to download an empty file in the correct format and fill it in."
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Execution & Monitoring",
+        "paragraphs": [
+          "The operation becomes a background job; a progress bar, success/failure counters and the currently processed user are shown. Completed operations are listed on the Job History page, where an error report can be downloaded."
+        ],
+        "callout": { "tone": "warning", "text": "Operations are rate-limited to respect the Google API quota; large lists may take time. You can stop a run at any time with <b>Cancel</b>." }
+      }
+    ]
+  }
+}

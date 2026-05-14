@@ -1,0 +1,113 @@
+{
+  "csv": {
+    "dropzonePrompt": "Tıklayın veya sürükleyip bırakın",
+    "dropzoneActive": "CSV dosyasını buraya bırakın",
+    "dropzoneSubtitle": "CSV dosyası",
+    "parsing": "Ayrıştırılıyor..."
+  },
+  "title": "Toplu İşlemler",
+  "steps": {
+    "selectAction": "İşlem Seçimi",
+    "uploadCsv": "CSV Yükleme",
+    "analysis": "Analiz",
+    "executing": "Çalıştırma"
+  },
+  "analyzing": "CSV analiz ediliyor...",
+  "actions": {
+    "suspend": {
+      "label": "Askıya Al",
+      "description": "Seçili kullanıcıları askıya alır"
+    },
+    "delete": {
+      "label": "Sil",
+      "description": "Seçili kullanıcıları kalıcı olarak siler"
+    },
+    "signature_push": {
+      "label": "İmza Gönder",
+      "description": "Gmail imzasını günceller ve profili senkronize eder"
+    }
+  },
+  "actionSelector": {
+    "select": "Seç"
+  },
+  "analysis": {
+    "back": "Geri",
+    "title": "Analiz Sonucu",
+    "totalRows": "Toplam Satır",
+    "validRows": "Geçerli",
+    "invalidRows": "Hatalı",
+    "invalidTitle": "Hatalı Satırlar ({{count}})",
+    "table": {
+      "row": "Satır",
+      "email": "E-posta",
+      "field": "Alan",
+      "error": "Hata"
+    },
+    "cancelFix": "İptal Et & Düzelt",
+    "continueWithSkip": "Hatalıları Atla & Devam Et ({{count}})",
+    "continue": "Devam Et ({{count}})",
+    "allInvalidTitle": "Tüm satırlar hatalı"
+  },
+  "csvStep": {
+    "back": "Geri",
+    "downloadTemplate": "Şablon CSV İndir",
+    "templateLabel": "İmza Şablonu:",
+    "selectTemplate": "-- Şablon seçiniz --",
+    "noTemplates": "Henüz şablon tanımlanmamış",
+    "defaultSuffix": " (Varsayılan)",
+    "missingColumns": "Eksik kolonlar: {{columns}}",
+    "csvEmpty": "CSV dosyası boş veya geçersiz.",
+    "requiredColumns": "Gerekli kolonlar: {{columns}}",
+    "rowsLoadedTemplate": "Toplam <b>{{count}}</b> satır yüklendi (ilk 5 satır):",
+    "continue": "Devam Et"
+  },
+  "execution": {
+    "progressLabel": "İlerleme Durumu",
+    "succeeded": "Başarılı",
+    "failed": "Başarısız",
+    "cancel": "İptal Et",
+    "completed": "Tamamlandı",
+    "cancelled": "İptal Edildi",
+    "processing": "Şu an işleniyor: {{user}}",
+    "newOperation": "Yeni İşlem Başlat",
+    "errorReportCsv": "Hata Raporu (CSV)",
+    "errorReportJson": "JSON"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Toplu İşlemler, bir CSV dosyasından okunan çok sayıda kullanıcıya aynı anda işlem uygulamanızı sağlar: Gmail imzası gönderme, askıya alma veya kalıcı silme."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Adım Adım",
+        "paragraphs": ["Sayfa dört adımlı bir sihirbazdır:"],
+        "bullets": [
+          { "term": "1. İşlem Seçimi:", "desc": "İmza Gönder, Askıya Al veya Sil seçeneklerinden birini seçin." },
+          { "term": "2. CSV Yükleme:", "desc": "İşlenecek kullanıcıları içeren CSV dosyasını yükleyin." },
+          { "term": "3. Analiz:", "desc": "Geçerli ve hatalı satırlar listelenir; hatalıları atlayıp devam edebilirsiniz." },
+          { "term": "4. Çalıştırma:", "desc": "İşlem başlar ve ilerleme anlık olarak gösterilir." }
+        ]
+      },
+      {
+        "icon": "file",
+        "heading": "CSV Şablonu",
+        "paragraphs": [
+          "Her işlem türünün kendine özel sütunları vardır. CSV Yükleme adımındaki \"Şablon CSV İndir\" butonuyla doğru formatta boş bir dosya indirip doldurabilirsiniz."
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Çalıştırma ve İzleme",
+        "paragraphs": [
+          "İşlem bir arka plan görevine dönüşür; ilerleme çubuğu, başarılı/başarısız sayaçları ve o an işlenen kullanıcı gösterilir. Tamamlanan işlemler Görev Geçmişi sayfasında listelenir ve hata raporu indirilebilir."
+        ],
+        "callout": { "tone": "warning", "text": "İşlemler Google API kotasına uymak için hız sınırına tabidir; büyük listeler zaman alabilir. <b>İptal Et</b> ile işlemi istediğiniz an durdurabilirsiniz." }
+      }
+    ]
+  }
+}

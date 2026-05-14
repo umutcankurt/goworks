@@ -1,0 +1,141 @@
+{
+  "preview": {
+    "heading": "Canlı Önizleme",
+    "sample": {
+      "fullName": "Ahmet Yılmaz",
+      "title": "Bilgi Teknolojileri Müdürü",
+      "institutionName": "Merkez Kurum",
+      "institutionAddress": "İstanbul, Türkiye",
+      "institutionPhone": "0212 555 01 00",
+      "phone": "0212 555 02 03",
+      "emailLocalPart": "ahmet.yilmaz"
+    }
+  },
+  "media": {
+    "heading": "Medya Yönetimi",
+    "publicWarning": "Dosyanın herkese açık paylaşıma sahip olduğundan emin olun.",
+    "namePlaceholder": "Medya adı",
+    "drivePlaceholder": "Google Drive URL",
+    "copyUrl": "URL Kopyala",
+    "delete": "Sil"
+  },
+  "editor": {
+    "insertTagTitle": "{{value}} ekle",
+    "conditionalButton": "Koşullu Bölge",
+    "conditionalTitle": "Seçili metni koşullu bölge olarak işaretle — değişken boşsa gizlenir",
+    "conditionalSelectMetin": "Koşullu bölge eklemek için önce metin seçin.",
+    "conditionalDropdownLabel": "Hangi değişken boşsa gizlensin?",
+    "widthButton": "Genişlik Sınırı",
+    "widthTitle": "Cursor'daki etiketin maks. genişliğini ayarla (px)",
+    "widthAlertCursor": "Genişlik sınırı eklemek için cursor'ı bir {{etiket}} içine koyun.",
+    "widthLabel": "{{tag}} maks. genişliği",
+    "widthApply": "Uygula",
+    "widthRemove": "Genişlik sınırını kaldır"
+  },
+  "list": {
+    "title": "İmza Yönetimi",
+    "newTemplate": "Yeni Şablon",
+    "empty": "Henüz şablon yok",
+    "setDefault": "Varsayılan yap",
+    "delete": "Sil",
+    "saveButton": "Kaydet",
+    "updateButton": "Güncelle",
+    "templateNamePlaceholder": "Şablon adı",
+    "mediaUnsavedNote": "Medya yönetimi için önce şablonu kaydedin.",
+    "unsavedConfirm": "Kaydedilmemiş değişiklikler var. Devam etmek istiyor musunuz?",
+    "deleteConfirm": "\"{{name}}\" silinecek. Bağlı tüm medya dosyaları da silinir. Devam etmek istiyor musunuz?"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "eye",
+        "heading": "Genel Kullanım",
+        "paragraphs": [
+          "Sayfa üç panelden oluşur: sol panelde şablon listesi, ortada HTML editörü, sağda canlı önizleme. Yaptığınız her değişiklik sağ panelde anında görüntülenir."
+        ],
+        "bullets": [
+          { "term": "Yeni Şablon:", "desc": "Sol paneldeki \"Yeni Şablon\" butonuna tıklayın, şablon adı ve HTML içeriği girin, \"Kaydet\" butonuna basın." },
+          { "term": "Düzenleme:", "desc": "Sol panelden mevcut bir şablona tıklayarak düzenleyebilirsiniz." },
+          { "term": "Varsayılan Şablon:", "desc": "Yıldız ikonuyla bir şablonu varsayılan olarak işaretleyebilirsiniz. Yeni kullanıcı oluşturma ve tekli imza atama gibi işlemlerde bu şablon otomatik seçili gelir." },
+          { "term": "Medya:", "desc": "Şablon kaydedildikten sonra Google Drive URL'leri ile medya dosyaları ekleyebilirsiniz." }
+        ],
+        "callout": {
+          "tone": "tip",
+          "text": "İmzaların zamanla güncel kalıp kalmadığını topluca kontrol etmek için <b>İmza Denetimi</b> sayfasını kullanın — kişilerin imzasını sistemdeki güncel veriyle karşılaştırıp sapanları toplu günceller."
+        }
+      },
+      {
+        "icon": "code",
+        "heading": "HTML Şablon Yapısı",
+        "paragraphs": [
+          "E-posta imzaları birçok farklı istemcide (Gmail, Outlook, Apple Mail vb.) görüntüleneceği için bazı kurallara dikkat etmek gerekir:"
+        ],
+        "bullets": [
+          { "term": "Tablo tabanlı düzen", "desc": "kullanın — <code>table</code> etiketiyle kurulan düzenler tüm istemcilerde en tutarlı sonucu verir." },
+          { "term": "Satır içi CSS", "desc": "kullanın — <code>style</code> özniteliğiyle yazın. Harici CSS veya stil blokları desteklenmez." },
+          { "term": "Görseller için", "desc": "mutlaka <code>width</code> ve <code>height</code> değerlerini belirtin." }
+        ],
+        "callout": { "tone": "info", "text": "<b>İzin verilen etiketler:</b> table, tr, td, th, img, a, br, p, div, span, b, i, u, strong, em, font, hr" }
+      },
+      {
+        "icon": "layers",
+        "heading": "Değişken Etiketleri",
+        "paragraphs": [
+          "Çift süslü parantez ile değişken yerleştirebilirsiniz. İmza uygulandığında bu değişkenler her kullanıcı için Google Admin verilerinden otomatik doldurulur."
+        ],
+        "table": {
+          "columns": ["Değişken", "Açıklama"],
+          "rows": [
+            ["<code>{{ad_soyad}}</code>", "Kullanıcının adı ve soyadı"],
+            ["<code>{{unvan}}</code>", "Ünvan (Müdür, Öğretmen vb.)"],
+            ["<code>{{kurum_adi}}</code>", "Kurum adı"],
+            ["<code>{{kurum_adres}}</code>", "Kurum adresi"],
+            ["<code>{{kurum_telefon}}</code>", "Kurum telefon numarası"],
+            ["<code>{{telefon}}</code>", "Kullanıcının kişisel telefonu"],
+            ["<code>{{eposta}}</code>", "E-posta adresi"]
+          ]
+        }
+      },
+      {
+        "icon": "eye",
+        "heading": "Koşullu Bölge",
+        "badge": "data-condition",
+        "paragraphs": [
+          "Bir değişken boşsa ilgili HTML elemanını tamamen gizleyebilirsiniz. Örneğin telefon numarası olmayan kullanıcılarda telefon satırı görünmez."
+        ],
+        "code": [
+          { "label": "Tek koşul:", "content": "<tr data-condition=\"telefon\">\n  <td>Tel:</td>\n  <td>{{telefon}}</td>\n</tr>", "note": "telefon boşsa bu satır tamamen kaldırılır." },
+          { "label": "Çoklu koşul (virgülle ayırın):", "content": "<span data-condition=\"telefon,unvan\">\n  {{unvan}} | {{telefon}}\n</span>", "note": "Hem telefon hem unvan boşsa gizlenir. Biri doluysa görünür kalır." }
+        ],
+        "callout": { "tone": "warning", "text": "Editördeki turuncu renkli \"Koşullu Bölge\" butonuyla metin seçip kolayca ekleyebilirsiniz." }
+      },
+      {
+        "icon": "ruler",
+        "heading": "Genişlik Sınırı",
+        "badge": "max-width",
+        "paragraphs": [
+          "Uzun metinlerin (özellikle adresler) imza düzenini bozmasını önlemek için genişlik sınırı ekleyebilirsiniz."
+        ],
+        "code": [
+          { "label": "Kullanım:", "content": "{{kurum_adres|max-width:350}}", "note": "Adres metni en fazla 350px genişliğinde gösterilir, uzun metin alt satıra geçer." }
+        ],
+        "bullets": [
+          { "desc": "Değer aralığı: 50 – 1000 piksel." },
+          { "desc": "Türkçe adres kısaltmaları (Mah., Sk., Cad., No: vb.) otomatik olarak korunur — kısaltma öncesinde satır kırılmaz." },
+          { "desc": "Herhangi bir değişkene uygulanabilir, ancak en çok <code>kurum_adres</code> için faydalıdır." }
+        ],
+        "callout": { "tone": "tip", "text": "Editördeki turkuaz renkli \"Genişlik Sınırı\" butonuyla imleci bir değişkenin içine konumlandırıp kolayca ekleyebilirsiniz." }
+      },
+      {
+        "icon": "code",
+        "heading": "Örnek Şablon",
+        "paragraphs": [
+          "Aşağıdaki şablon logo, koşullu ünvan/telefon satırları ve genişlik sınırlı adres kullanımının bir arada nasıl çalıştığını gösterir:"
+        ],
+        "code": [
+          { "content": "<table style=\"font-family:Arial,sans-serif;font-size:13px;color:#333;\">\n  <tr>\n    <td style=\"padding-right:12px;border-right:2px solid #0066cc;\">\n      <img src=\"LOGO_URL\" width=\"80\" height=\"80\" />\n    </td>\n    <td style=\"padding-left:12px;\">\n      <strong>{{ad_soyad}}</strong><br/>\n      <span data-condition=\"unvan\" style=\"color:#555;\">\n        {{unvan}}<br/>\n      </span>\n      {{kurum_adi}}<br/>\n      <span data-condition=\"telefon\">\n        Tel: {{telefon}}<br/>\n      </span>\n      {{eposta}}<br/>\n      <span data-condition=\"kurum_adres\" style=\"color:#888;font-size:11px;\">\n        {{kurum_adres|max-width:350}}\n      </span>\n    </td>\n  </tr>\n</table>" }
+        ]
+      }
+    ]
+  }
+}

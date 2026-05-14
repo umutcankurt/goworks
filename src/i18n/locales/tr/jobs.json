@@ -1,0 +1,111 @@
+{
+  "history": {
+    "title": "Görev Geçmişi",
+    "subtitle": "Tüm yöneticiler tarafından çalıştırılan toplu işlemlerin geçmişi",
+    "filters": {
+      "allStatuses": "Tüm Durumlar",
+      "allTypes": "Tüm Türler",
+      "creatorPlaceholder": "Oluşturana göre filtrele...",
+      "perPage": "{{count}} / sayfa",
+      "totalJobs": "Toplam {{count}} görev"
+    },
+    "empty": "Henüz görev bulunamadı.",
+    "table": {
+      "type": "Tür",
+      "creator": "Oluşturan",
+      "startedAt": "Başlangıç",
+      "completedAt": "Bitiş",
+      "total": "Toplam",
+      "succeeded": "Başarılı",
+      "failed": "Başarısız",
+      "status": "Durum",
+      "report": "Rapor"
+    },
+    "downloadErrorReport": "Hata raporunu indir",
+    "pagination": "Sayfa {{page}} / {{total}}"
+  },
+  "types": {
+    "BULK_SIGNATURE_PUSH": "Toplu İmza",
+    "BULK_SUSPEND": "Toplu Askıya Alma",
+    "BULK_DELETE": "Toplu Silme",
+    "SIGNATURE_AUDIT": "İmza Denetimi"
+  },
+  "status": {
+    "COMPLETED": "Tamamlandı",
+    "FAILED": "Başarısız",
+    "CANCELLED": "İptal Edildi",
+    "RUNNING": "Çalışıyor",
+    "PENDING": "Bekliyor"
+  },
+  "detail": {
+    "metadata": {
+      "creator": "Oluşturan",
+      "startedAt": "Başlangıç",
+      "completedAt": "Bitiş",
+      "duration": "Süre"
+    },
+    "summary": {
+      "total": "Toplam",
+      "succeeded": "Başarılı",
+      "failed": "Başarısız"
+    },
+    "tabs": {
+      "succeeded": "Başarılı ({{count}})",
+      "failed": "Başarısız ({{count}})"
+    },
+    "noSucceeded": "Başarılı kullanıcı bulunmuyor.",
+    "noSuccessDetails": "Bu görev için detaylı başarı listesi mevcut değil.",
+    "noFailed": "Başarısız kullanıcı bulunmuyor.",
+    "errorReportCsv": "Hata Raporu (CSV)",
+    "errorReportJson": "JSON",
+    "downloadCsv": "CSV İndir",
+    "csvHeaders": {
+      "email": "E-posta",
+      "error": "Hata"
+    },
+    "duration": {
+      "hours": "{{h}}sa {{m}}dk",
+      "minutes": "{{m}}dk {{s}}sn",
+      "seconds": "{{s}}sn"
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "Görev Geçmişi, tüm yöneticiler tarafından çalıştırılmış ve çalışmakta olan toplu işlemleri tek listede toplar.",
+          "Toplu imza, askıya alma, silme işlemlerinin yanı sıra <b>İmza Denetimi</b> taramaları da burada job olarak görünür."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Filtreler",
+        "paragraphs": [
+          "Listeyi daraltmak için durum, tür, oluşturan kişi ve sayfa başına kayıt sayısı filtrelerini kullanabilirsiniz."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Durumlar",
+        "bullets": [
+          { "term": "Çalışıyor:", "desc": "Görev şu anda devam ediyor." },
+          { "term": "Tamamlandı:", "desc": "Görev başarıyla bitti." },
+          { "term": "Başarısız:", "desc": "Görev bir hatayla sonlandı." },
+          { "term": "İptal Edildi:", "desc": "Görev kullanıcı tarafından durduruldu." }
+        ]
+      },
+      {
+        "icon": "file",
+        "heading": "Detay, Rapor ve İptal",
+        "bullets": [
+          { "term": "Detay:", "desc": "Bir göreve tıklayarak başarılı/başarısız kullanıcı listesini görebilirsiniz." },
+          { "term": "Hata Raporu:", "desc": "Başarısız satırları CSV veya JSON olarak indirebilirsiniz." },
+          { "term": "İptal:", "desc": "Hâlâ çalışan bir görevi durdurabilirsiniz." }
+        ],
+        "callout": { "tone": "info", "text": "Uygulama kapanır veya çökerse, açılışta yarım kalan görevler <b>kaldıkları yerden otomatik devam eder</b>." }
+      }
+    ]
+  }
+}

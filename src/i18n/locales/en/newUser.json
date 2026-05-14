@@ -1,0 +1,150 @@
+{
+  "createdModal": {
+    "title": "User Created Successfully",
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "jobTitle": "Title",
+      "institution": "Institution",
+      "password": "Password"
+    },
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "copy": "Copy",
+    "groups": "Groups",
+    "moreGroups": "+{{count}} more",
+    "signature": "Signature",
+    "signatureStatus": {
+      "pending": "Pending...",
+      "success": "Created successfully",
+      "failed": "Failed to send",
+      "skipped": "Skipped"
+    },
+    "close": "Close",
+    "edit": "Edit"
+  },
+  "title": "Create New User",
+  "subtitle": "Add a new user account to Google Workspace.",
+  "loading": "Loading data...",
+  "sections": {
+    "personal": "Personal Info",
+    "account": "Account Info",
+    "contact": "Contact & Organization Info",
+    "groups": "Group Management",
+    "signature": "Standard Email Signature"
+  },
+  "fields": {
+    "firstName": "First Name",
+    "firstNamePlaceholder": "John",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "DOE",
+    "email": "Email Address",
+    "emailPlaceholder": "first.last",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "forceChange": "Require password change at next sign-in",
+    "orgUnit": "Org Unit (OU)",
+    "rootOrg": "/ (Root Organization)",
+    "phone": "Phone Number",
+    "phonePlaceholder": "90 5XX XXX XX XX",
+    "jobTitle": "Title",
+    "jobTitleSearch": "Search title...",
+    "jobTitleEmpty": "No matching title.",
+    "institution": "Institution / Branch",
+    "institutionSearch": "Search institution...",
+    "institutionEmpty": "No matching institution."
+  },
+  "email": {
+    "checking": "Checking...",
+    "taken": "This email is already in use!",
+    "available": "This email is available."
+  },
+  "groupsHelper": "Select groups to add the user to after creation.",
+  "signatureSection": {
+    "description": "After the user is created, the selected signature is applied in the background.",
+    "toggle": "Apply Signature",
+    "templateLabel": "Signature Template",
+    "defaultSuffix": "(Default)",
+    "preview": "Preview",
+    "noTemplates": "No signature templates registered.",
+    "saMissingTitle": "Service Account not configured",
+    "saMissingHelp": "Configure the Service Account in Settings to use this feature."
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "submit": "Create User",
+    "submitting": "Creating..."
+  },
+  "errors": {
+    "firstNameRequired": "First name is required.",
+    "lastNameRequired": "Last name is required.",
+    "usernameRequired": "Email username is required.",
+    "usernameInvalid": "Username can contain only letters, numbers, dot, dash, and underscore.",
+    "usernameChecking": "Email is being checked, please wait.",
+    "usernameTaken": "This email is already in use.",
+    "passwordRequired": "Password is required.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "phoneInvalid": "Please enter a valid phone number. (e.g. 90 532 123 45 67 or 90 212 599 83 00)",
+    "loadFailed": "Failed to load data: {{error}}",
+    "createFailed": "Could not create user.",
+    "unexpected": "An unexpected error occurred."
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "This page creates a new Google Workspace user. It collects personal info, account info, institution/title/phone, email signature and group assignment in a single form. When the form is submitted, the account is created directly in Google Workspace."
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Personal & Account Info",
+        "bullets": [
+          { "term": "First / Last Name:", "desc": "Forms the name shown on the user's Google profile." },
+          { "term": "Email:", "desc": "The username and domain combine to form the sign-in email address." },
+          { "term": "Password:", "desc": "The initial sign-in password; the user can optionally be forced to change it at first sign-in." },
+          { "term": "Org Unit (OU):", "desc": "The organizational unit the user is placed in." }
+        ]
+      },
+      {
+        "icon": "building",
+        "heading": "Institution",
+        "paragraphs": [
+          "An institution is the branch or location where the user works. The selected institution's name, address and phone are written to the user's organization info in Google.",
+          "These values are used in the email signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables — so the user's signature automatically carries the correct branch details."
+        ],
+        "callout": { "tone": "info", "text": "Institutions are managed under <b>Settings → Institutions</b>. This feature is meant for <b>organizations with multiple branches or campuses</b>; each branch is defined as a separate institution with its own name, address and phone. Single-location companies can define just one institution." }
+      },
+      {
+        "icon": "tag",
+        "heading": "Title",
+        "paragraphs": [
+          "The title is the user's role (Manager, Teacher, Specialist, etc.). It is written to the user's \"Job title\" field in Google and appears in the email signature as the <code>{{unvan}}</code> variable."
+        ],
+        "callout": { "tone": "info", "text": "The title list is managed under <b>Settings → Titles</b>; you can add new titles there or bulk-import them via CSV." }
+      },
+      {
+        "icon": "phone",
+        "heading": "Phone",
+        "paragraphs": [
+          "The phone number is written to the user's phone field in Google and used in the email signature as the <code>{{telefon}}</code> variable. The number is formatted automatically as you type."
+        ],
+        "callout": { "tone": "tip", "text": "Phone is optional. If left blank, the conditional phone row in the signature template is hidden automatically for that user." }
+      },
+      {
+        "icon": "mail",
+        "heading": "Signature & Groups",
+        "bullets": [
+          { "term": "Email Signature:", "desc": "When you select a signature template, the Gmail signature is applied automatically in the background after the user is created." },
+          { "term": "Groups:", "desc": "You can add the user to one or more Google groups during creation." }
+        ],
+        "callout": { "tone": "warning", "text": "A Service Account must be configured for signature delivery. If it is not configured, the signature step is skipped." }
+      }
+    ]
+  }
+}

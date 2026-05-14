@@ -1,0 +1,188 @@
+{
+  "header": {
+    "appTitle": "GoWorks",
+    "appSubtitle": "Command-center setup"
+  },
+  "stepNav": {
+    "welcome": "Welcome",
+    "branding": "Company details",
+    "cloud": "Google Cloud project",
+    "serviceAccount": "Service Account",
+    "adminLogin": "Admin sign-in",
+    "dwd": "Domain-Wide Delegation",
+    "completion": "Ready"
+  },
+  "footer": {
+    "back": "Back",
+    "next": "Continue",
+    "stepCounter": "STEP {{current}} / {{total}}"
+  },
+  "welcome": {
+    "eyebrow": "Welcome",
+    "title": "Let's set up your command center",
+    "subtitle": "GoWorks lets you manage Google Workspace from a single panel. We'll need three things below.",
+    "cards": {
+      "admin": {
+        "title": "Workspace Super Admin",
+        "body": "An account with full admin access is required to authorize the service account."
+      },
+      "cloud": {
+        "title": "Google Cloud project",
+        "body": "We'll open a Cloud project to create a Service Account and enable Workspace APIs."
+      },
+      "duration": {
+        "title": "5–10 minutes",
+        "body": "You can pause between steps any time; your progress is saved."
+      }
+    },
+    "cta": "Begin setup"
+  },
+  "branding": {
+    "title": "Introduce your organization",
+    "subtitle": "These details power the header, sidebar, and outgoing emails. The preview on the right updates with every keystroke.",
+    "fields": {
+      "companyName": {
+        "label": "Company name",
+        "placeholder": "e.g. Acme Inc.",
+        "hint": "Appears in the sidebar header and as the email sender label."
+      },
+      "sidebarAbbr": {
+        "label": "Sidebar abbreviation",
+        "hint": "If left empty, it is generated from the company name initials. Preview: {{preview}}"
+      },
+      "allowedDomain": {
+        "label": "Allowed email domain",
+        "placeholder": "acme.com",
+        "hint": "Only Google accounts ending with this domain may sign in."
+      },
+      "emailSenderName": {
+        "label": "Email sender name",
+        "placeholder": "GoWorks",
+        "hint": "Sender label used on bulk-job notification emails."
+      }
+    },
+    "logo": {
+      "title": "Logo",
+      "upload": "Upload logo",
+      "replace": "Replace logo",
+      "delete": "Delete",
+      "hint": "PNG / JPG / SVG / WEBP, max 1 MB",
+      "uploaded": "Logo uploaded",
+      "uploadFailed": "Logo upload failed",
+      "tooLarge": "Logo file exceeds the 1 MB limit",
+      "invalidFormat": "Only PNG, JPG, SVG or WEBP are allowed",
+      "confirmDelete": "Are you sure you want to delete the logo?"
+    },
+    "preview": {
+      "title": "Live preview",
+      "live": "LIVE",
+      "placeholderCompany": "Acme Inc.",
+      "placeholderDomain": "acme.com",
+      "loginEyebrow": "SIGN IN",
+      "loginTitle": "{{company}}",
+      "googleCta": "Sign in with Google"
+    }
+  },
+  "cloud": {
+    "title": "Create a Google Cloud project",
+    "subtitle": "The Service Account and API permissions will live here. You can either create a new project or use an existing one.",
+    "instructions": [
+      {
+        "title": "Open Cloud Console",
+        "body": "Go to console.cloud.google.com and sign in with your super-admin account."
+      },
+      {
+        "title": "Create a new project",
+        "body": "Use the project picker at the top → \"New project\" → name it for GoWorks."
+      },
+      {
+        "title": "Enable APIs",
+        "body": "Search for and enable the four APIs listed on the right one by one."
+      },
+      {
+        "title": "Ready for the next step",
+        "body": "Once the APIs are enabled, you can move on to the Service Account step."
+      }
+    ],
+    "apisTitle": "APIs to enable (4)",
+    "apis": [
+      "Admin SDK API",
+      "Gmail API",
+      "Groups Settings API",
+      "Reports API (Audit)"
+    ],
+    "openConsole": "Open Cloud Console",
+    "tip": "Tip: type the full API name in the search box — multiple APIs share similar prefixes."
+  },
+  "serviceAccount": {
+    "title": "Service Account key",
+    "subtitle": "Create a Service Account in your Cloud project, download the JSON key, and upload it below. The key is stored locally on this device.",
+    "dropzoneTitle": "Drop the JSON key here or click to browse",
+    "dropzoneHint": "service-account-abc.json format, max 4 KB",
+    "configured": "Service Account configured",
+    "delete": "Remove",
+    "uploading": "Uploading...",
+    "checking": "Checking...",
+    "confirmDelete": "Are you sure you want to delete the Service Account key?",
+    "guideHint": "If you haven't created the JSON yet: Cloud Console → IAM → Service Accounts → create new → \"Keys\" tab → add JSON-format key.",
+    "errors": {
+      "notJson": "Please choose a .json Service Account key file",
+      "uploadFailed": "Upload failed: {{error}}"
+    },
+    "toast": {
+      "uploaded": "Service Account uploaded",
+      "deleted": "Service Account removed"
+    }
+  },
+  "dwd": {
+    "title": "Domain-Wide Delegation",
+    "subtitle": "Authorize the Service Account in Admin Console with the Client ID and scope list below so it can act on behalf of admins.",
+    "clientIdLabel": "Client ID",
+    "clientIdMissing": "Upload the Service Account JSON first to display its Client ID.",
+    "scopesLabel": "OAuth scopes (8)",
+    "copy": "Copy",
+    "copyAll": "Copy all",
+    "copied": "Copied",
+    "openConsole": "Admin Console → Domain-wide delegation",
+    "instructions": "In Admin Console go to \"API controls\" → \"Domain-wide delegation\" → \"Add new\", paste the Client ID, and provide the OAuth scopes as a comma-separated single line.",
+    "testButton": "Test DWD connection",
+    "testing": "Testing...",
+    "testSuccess": "All scopes verified (as {{adminEmail}})",
+    "testFail": "DWD verification failed: {{error}}",
+    "testFailHelp": "Could not read admin.directory.user as {{adminEmail}}. Re-check the Client ID and scope list in Admin Console.",
+    "skip": "Skip DWD for now",
+    "skipConfirm": "Continue without configuring DWD? Gmail signature push won't work — you can finish setup later from Settings."
+  },
+  "adminLogin": {
+    "title": "Admin sign-in",
+    "subtitle": "Sign in with your super-admin Google account. We'll test Domain-Wide Delegation in the next step.",
+    "checklist": [
+      "Company details captured",
+      "Google Cloud project & APIs ready",
+      "Service Account key uploaded"
+    ],
+    "googleCta": "Sign in as admin with Google",
+    "loginInProgress": "Google window opened in your browser...",
+    "loginFailed": "Sign-in failed: {{error}}",
+    "footnote": "OAuth will open in your browser."
+  },
+  "completion": {
+    "title": "You're ready to go!",
+    "subtitle": "Pre-setup is complete. You can now start using the GoWorks panel.",
+    "checklistHeading": "Completed",
+    "items": [
+      "Company details saved",
+      "Google Cloud project ready",
+      "Service Account key uploaded",
+      "Admin sign-in completed",
+      "Domain-Wide Delegation verified"
+    ],
+    "cta": "Continue to App",
+    "resetNote": "You can re-run the wizard any time from Settings → General."
+  },
+  "errors": {
+    "needServiceAccount": "Upload the Service Account JSON key first.",
+    "needBranding": "Fill in the company name and allowed domain before continuing.",
+    "needDwdTest": "Run the DWD test successfully before continuing."
+  }
+}

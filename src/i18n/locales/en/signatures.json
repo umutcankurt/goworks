@@ -1,0 +1,141 @@
+{
+  "preview": {
+    "heading": "Live Preview",
+    "sample": {
+      "fullName": "John Smith",
+      "title": "IT Manager",
+      "institutionName": "Head Office",
+      "institutionAddress": "New York, USA",
+      "institutionPhone": "+1 555 010 2000",
+      "phone": "+1 555 867 5309",
+      "emailLocalPart": "john.smith"
+    }
+  },
+  "media": {
+    "heading": "Media Management",
+    "publicWarning": "Make sure the file is publicly shared.",
+    "namePlaceholder": "Media name",
+    "drivePlaceholder": "Google Drive URL",
+    "copyUrl": "Copy URL",
+    "delete": "Delete"
+  },
+  "editor": {
+    "insertTagTitle": "Insert {{value}}",
+    "conditionalButton": "Conditional Block",
+    "conditionalTitle": "Mark selected text as conditional — hidden if variable is empty",
+    "conditionalSelectMetin": "Select text first to add a conditional block.",
+    "conditionalDropdownLabel": "Hide when which variable is empty?",
+    "widthButton": "Width Limit",
+    "widthTitle": "Set max width of tag at cursor (px)",
+    "widthAlertCursor": "Place the cursor inside a {{tag}} to set width limit.",
+    "widthLabel": "{{tag}} max width",
+    "widthApply": "Apply",
+    "widthRemove": "Remove width limit"
+  },
+  "list": {
+    "title": "Signature Management",
+    "newTemplate": "New Template",
+    "empty": "No templates yet",
+    "setDefault": "Set as default",
+    "delete": "Delete",
+    "saveButton": "Save",
+    "updateButton": "Update",
+    "templateNamePlaceholder": "Template name",
+    "mediaUnsavedNote": "Save the template first to manage media.",
+    "unsavedConfirm": "You have unsaved changes. Continue?",
+    "deleteConfirm": "\"{{name}}\" will be deleted along with its media files. Continue?"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "eye",
+        "heading": "Overview",
+        "paragraphs": [
+          "The page has three panels: template list on the left, HTML editor in the middle, live preview on the right. Each change is reflected instantly in the preview."
+        ],
+        "bullets": [
+          { "term": "New Template:", "desc": "Click \"New Template\" on the left panel, enter a name and HTML content, then click \"Save\"." },
+          { "term": "Edit:", "desc": "Click an existing template on the left panel to edit it." },
+          { "term": "Default Template:", "desc": "Mark a template as default with the star icon. It is auto-selected when creating users or assigning a single signature." },
+          { "term": "Media:", "desc": "After saving the template you can add media files via Google Drive URLs." }
+        ],
+        "callout": {
+          "tone": "tip",
+          "text": "To check in bulk whether signatures stay up to date over time, use the <b>Signature Audit</b> page — it compares people's signatures against current system data and bulk-updates the ones that drifted."
+        }
+      },
+      {
+        "icon": "code",
+        "heading": "HTML Template Structure",
+        "paragraphs": [
+          "Email signatures render across many clients (Gmail, Outlook, Apple Mail, etc.), so a few rules apply:"
+        ],
+        "bullets": [
+          { "term": "Table-based layout", "desc": "— layouts built with the <code>table</code> tag give the most consistent results across all clients." },
+          { "term": "Inline CSS", "desc": "— write styles with the <code>style</code> attribute. External CSS or style blocks are not supported." },
+          { "term": "For images", "desc": "always set the <code>width</code> and <code>height</code> values." }
+        ],
+        "callout": { "tone": "info", "text": "<b>Allowed tags:</b> table, tr, td, th, img, a, br, p, div, span, b, i, u, strong, em, font, hr" }
+      },
+      {
+        "icon": "layers",
+        "heading": "Variable Tags",
+        "paragraphs": [
+          "Insert variables with double curly braces. They are filled per user from Google Admin data when the signature is applied."
+        ],
+        "table": {
+          "columns": ["Variable", "Description"],
+          "rows": [
+            ["<code>{{full_name}}</code>", "User full name"],
+            ["<code>{{title}}</code>", "Job title (Manager, Teacher, etc.)"],
+            ["<code>{{institution_name}}</code>", "Institution name"],
+            ["<code>{{institution_address}}</code>", "Institution address"],
+            ["<code>{{institution_phone}}</code>", "Institution phone number"],
+            ["<code>{{phone}}</code>", "User personal phone"],
+            ["<code>{{email}}</code>", "Email address"]
+          ]
+        }
+      },
+      {
+        "icon": "eye",
+        "heading": "Conditional Block",
+        "badge": "data-condition",
+        "paragraphs": [
+          "Hide an HTML element entirely when a variable is empty. For example, a phone row is hidden for users without a phone number."
+        ],
+        "code": [
+          { "label": "Single condition:", "content": "<tr data-condition=\"phone\">\n  <td>Tel:</td>\n  <td>{{phone}}</td>\n</tr>", "note": "If phone is empty this row is removed entirely." },
+          { "label": "Multiple conditions (comma-separated):", "content": "<span data-condition=\"phone,title\">\n  {{title}} | {{phone}}\n</span>", "note": "Hidden only when both phone and title are empty. Visible if any one is set." }
+        ],
+        "callout": { "tone": "warning", "text": "Use the orange \"Conditional Block\" button in the editor to wrap selected text easily." }
+      },
+      {
+        "icon": "ruler",
+        "heading": "Width Limit",
+        "badge": "max-width",
+        "paragraphs": [
+          "Add a width limit to prevent long text (especially addresses) from breaking the signature layout."
+        ],
+        "code": [
+          { "label": "Usage:", "content": "{{institution_address|max-width:350}}", "note": "The address text is shown at most 350px wide; long text wraps to a new line." }
+        ],
+        "bullets": [
+          { "desc": "Range: 50 – 1000 pixels." },
+          { "desc": "Turkish address abbreviations (Mah., Sk., Cad., No:, etc.) are auto-protected — no line break before them." },
+          { "desc": "Can be applied to any variable, but is most useful for <code>institution_address</code>." }
+        ],
+        "callout": { "tone": "tip", "text": "Use the teal \"Width Limit\" button in the editor by placing the cursor inside a variable." }
+      },
+      {
+        "icon": "code",
+        "heading": "Example Template",
+        "paragraphs": [
+          "The template below shows how a logo, conditional title/phone rows and a width-limited address work together:"
+        ],
+        "code": [
+          { "content": "<table style=\"font-family:Arial,sans-serif;font-size:13px;color:#333;\">\n  <tr>\n    <td style=\"padding-right:12px;border-right:2px solid #0066cc;\">\n      <img src=\"LOGO_URL\" width=\"80\" height=\"80\" />\n    </td>\n    <td style=\"padding-left:12px;\">\n      <strong>{{full_name}}</strong><br/>\n      <span data-condition=\"title\" style=\"color:#555;\">\n        {{title}}<br/>\n      </span>\n      {{institution_name}}<br/>\n      <span data-condition=\"phone\">\n        Tel: {{phone}}<br/>\n      </span>\n      {{email}}<br/>\n      <span data-condition=\"institution_address\" style=\"color:#888;font-size:11px;\">\n        {{institution_address|max-width:350}}\n      </span>\n    </td>\n  </tr>\n</table>" }
+        ]
+      }
+    ]
+  }
+}

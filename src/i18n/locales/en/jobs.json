@@ -1,0 +1,111 @@
+{
+  "history": {
+    "title": "Job History",
+    "subtitle": "History of bulk operations executed by all administrators",
+    "filters": {
+      "allStatuses": "All Statuses",
+      "allTypes": "All Types",
+      "creatorPlaceholder": "Filter by creator...",
+      "perPage": "{{count}} / page",
+      "totalJobs": "Total {{count}} jobs"
+    },
+    "empty": "No jobs found yet.",
+    "table": {
+      "type": "Type",
+      "creator": "Creator",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "total": "Total",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "status": "Status",
+      "report": "Report"
+    },
+    "downloadErrorReport": "Download error report",
+    "pagination": "Page {{page}} / {{total}}"
+  },
+  "types": {
+    "BULK_SIGNATURE_PUSH": "Bulk Signature",
+    "BULK_SUSPEND": "Bulk Suspend",
+    "BULK_DELETE": "Bulk Delete",
+    "SIGNATURE_AUDIT": "Signature Audit"
+  },
+  "status": {
+    "COMPLETED": "Completed",
+    "FAILED": "Failed",
+    "CANCELLED": "Cancelled",
+    "RUNNING": "Running",
+    "PENDING": "Pending"
+  },
+  "detail": {
+    "metadata": {
+      "creator": "Creator",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "duration": "Duration"
+    },
+    "summary": {
+      "total": "Total",
+      "succeeded": "Succeeded",
+      "failed": "Failed"
+    },
+    "tabs": {
+      "succeeded": "Succeeded ({{count}})",
+      "failed": "Failed ({{count}})"
+    },
+    "noSucceeded": "No succeeded users.",
+    "noSuccessDetails": "Detailed success list is not available for this job.",
+    "noFailed": "No failed users.",
+    "errorReportCsv": "Error Report (CSV)",
+    "errorReportJson": "JSON",
+    "downloadCsv": "Download CSV",
+    "csvHeaders": {
+      "email": "Email",
+      "error": "Error"
+    },
+    "duration": {
+      "hours": "{{h}}h {{m}}m",
+      "minutes": "{{m}}m {{s}}s",
+      "seconds": "{{s}}s"
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "Job History collects all bulk operations — both finished and currently running — executed by every administrator into a single list.",
+          "Besides bulk signature, suspend and delete operations, <b>Signature Audit</b> scans also appear here as jobs."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Filters",
+        "paragraphs": [
+          "Use the status, type, creator and per-page filters to narrow down the list."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Statuses",
+        "bullets": [
+          { "term": "Running:", "desc": "The job is currently in progress." },
+          { "term": "Completed:", "desc": "The job finished successfully." },
+          { "term": "Failed:", "desc": "The job ended with an error." },
+          { "term": "Cancelled:", "desc": "The job was stopped by the user." }
+        ]
+      },
+      {
+        "icon": "file",
+        "heading": "Detail, Report & Cancel",
+        "bullets": [
+          { "term": "Detail:", "desc": "Click a job to see its succeeded/failed user lists." },
+          { "term": "Error Report:", "desc": "Download the failed rows as CSV or JSON." },
+          { "term": "Cancel:", "desc": "Stop a job that is still running." }
+        ],
+        "callout": { "tone": "info", "text": "If the app closes or crashes, unfinished jobs <b>resume automatically from where they left off</b> on the next launch." }
+      }
+    ]
+  }
+}

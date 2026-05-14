@@ -1,0 +1,172 @@
+{
+  "title": "İmza Denetimi",
+  "subtitle": "Kişilerin imzasını sistemdeki güncel veriyle karşılaştırın, sapanları toplu güncelleyin.",
+  "steps": {
+    "configure": "Yapılandır",
+    "scanning": "Taranıyor",
+    "review": "İncele",
+    "applying": "Uygulanıyor",
+    "done": "Tamamlandı"
+  },
+  "config": {
+    "loading": "Şablonlar, gruplar ve kuruluş birimleri yükleniyor…",
+    "scope": {
+      "heading": "Kapsam — kimlerin imzası kontrol edilsin?",
+      "all": "Tüm kişiler",
+      "group": "Mail grubu",
+      "orgUnit": "Kuruluş birimi",
+      "groupPlaceholder": "Bir mail grubu seçin…",
+      "orgUnitPlaceholder": "Bir kuruluş birimi seçin…"
+    },
+    "template": {
+      "heading": "Hedef şablon — imzalar bu şablona göre değerlendirilir",
+      "placeholder": "Bir imza şablonu seçin…",
+      "defaultSuffix": "(varsayılan)",
+      "empty": "Henüz imza şablonu yok. Önce İmza Yönetimi'nden bir şablon oluşturun."
+    },
+    "depth": {
+      "heading": "Kontrol derinliği",
+      "fast": {
+        "label": "Hızlı",
+        "desc": "Sadece dahili durum kaydıyla karşılaştırır. Hızlıdır; Gmail'e dokunmaz."
+      },
+      "deep": {
+        "label": "Derin",
+        "desc": "Ek olarak canlı Gmail imzasını çeker. Elle yapılan değişiklikleri ve imzası olmayanları da yakalar; daha yavaştır."
+      }
+    },
+    "start": "Kontrolü Başlat"
+  },
+  "progress": {
+    "scanning": "İmzalar taranıyor",
+    "applying": "İmzalar güncelleniyor",
+    "preparing": "Kitle belirleniyor…",
+    "processing": "İşleniyor: {{user}}",
+    "cancel": "İptal Et"
+  },
+  "category": {
+    "ok": "Güncel",
+    "drift": "Güncellenecek",
+    "no_signature": "İmza yok",
+    "missing_data": "Eksik veri",
+    "error": "Hata"
+  },
+  "reason": {
+    "no_state": "İmza daha önce sistemden basılmamış",
+    "template_changed": "Şablon değişmiş",
+    "data_changed": "Kişi/kurum verisi değişmiş",
+    "manual_edit": "İmza elle değiştirilmiş",
+    "no_signature": "Kişinin imzası yok",
+    "missing_fields": "Unvan veya telefon boş",
+    "institution_unmatched": "Departman, tanımlı bir kurumla eşleşmiyor",
+    "resolve_error": "Profil bilgileri alınamadı",
+    "scan_error": "Tarama sırasında hata oluştu"
+  },
+  "review": {
+    "selectAllUpdatable": "Güncellenecekleri seç ({{count}})",
+    "clearSelection": "Seçimi temizle",
+    "clearFilter": "Filtreyi kaldır",
+    "newAudit": "Yeni Denetim",
+    "applySelected": "Seçilenleri Güncelle ({{count}})",
+    "empty": "Bu kategoride kayıt yok.",
+    "toggleDetail": "Detayı aç/kapat",
+    "col": {
+      "email": "E-posta",
+      "category": "Durum",
+      "reason": "Sebep"
+    },
+    "diff": {
+      "variable": "Değişken",
+      "previous": "Önceki",
+      "current": "Güncel"
+    }
+  },
+  "done": {
+    "heading": "Güncelleme tamamlandı",
+    "summary": "{{succeeded}} imza güncellendi, {{failed}} başarısız.",
+    "downloadReport": "Hata raporunu indir",
+    "newAudit": "Yeni Denetim"
+  },
+  "toast": {
+    "loadFailed": "Seçenekler yüklenemedi: {{error}}",
+    "scanFailed": "Tarama başlatılamadı: {{error}}",
+    "itemsFailed": "Tarama sonuçları alınamadı: {{error}}",
+    "applyFailed": "Güncelleme başlatılamadı: {{error}}",
+    "cancelling": "İşlem iptal ediliyor…",
+    "cancelFailed": "İptal edilemedi: {{error}}"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "eye",
+        "heading": "Genel Kullanım",
+        "paragraphs": [
+          "İmza Denetimi, kişilerin Gmail imzasının sistemdeki <b>güncel veriyle</b> (unvan, telefon, kurum bilgileri ve seçilen şablon) uyumlu olup olmadığını kontrol eder. Eskimiş imzaları tek tek aramak yerine toplu olarak bulup düzeltmenizi sağlar."
+        ],
+        "bullets": [
+          { "term": "1. Yapılandır:", "desc": "Kapsam, hedef şablon ve kontrol derinliğini seçin." },
+          { "term": "2. Taranıyor:", "desc": "Her kişi için imzanın ne olması gerektiği hesaplanır ve mevcut durumla karşılaştırılır." },
+          { "term": "3. İncele:", "desc": "Sonuçlar kategorilere ayrılır; satırı genişletip değişiklikleri görebilirsiniz." },
+          { "term": "4. Uygula:", "desc": "Güncellenecek kişileri seçip toplu güncelleme başlatın." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Kapsam ve Derinlik",
+        "paragraphs": [
+          "Kontrolün <b>kimleri</b> kapsayacağını ve <b>ne kadar derin</b> bakacağını siz seçersiniz."
+        ],
+        "bullets": [
+          { "term": "Tüm kişiler", "desc": "— alan adındaki bütün aktif kullanıcılar." },
+          { "term": "Mail grubu", "desc": "— seçilen Google grubunun üyeleri." },
+          { "term": "Kuruluş birimi", "desc": "— seçilen OU altındaki kullanıcılar." },
+          { "term": "Hızlı", "desc": "— sadece sistemin tuttuğu \"son basılan imza\" kaydıyla karşılaştırır; Gmail'e bağlanmaz, hızlıdır." },
+          { "term": "Derin", "desc": "— ek olarak her kişinin canlı Gmail imzasını çeker; elle yapılan değişiklikleri ve imzası boş olanları da yakalar, ama yavaştır." }
+        ],
+        "callout": {
+          "tone": "tip",
+          "text": "İlk kez çalıştırıyorsanız <b>Derin</b> modu seçin — Hızlı mod henüz hiç kayıt olmadığı için herkesi \"Güncellenecek\" gösterir."
+        }
+      },
+      {
+        "icon": "list",
+        "heading": "Sonuç Kategorileri",
+        "paragraphs": [
+          "Her kişi tarama sonunda bir kategoriye düşer:"
+        ],
+        "table": {
+          "columns": ["Kategori", "Anlamı"],
+          "rows": [
+            ["<b>Güncel</b>", "İmza, olması gereken hâlde — işlem gerekmez."],
+            ["<b>Güncellenecek</b>", "Veri veya şablon değişmiş; imza eskimiş."],
+            ["<b>İmza yok</b>", "Kişinin Gmail imzası boş (yalnız Derin modda kesin tespit edilir)."],
+            ["<b>Eksik veri</b>", "Unvan, telefon veya kurum eşleşmesi eksik — atlanır, imza basılmaz."],
+            ["<b>Hata</b>", "Profil veya imza bilgisi alınamadı."]
+          ]
+        }
+      },
+      {
+        "icon": "zap",
+        "heading": "Sapma Tespiti ve Güncelleme",
+        "paragraphs": [
+          "Sistem, her başarılı imza push'unda imzanın bir <b>parmak izini</b> saklar. Tarama, güncel veriden hesaplanan hedef imzayı bu kayıtla karşılaştırır — fark varsa kişi \"Güncellenecek\" olur.",
+          "İncele ekranında \"Güncellenecekleri seç\" ile tüm sapanları işaretleyip <b>Seçilenleri Güncelle</b> diyebilirsiniz. Güncelleme her zaman üzerine yazar — sistem tek doğru kaynaktır."
+        ],
+        "callout": {
+          "tone": "warning",
+          "text": "Güncelleme, kişilerin mevcut imzasının <b>üzerine yazar</b>. Elle yapılmış özelleştirmeler de değişir."
+        }
+      },
+      {
+        "icon": "info",
+        "heading": "Notlar",
+        "bullets": [
+          { "desc": "Askıya alınmış kullanıcılar denetime dâhil edilmez." },
+          { "desc": "Unvan, telefon veya kurum eşleşmesi eksik olan kişiler \"Eksik veri\" olarak işaretlenir ve güncellenmez — yarım imza basılmaz." },
+          { "desc": "Bu özellik zamanlanmış çalışmaz; denetimi her zaman siz başlatırsınız." },
+          { "desc": "Güncelleme işlemi Görev Geçmişi'nde de görünür; hata olursa rapor indirilebilir." }
+        ]
+      }
+    ]
+  }
+}

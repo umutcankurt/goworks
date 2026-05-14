@@ -1,0 +1,88 @@
+{
+  "roles": {
+    "OWNER": "Owner",
+    "MANAGER": "Manager",
+    "MEMBER": "Member"
+  },
+  "memberPicker": {
+    "searchPlaceholder": "Search user or enter email..."
+  },
+  "userPicker": {
+    "defaultPlaceholder": "Search user (name or email)...",
+    "externalEmail": "Add external email",
+    "noUserMatch": "No matching user found."
+  },
+  "groupPicker": {
+    "searchPlaceholder": "Search group (name or email)...",
+    "noMatch": "No matching group found."
+  },
+  "list": {
+    "title": "Google Groups",
+    "searchPlaceholder": "Group name or email...",
+    "search": "Search",
+    "clear": "Clear",
+    "newGroup": "New Group",
+    "loading": "Loading groups...",
+    "loadFailed": "Failed to fetch groups",
+    "table": {
+      "name": "Group Name",
+      "email": "Email",
+      "description": "Description",
+      "action": "Action"
+    },
+    "noResults": "No groups matched your search.",
+    "empty": "No groups yet.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loadMore": "Load More ({{count}} loaded)",
+    "loadingShort": "Loading...",
+    "deleteDialog": {
+      "title": "Delete group",
+      "message": "Are you sure you want to delete <b>{{name}}</b> ({{email}})? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "The Google Groups page lets you create, edit and delete your Google Workspace groups (mailing lists)."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Listing & Search",
+        "bullets": [
+          { "term": "Search:", "desc": "Filter by group name or email address." },
+          { "term": "Pagination:", "desc": "Long lists are paginated; use \"Load More\" to fetch the rest." },
+          { "term": "Row actions:", "desc": "Each row has edit and delete buttons." }
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Creating & Editing Groups",
+        "paragraphs": [
+          "Use the \"New Group\" button to create a group. When editing a group the form is tabbed:"
+        ],
+        "bullets": [
+          { "term": "General:", "desc": "Group name, email and description." },
+          { "term": "Members:", "desc": "Add/remove members and assign roles (Owner / Manager / Member)." },
+          { "term": "Access Settings:", "desc": "Who can post to the group and view its content." },
+          { "term": "Alias:", "desc": "Define additional (alias) email addresses for the group." }
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Auditing",
+        "paragraphs": [
+          "All group operations are performed with the permissions of the signed-in admin."
+        ],
+        "callout": { "tone": "info", "text": "In the Workspace audit log, <b>you</b> always appear as the actor — not a service account." }
+      }
+    ]
+  }
+}

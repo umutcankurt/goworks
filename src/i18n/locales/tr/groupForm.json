@@ -1,0 +1,105 @@
+{
+  "createTitle": "Yeni Grup Oluştur",
+  "editTitle": "Grubu Düzenle",
+  "loading": "Yükleniyor...",
+  "tabs": {
+    "general": "Genel",
+    "members": "Üyeler",
+    "access": "Erişim Ayarları",
+    "aliases": "Alias"
+  },
+  "general": {
+    "groupName": "Grup Adı",
+    "groupNamePlaceholder": "Örn: Öğretmenler",
+    "groupEmail": "Grup E-postası",
+    "groupEmailPlaceholder": "grup-adi",
+    "description": "Açıklama",
+    "descriptionPlaceholder": "Grubun amacını kısaca açıklayın...",
+    "cancel": "Vazgeç",
+    "saving": "Kaydediliyor...",
+    "create": "Grubu Oluştur",
+    "save": "Kaydet"
+  },
+  "members": {
+    "existingHeading": "Mevcut Üyeler ({{count}})",
+    "empty": "Bu grupta henüz üye yok.",
+    "newMembers": "Üyeler",
+    "addNew": "Yeni Üye Ekle",
+    "removeMember": "Üyeyi kaldır",
+    "clear": "Temizle",
+    "addingMembers": "Ekleniyor...",
+    "addMembers": "{{count}} üye ekle",
+    "createHelper": "Bu üyeler grup oluşturulduğunda eklenecektir."
+  },
+  "access": {
+    "save": "Erişim Ayarlarını Kaydet",
+    "saving": "Kaydediliyor...",
+    "selectPlaceholder": "— Seçiniz —",
+    "whoCanJoin": "Kimler gruba katılabilir?",
+    "whoCanJoinOptions": {
+      "INVITED_CAN_JOIN": "Sadece davet edilenler",
+      "CAN_REQUEST_TO_JOIN": "İstek üzerine",
+      "ALL_IN_DOMAIN_CAN_JOIN": "Domaindeki herkes",
+      "ANYONE_CAN_JOIN": "Herkes"
+    },
+    "whoCanPostMessage": "Kimler yayın paylaşabilir?",
+    "whoCanPostOptions": {
+      "NONE_CAN_POST": "Hiç kimse",
+      "ALL_OWNERS_CAN_POST": "Sadece sahipler",
+      "ALL_MANAGERS_CAN_POST": "Sadece yöneticiler",
+      "ALL_MEMBERS_CAN_POST": "Tüm üyeler",
+      "ALL_IN_DOMAIN_CAN_POST": "Domaindeki herkes",
+      "ANYONE_CAN_POST": "Herkes"
+    },
+    "whoCanViewGroup": "Grubu kimler görebilir?",
+    "whoCanViewMembership": "Üye listesini kimler görebilir?",
+    "whoCanViewOptions": {
+      "ALL_OWNERS_CAN_VIEW": "Sahipler",
+      "ALL_MANAGERS_CAN_VIEW": "Yöneticiler",
+      "ALL_MEMBERS_CAN_VIEW": "Üyeler",
+      "ALL_IN_DOMAIN_CAN_VIEW": "Domaindeki herkes",
+      "ANYONE_CAN_VIEW": "Herkes"
+    },
+    "whoCanContactOwner": "Sahibe kimler ulaşabilir?",
+    "whoCanContactOptions": {
+      "ALL_MANAGERS_CAN_CONTACT": "Yöneticiler",
+      "ALL_MEMBERS_CAN_CONTACT": "Üyeler",
+      "ALL_IN_DOMAIN_CAN_CONTACT": "Domaindeki herkes",
+      "ANYONE_CAN_CONTACT": "Herkes"
+    },
+    "messageModerationLevel": "İleti moderasyon seviyesi",
+    "moderationOptions": {
+      "MODERATE_NONE": "Moderasyon yok",
+      "MODERATE_NEW_MEMBERS": "Yeni üyelerin iletilerini moderasyona al",
+      "MODERATE_NON_MEMBERS": "Üye olmayanları moderasyona al",
+      "MODERATE_ALL_MESSAGES": "Tüm iletileri moderasyona al"
+    },
+    "toggles": {
+      "allowExternalMembers": "Harici üyelere izin ver",
+      "allowWebPosting": "Web üzerinden yayın paylaşımı",
+      "isArchived": "Grubu arşivle",
+      "archiveOnly": "Yalnızca arşiv (yeni ileti gönderilemez)"
+    }
+  },
+  "aliases": {
+    "existingHeading": "Mevcut Alias'lar ({{count}})",
+    "empty": "Bu grubun alias'ı yok.",
+    "deleteAlias": "Alias'ı sil",
+    "addNewHeading": "Yeni Alias Ekle",
+    "aliasPlaceholder": "alias-adi",
+    "adding": "Ekleniyor...",
+    "add": "Ekle"
+  },
+  "errors": {
+    "loadFailed": "Grup yüklenemedi",
+    "groupNameRequired": "Grup adı zorunludur.",
+    "localPartRequired": "Grup e-postası zorunludur.",
+    "localPartInvalid": "Yalnızca harf, rakam, ., _, - kullanılabilir.",
+    "domainRequired": "Domain seçiniz.",
+    "saveFailed": "Kaydedilemedi",
+    "aliasLocalRequired": "Alias e-posta gerekli",
+    "aliasInvalid": "Yalnızca harf, rakam, ., _, - kullanılabilir",
+    "aliasDomainRequired": "Domain seçiniz",
+    "aliasAddFailed": "Alias eklenemedi"
+  }
+}

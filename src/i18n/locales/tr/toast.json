@@ -1,0 +1,98 @@
+{
+  "settings": {
+    "titlesLoadFailed": "Ünvanlar yüklenemedi: {{error}}",
+    "titleAdded": "Ünvan eklendi",
+    "titleUpdated": "Ünvan güncellendi",
+    "titleDeleted": "Ünvan silindi",
+    "titlesImported": "{{created}} ünvan eklendi, {{skipped}} atlandı",
+    "institutionsLoadFailed": "Kurumlar yüklenemedi: {{error}}",
+    "institutionAdded": "Kurum eklendi",
+    "institutionUpdated": "Kurum güncellendi",
+    "institutionDeleted": "Kurum silindi",
+    "institutionsImported": "{{created}} kurum eklendi, {{skipped}} atlandı",
+    "domainUpdated": "İzin verilen domain güncellendi",
+    "logoTooLarge": "Logo dosyası 1 MB'tan büyük olamaz",
+    "logoFormatInvalid": "Sadece PNG, JPG, SVG veya WEBP yüklenebilir",
+    "logoUploaded": "Logo yüklendi",
+    "logoUploadFailed": "Logo yüklenemedi",
+    "logoDeleted": "Logo silindi",
+    "logoDeleteFailed": "Logo silinemedi",
+    "serviceAccountUploaded": "Service Account başarıyla yüklendi",
+    "serviceAccountUploadFailed": "Yükleme hatası: {{error}}",
+    "serviceAccountDeleted": "Service Account silindi",
+    "serviceAccountDeleteFailed": "Silme hatası: {{error}}"
+  },
+  "media": {
+    "loadFailed": "Medya yüklenemedi: {{error}}",
+    "added": "Medya eklendi",
+    "deleted": "Medya silindi",
+    "urlCopied": "URL kopyalandı"
+  },
+  "csv": {
+    "parseError": "CSV ayrıştırma hatası: {{error}}",
+    "emptyOrInvalid": "CSV dosyası boş veya geçersiz.",
+    "loaded": "{{count}} satır başarıyla yüklendi.",
+    "readError": "Dosya okuma hatası: {{error}}"
+  },
+  "groups": {
+    "deleted": "Grup silindi",
+    "deleteFailed": "Grup silinemedi",
+    "created": "Grup oluşturuldu",
+    "updated": "Grup güncellendi",
+    "createdWithFailedMembers": "Grup oluşturuldu fakat {{count}} üye eklenemedi",
+    "saveFailed": "Kaydedilemedi",
+    "memberRemoved": "Üye çıkarıldı",
+    "memberRemoveFailed": "Üye çıkarılamadı",
+    "memberAddFailed": "Üye eklenemedi",
+    "membersAdded": "{{count}} üye eklendi",
+    "membersPartialAdd": "{{succeeded}} üye eklendi, {{failed}} hata",
+    "aliasAdded": "Alias eklendi",
+    "aliasDeleted": "Alias silindi",
+    "aliasDeleteFailed": "Alias silinemedi",
+    "settingsSaved": "Erişim ayarları kaydedildi",
+    "settingsSaveFailed": "Ayarlar kaydedilemedi",
+    "roleUpdated": "Rol güncellendi",
+    "roleUpdateFailed": "Rol güncellenemedi"
+  },
+  "bulk": {
+    "analyzeFailed": "Analiz hatası: {{error}}",
+    "jobQueued": "Görev sunucu kuyruğuna eklendi.",
+    "jobStartFailed": "Sunucu görevi başlatılamadı: {{error}}",
+    "cancelling": "Görev iptal ediliyor...",
+    "cancelFailed": "İptal başarısız: {{error}}"
+  },
+  "signatures": {
+    "loadFailed": "Şablonlar yüklenemedi: {{error}}",
+    "nameAndContentRequired": "Şablon adı ve HTML içeriği gerekli",
+    "updated": "Şablon güncellendi",
+    "created": "Şablon oluşturuldu",
+    "deleted": "Şablon silindi",
+    "defaultSet": "Varsayılan şablon ayarlandı",
+    "pushed": "İmza başarıyla gönderildi.",
+    "pushFailed": "İmza gönderilemedi: {{error}}",
+    "saved": "İmza başarıyla kaydedildi.",
+    "saveFailed": "İmza kaydedilemedi: {{error}}",
+    "previewFailed": "Önizleme oluşturulamadı: {{error}}"
+  },
+  "offboard": {
+    "groupsRemoved": "{{count}} gruptan çıkarıldı.",
+    "allCompleted": "Tüm ilişik kesme adımları başarıyla tamamlandı.",
+    "forwardingMissing": "E-posta yönlendirmesi için hedef adres giriniz.",
+    "orgUnitMissing": "Kuruluş birimi değişikliği için bir birim seçiniz."
+  },
+  "userDetail": {
+    "profileUpdated": "Kullanıcı profili başarıyla güncellendi.",
+    "profileUpdatedNewEmail": "Kullanıcı profili güncellendi. Yeni e-posta: {{email}}",
+    "passwordUpdated": "Şifre başarıyla güncellendi.",
+    "userDeleted": "Kullanıcı başarıyla silindi.",
+    "groupsAdded": "Gruplar başarıyla eklendi.",
+    "groupAddFailed": "\"{{name}}\" grubuna eklenirken hata oluştu.",
+    "aliasExists": "Bu takma ad zaten mevcut.",
+    "aliasAdded": "Takma ad eklendi: {{alias}}",
+    "aliasAddFailed": "Takma ad eklenemedi: {{error}}",
+    "aliasAddDefault": "Takma ad eklenemedi.",
+    "aliasRemoved": "Takma ad kaldırıldı: {{alias}}",
+    "aliasRemoveFailed": "Takma ad kaldırılamadı: {{error}}",
+    "aliasRemoveDefault": "Takma ad kaldırılamadı."
+  }
+}

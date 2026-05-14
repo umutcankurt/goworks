@@ -1,0 +1,54 @@
+{
+  "title": "System Reports and Statistics",
+  "refresh": "Refresh Data",
+  "refreshing": "Refreshing...",
+  "metrics": {
+    "totalUsers": "Total Users",
+    "activeUsers": "Active Users",
+    "suspendedUsers": "Suspended"
+  },
+  "audit": {
+    "title": "Recent Login Activities (Audit Logs)",
+    "empty": "No records yet or Reports API permission incomplete.",
+    "delayNote": "NOTE: Reports API data may be delayed up to 24 hours.",
+    "table": { "date": "Date", "email": "User Email", "ip": "IP Address" }
+  },
+  "suspended": {
+    "title": "Suspended Users",
+    "empty": "No suspended users.",
+    "badge": "Suspended"
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Overview",
+        "paragraphs": [
+          "The Reports page gives you an audit and status summary of your organization; user metrics, recent login activities and suspended accounts are gathered into a single screen."
+        ]
+      },
+      {
+        "icon": "layers",
+        "heading": "Metrics",
+        "paragraphs": [
+          "The cards at the top of the page show the total, active and suspended user counts."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "Recent Login Activities",
+        "paragraphs": [
+          "Recent sign-in records (date, user, IP address) are listed via the Reports API."
+        ],
+        "callout": { "tone": "info", "text": "Reports API data on Google's side can be delayed by <b>up to 24 hours</b>; it is normal for the list to be empty or incomplete." }
+      },
+      {
+        "icon": "users",
+        "heading": "Suspended Users & Refresh",
+        "paragraphs": [
+          "Users that are currently suspended are listed in a separate section. Use the \"Refresh Data\" button to re-fetch all reports with the latest data."
+        ]
+      }
+    ]
+  }
+}

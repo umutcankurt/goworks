@@ -1,0 +1,188 @@
+{
+  "header": {
+    "appTitle": "GoWorks",
+    "appSubtitle": "Komuta merkezi kurulumu"
+  },
+  "stepNav": {
+    "welcome": "Başlangıç",
+    "branding": "Firma bilgileri",
+    "cloud": "Google Cloud projesi",
+    "serviceAccount": "Service Account",
+    "adminLogin": "Yönetici girişi",
+    "dwd": "Domain-Wide Delegation",
+    "completion": "Hazır"
+  },
+  "footer": {
+    "back": "Geri",
+    "next": "Devam et",
+    "stepCounter": "ADIM {{current}} / {{total}}"
+  },
+  "welcome": {
+    "eyebrow": "Hoş geldiniz",
+    "title": "Komuta merkezinizi kuralım",
+    "subtitle": "GoWorks, Google Workspace yönetiminizi tek bir panelden yapmanızı sağlar. Aşağıdaki üç şeye ihtiyacımız olacak.",
+    "cards": {
+      "admin": {
+        "title": "Workspace Süper Admin",
+        "body": "Servis hesabını yetkilendirebilmek için tam admin erişimine sahip bir hesap gerekir."
+      },
+      "cloud": {
+        "title": "Google Cloud projesi",
+        "body": "Service Account oluşturmak ve Workspace API'lerini etkinleştirmek için bir Cloud projesi açacağız."
+      },
+      "duration": {
+        "title": "5–10 dakika",
+        "body": "Adımlar arasında dilediğiniz an duraklayabilirsiniz; ilerlemeniz kaydedilir."
+      }
+    },
+    "cta": "Kuruluma başla"
+  },
+  "branding": {
+    "title": "Firmanızı tanıtın",
+    "subtitle": "Bu bilgiler header, sidebar ve giden e-postalar için kullanılır. Sağdaki önizleme her tuş vuruşunda güncellenir.",
+    "fields": {
+      "companyName": {
+        "label": "Firma adı",
+        "placeholder": "Örn: ABC Firma",
+        "hint": "Sidebar başlığında ve e-posta gönderici metninde görünür."
+      },
+      "sidebarAbbr": {
+        "label": "Sidebar kısaltması",
+        "hint": "Boş bırakırsanız firma adının baş harflerinden üretilir. Önizleme: {{preview}}"
+      },
+      "allowedDomain": {
+        "label": "İzin verilen e-posta domain'i",
+        "placeholder": "abcfirma.com",
+        "hint": "Yalnızca bu domain ile biten Google hesapları uygulamaya giriş yapabilir."
+      },
+      "emailSenderName": {
+        "label": "E-posta gönderici adı",
+        "placeholder": "GoWorks",
+        "hint": "Toplu işlem bildirim e-postalarının gönderici adı."
+      }
+    },
+    "logo": {
+      "title": "Logo",
+      "upload": "Logo yükle",
+      "replace": "Logoyu değiştir",
+      "delete": "Sil",
+      "hint": "PNG / JPG / SVG / WEBP, max 1 MB",
+      "uploaded": "Logo yüklendi",
+      "uploadFailed": "Logo yüklenemedi",
+      "tooLarge": "Logo dosyası 1 MB sınırını aşıyor",
+      "invalidFormat": "Sadece PNG, JPG, SVG veya WEBP yükleyebilirsiniz",
+      "confirmDelete": "Logoyu silmek istediğinize emin misiniz?"
+    },
+    "preview": {
+      "title": "Canlı önizleme",
+      "live": "CANLI",
+      "placeholderCompany": "ABC Firma",
+      "placeholderDomain": "abcfirma.com",
+      "loginEyebrow": "GİRİŞ",
+      "loginTitle": "{{company}}",
+      "googleCta": "Google ile giriş"
+    }
+  },
+  "cloud": {
+    "title": "Google Cloud projesi oluşturun",
+    "subtitle": "Service Account ve API izinleri burada barınacak. Yeni bir proje açabilir veya mevcut bir projeyi kullanabilirsiniz.",
+    "instructions": [
+      {
+        "title": "Cloud Console'a gidin",
+        "body": "console.cloud.google.com adresini açın ve süper admin hesabınızla oturum açın."
+      },
+      {
+        "title": "Yeni proje oluşturun",
+        "body": "Üstteki proje seçiciden \"Yeni proje\" seçeneğiyle GoWorks için bir proje açın."
+      },
+      {
+        "title": "API'leri etkinleştirin",
+        "body": "Sağdaki listedeki dört API'yi tek tek arayıp \"Etkinleştir\"e basın."
+      },
+      {
+        "title": "Bir sonraki adıma hazırsınız",
+        "body": "API'ler etkinleştikten sonra Service Account adımına geçebilirsiniz."
+      }
+    ],
+    "apisTitle": "Etkinleştirilecek API'ler (4)",
+    "apis": [
+      "Admin SDK API",
+      "Gmail API",
+      "Groups Settings API",
+      "Reports API (Audit)"
+    ],
+    "openConsole": "Cloud Console'u aç",
+    "tip": "İpucu: Bir API'yi etkinleştirmeden önce arama kutusuna tam adını yazın; benzer isimli farklı API'ler olabilir."
+  },
+  "serviceAccount": {
+    "title": "Service Account anahtarı",
+    "subtitle": "Cloud projenizde bir Service Account oluşturup JSON anahtarını indirin ve aşağıdan yükleyin. Anahtar bu cihazda yerel olarak saklanır.",
+    "dropzoneTitle": "JSON anahtarını sürükleyin veya tıklayıp seçin",
+    "dropzoneHint": "service-account-abc.json formatında, max 4 KB",
+    "configured": "Service Account yapılandırıldı",
+    "delete": "Sil",
+    "uploading": "Yükleniyor...",
+    "checking": "Kontrol ediliyor...",
+    "confirmDelete": "Service Account anahtarını silmek istediğinize emin misiniz?",
+    "guideHint": "JSON dosyasını henüz oluşturmadıysanız: Cloud Console → IAM → Service Accounts → yeni hesap oluştur → \"Anahtarlar\" sekmesi → JSON formatında anahtar ekle.",
+    "errors": {
+      "notJson": "Lütfen .json uzantılı bir Service Account anahtar dosyası seçin",
+      "uploadFailed": "Yükleme başarısız: {{error}}"
+    },
+    "toast": {
+      "uploaded": "Service Account başarıyla yüklendi",
+      "deleted": "Service Account silindi"
+    }
+  },
+  "dwd": {
+    "title": "Domain-Wide Delegation",
+    "subtitle": "Service Account'ın admin adına işlem yapabilmesi için aşağıdaki Client ID ve scope listesini Admin Console'a tanıtın.",
+    "clientIdLabel": "Client ID",
+    "clientIdMissing": "Client ID görüntülenebilmesi için önce Service Account JSON yüklenmeli.",
+    "scopesLabel": "OAuth scope'ları (8)",
+    "copy": "Kopyala",
+    "copyAll": "Tümünü kopyala",
+    "copied": "Kopyalandı",
+    "openConsole": "Admin Console → Domain-wide delegation",
+    "instructions": "Admin Console'da \"API kontrolleri\" → \"Domain-wide delegation\" → \"Yeni ekle\" diyerek Client ID'yi yapıştırın ve OAuth scope'larını virgüllü tek satır olarak girin.",
+    "testButton": "DWD bağlantısını test et",
+    "testing": "Test ediliyor...",
+    "testSuccess": "Tüm scope'lar doğrulandı ({{adminEmail}} olarak)",
+    "testFail": "DWD doğrulanamadı: {{error}}",
+    "testFailHelp": "{{adminEmail}} olarak admin.directory.user okunamadı. Admin Console'da Client ID ve scope listesini kontrol edin.",
+    "skip": "DWD'yi şimdilik atla",
+    "skipConfirm": "DWD'yi yapılandırmadan devam etmek istediğinizden emin misiniz? Gmail imza push özelliği çalışmayacak — daha sonra Ayarlar'dan tamamlayabilirsiniz."
+  },
+  "adminLogin": {
+    "title": "Yönetici girişi",
+    "subtitle": "Süper admin Google hesabınızla giriş yapın. Sıradaki adımda Domain-Wide Delegation testini yapacağız.",
+    "checklist": [
+      "Firma bilgileri tanımlandı",
+      "Google Cloud projesi ve API'ler hazır",
+      "Service Account anahtarı yüklü"
+    ],
+    "googleCta": "Yönetici olarak Google'la giriş yap",
+    "loginInProgress": "Tarayıcıda Google penceresi açıldı...",
+    "loginFailed": "Giriş başarısız: {{error}}",
+    "footnote": "OAuth tarayıcıda açılacak."
+  },
+  "completion": {
+    "title": "Kullanıma hazırsınız!",
+    "subtitle": "Tüm ön kurulum adımlarını tamamladınız. Şimdi GoWorks panelini kullanmaya başlayabilirsiniz.",
+    "checklistHeading": "Tamamlananlar",
+    "items": [
+      "Firma bilgileri kaydedildi",
+      "Google Cloud projesi hazır",
+      "Service Account anahtarı yüklendi",
+      "Yönetici girişi yapıldı",
+      "Domain-Wide Delegation doğrulandı"
+    ],
+    "cta": "Uygulamaya Devam Et",
+    "resetNote": "Sihirbazı tekrar çalıştırmak için Ayarlar → Genel'den dilediğiniz zaman erişebilirsiniz."
+  },
+  "errors": {
+    "needServiceAccount": "Önce Service Account JSON anahtarını yükleyin.",
+    "needBranding": "Devam etmeden önce firma adı ve izin verilen domain doldurulmalı.",
+    "needDwdTest": "Devam etmeden önce DWD bağlantısını başarıyla test edin."
+  }
+}

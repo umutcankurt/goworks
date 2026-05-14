@@ -1,0 +1,110 @@
+{
+  "title": "İlişik Kesme",
+  "subtitle": "Kurumdan ayrılan personelin hesap kapatma adımlarını yönetin.",
+  "search": {
+    "label": "Kullanıcı E-posta Adresi",
+    "placeholder": "ornek@{{domain}}",
+    "button": "Ara",
+    "userNotFound": "Kullanıcı bulunamadı."
+  },
+  "user": {
+    "suspended": "Askıda",
+    "active": "Aktif",
+    "profile": "Profil"
+  },
+  "progress": {
+    "label": "İlerleme",
+    "completed": "{{done}}/{{total}} tamamlandı"
+  },
+  "stepsHeading": "İlişik Kesme Adımları",
+  "stepsHelper": "Uygulamak istediğiniz adımları seçin ve başlatın.",
+  "steps": {
+    "org_unit": {
+      "label": "Kuruluş Birimi Değiştir",
+      "description": "Kullanıcıyı belirtilen kuruluş birimine taşır."
+    },
+    "suspend": {
+      "label": "Hesabı Askıya Al",
+      "description": "Kullanıcının sisteme giriş yapmasını engeller."
+    },
+    "groups": {
+      "label": "Tüm Gruplardan Çıkar",
+      "description": "Kullanıcıyı üyesi olduğu tüm gruplardan kaldırır."
+    },
+    "reset_pwd": {
+      "label": "Şifreyi Sıfırla",
+      "description": "Güvenlik amacıyla şifreyi rastgele karmaşık bir şifre ile değiştirir."
+    },
+    "forward": {
+      "label": "E-posta Yönlendirmesi",
+      "description": "Gelen e-postaları belirtilen adrese yönlendirir."
+    },
+    "directory": {
+      "label": "Dizinden Kaldır",
+      "description": "Kullanıcıyı kurum dizininden (adres defteri) gizler."
+    }
+  },
+  "stepStatus": {
+    "done": "Tamamlandı",
+    "error": "Hata",
+    "running": "Çalışıyor..."
+  },
+  "forwardingLabel": "Yönlendirilecek E-posta Adresi",
+  "forwardingPlaceholder": "yonetici@{{domain}}",
+  "orgUnitLabel": "Hedef Kuruluş Birimi",
+  "orgUnitPlaceholder": "Kuruluş birimi ara...",
+  "orgUnitEmpty": "Eşleşen birim bulunamadı.",
+  "allDone": "Tüm adımlar başarıyla tamamlandı.",
+  "reset": "Sıfırla",
+  "running": "İşlem Devam Ediyor...",
+  "resume": "Kaldığı Yerden Devam Et",
+  "start": "İlişik Kesmeyi Başlat",
+  "errors": {
+    "suspend": "Askıya alma başarısız.",
+    "groupsList": "Gruplar alınamadı.",
+    "passwordReset": "Şifre sıfırlanamadı.",
+    "forwardingMissing": "Yönlendirme adresi belirtilmedi.",
+    "forwardingFailed": "E-posta yönlendirmesi ayarlanamadı.",
+    "directoryFailed": "Dizinden kaldırma başarısız.",
+    "orgUnitMissing": "Kuruluş birimi seçilmedi.",
+    "orgUnitFailed": "Kuruluş birimi değiştirilemedi."
+  },
+  "guide": {
+    "sections": [
+      {
+        "icon": "info",
+        "heading": "Genel Bakış",
+        "paragraphs": [
+          "İlişik Kesme (Offboard), kurumdan ayrılan bir personelin hesabını kapatmak için gereken tüm adımları tek ekranda toplar."
+        ]
+      },
+      {
+        "icon": "users",
+        "heading": "Kullanıcı Seçimi",
+        "paragraphs": [
+          "Üstteki arama kutusuna ilişiği kesilecek kullanıcının e-posta adresini girip arayın. Kullanıcı bulununca profili ve mevcut durumu (aktif / askıda) gösterilir."
+        ]
+      },
+      {
+        "icon": "list",
+        "heading": "İlişik Kesme Adımları",
+        "paragraphs": ["Uygulanacak adımları seçebilirsiniz:"],
+        "bullets": [
+          { "term": "Hesabı Askıya Al:", "desc": "Kullanıcının giriş yapmasını engeller." },
+          { "term": "Şifreyi Sıfırla:", "desc": "Şifreyi rastgele karmaşık bir değerle değiştirir." },
+          { "term": "Tüm Gruplardan Çıkar:", "desc": "Kullanıcıyı üyesi olduğu tüm gruplardan kaldırır." },
+          { "term": "E-posta Yönlendirmesi:", "desc": "Gelen e-postaları belirttiğiniz adrese yönlendirir." },
+          { "term": "Kuruluş Birimi Değiştir / Dizinden Kaldır:", "desc": "Kullanıcıyı hedef OU'ya taşır veya adres defterinden gizler." }
+        ]
+      },
+      {
+        "icon": "zap",
+        "heading": "Çalıştırma",
+        "paragraphs": [
+          "Seçili adımları \"İlişik Kesmeyi Başlat\" ile sırayla uygulayabilirsiniz; her adımın sonucu anında gösterilir. Bir adım hata verirse, düzelttikten sonra kaldığı yerden devam edebilirsiniz."
+        ],
+        "callout": { "tone": "warning", "text": "Bu işlemler geri alınamaz. Özellikle <b>gruplardan çıkarma</b> ve <b>askıya alma</b> adımlarını uygulamadan önce doğru kullanıcıyı seçtiğinizden emin olun." }
+      }
+    ]
+  }
+}

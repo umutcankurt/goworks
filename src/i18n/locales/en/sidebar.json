@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "newUser": "New User",
+    "groups": "Google Groups",
+    "bulkOperations": "Bulk Operations",
+    "jobHistory": "Job History",
+    "offboard": "Offboard",
+    "reports": "Reports",
+    "signatures": "Signature Management",
+    "signatureAudit": "Signature Audit",
+    "settings": "Settings"
+  },
+  "logout": "Sign Out",
+  "logoAlt": "Logo"
+}
