@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter } from 'electron'
+import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -68,6 +68,13 @@ function createWindow() {
     minHeight: 720,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
+      // Faz E security hardening — explicit yapıyoruz (Electron 40 default'larının
+      // çoğu zaten güvenli, ama açıkça belirtmek "biliyoruz" sinyali ve gelecekteki
+      // default değişikliklerine karşı koruma).
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
     },
   })
 
@@ -186,7 +193,52 @@ let bootStatus: BootCheckResult = { soft: { serviceAccountMissing: false } };
 
 ipcMain.handle('config:getBootStatus', () => bootStatus);
 
+/**
+ * Content Security Policy — dev/prod ayrımı.
+ *
+ * Vite HMR `ws://`, hot reload `eval`, ve inline style ister. Production
+ * tam tersine bunları reddetmeli. Statik `<meta http-equiv>` tag bu
+ * ayrımı yapamaz → response header'ı runtime'da basıyoruz.
+ *
+ * Production'da blocked: `eval`, inline `<script>`, üçüncü taraf origin'ler
+ * (googleapis hariç).
+ */
+function applyContentSecurityPolicy() {
+  const isDev = !!VITE_DEV_SERVER_URL;
+  const csp = isDev
+    ? [
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https:",
+        "font-src 'self' data:",
+        "connect-src 'self' ws: http://localhost:* http://127.0.0.1:* https: https://www.googleapis.com https://accounts.google.com",
+      ].join('; ')
+    : [
+        "default-src 'self'",
+        "script-src 'self'",
+        // İmza editörü WYSIWYG inline style üretiyor — production'da da
+        // 'unsafe-inline' style gerekli. Eval ve script-inline kapalı kalır.
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https://*.googleusercontent.com",
+        "font-src 'self' data:",
+        "connect-src 'self' https://www.googleapis.com https://accounts.google.com https://*.googleusercontent.com",
+      ].join('; ');
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp],
+      },
+    });
+  });
+}
+
 app.whenReady().then(async () => {
+  // Faz E security: CSP'yi window oluşmadan ÖNCE bağla.
+  applyContentSecurityPolicy();
+
   // Boot-time validation (env, userData writable, service account). Hard-fail
   // durumunda runBootCheck dialog gösterir ve app.exit(1) çağırır.
   try {
