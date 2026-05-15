@@ -30,6 +30,7 @@ import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
+import { toUserMessage } from './lib/error-utils';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -284,9 +285,10 @@ app.whenReady().then(async () => {
     try {
       const result = await adminService.getUsers(customer, maxResults, pageToken, query);
       return { success: true, ...result };
-    } catch (error: any) {
-      console.error('admin:getUsers failed:', error);
-      return { success: false, error: error.message };
+    } catch (error) {
+      // Stack trace log dosyasında kalır, renderer'a sadece kullanıcı mesajı gider
+      logger.error('[admin:getUsers] failed', error);
+      return { success: false, error: toUserMessage(error) };
     }
   });
 
@@ -303,8 +305,9 @@ app.whenReady().then(async () => {
     try {
       const user = await adminService.suspendUser(userKey);
       return { success: true, user };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[admin:suspendUser] failed', error);
+      return { success: false, error: toUserMessage(error) };
     }
   });
 

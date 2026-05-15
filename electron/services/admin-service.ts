@@ -1,6 +1,7 @@
 import { getGoogle } from '../google-lazy';
 import { OAuth2Client } from 'google-auth-library';
 import { AdminUser, PaginatedUsers, AdminGroup, GroupMember, UserUpdatePayload, CreateUserPayload, OrgUnit, Domain, GroupRole, StorageUsageData, UserCountData } from '../types';
+import { UserFacingError } from '../lib/errors';
 
 export class AdminService {
     private authClient: OAuth2Client;
@@ -56,7 +57,7 @@ export class AdminService {
         try {
             const existing = await this.directory.users.get({ userKey, fields: 'suspended' });
             if (existing.data.suspended) {
-                throw new Error('Kullanıcı zaten askıda');
+                throw new UserFacingError('Kullanıcı zaten askıda');
             }
 
             const res = await this.directory.users.update({
@@ -221,7 +222,7 @@ export class AdminService {
     }
 
     async getCustomerStorageUsage(daysBack = 2): Promise<StorageUsageData> {
-        if (daysBack > 6) throw new Error('Son 6 güne ait depolama raporu bulunamadı.');
+        if (daysBack > 6) throw new UserFacingError('Son 6 güne ait depolama raporu bulunamadı.');
         const date = this.getReportDate(daysBack);
         try {
             const res = await this.reports.customerUsageReports.get({
@@ -248,7 +249,7 @@ export class AdminService {
     }
 
     async getCustomerUserCounts(daysBack = 2): Promise<UserCountData> {
-        if (daysBack > 6) throw new Error('Son 6 güne ait kullanıcı raporu bulunamadı.');
+        if (daysBack > 6) throw new UserFacingError('Son 6 güne ait kullanıcı raporu bulunamadı.');
         const date = this.getReportDate(daysBack);
         try {
             const res = await this.reports.customerUsageReports.get({
