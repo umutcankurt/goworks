@@ -118,7 +118,7 @@
           "An institution is the branch or location where the user works. The selected institution's name, address and phone are written to the user's organization info in Google.",
           "These values are used in the email signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables — so the user's signature automatically carries the correct branch details."
         ],
-        "callout": { "tone": "info", "text": "Institutions are managed under <b>Settings → Institutions</b>. This feature is meant for <b>organizations with multiple branches or campuses</b>; each branch is defined as a separate institution with its own name, address and phone. Single-location companies can define just one institution." }
+        "callout": { "tone": "info", "text": "Institutions are managed under <b>Settings → Institutions</b>. This feature is meant for <b>organizations with multiple branches or locations</b>; each branch is defined as a separate institution with its own name, address and phone. Single-location companies can define just one institution." }
       },
       {
         "icon": "tag",

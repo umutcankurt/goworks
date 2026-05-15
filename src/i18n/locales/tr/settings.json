@@ -112,7 +112,7 @@
     "namePlaceholder": "Kurum adı",
     "addressPlaceholder": "Adres (opsiyonel)",
     "phonePlaceholder": "Telefon (opsiyonel)",
-    "csvFormat": "CSV formatı: <code>name/kurum/kampus</code>, <code>address/adres</code>, <code>phone/telefon</code> sütunları",
+    "csvFormat": "CSV formatı: <code>name/kurum</code>, <code>address/adres</code>, <code>phone/telefon</code> sütunları",
     "csvPlaceholder": "name,address,phone\nMerkez Kurum,İstanbul,02121234567",
     "headers": {
       "name": "Kurum",

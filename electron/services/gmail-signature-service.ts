@@ -109,10 +109,6 @@ export function buildSignatureVariables(profile: SignatureProfile): TemplateVari
         kurum_adi: profile.department,
         kurum_adres: institutionAddress,
         kurum_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
-        // Geri uyum: kayıtlı template'ler hâlâ {{kampus_*}} kullanıyor olabilir
-        kampus_adi: profile.department,
-        kampus_adres: institutionAddress,
-        kampus_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
         telefon: profile.phone ? formatPhoneForSignature(profile.phone) : '',
         eposta: profile.email,
     };

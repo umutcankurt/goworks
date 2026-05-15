@@ -112,8 +112,8 @@
     "namePlaceholder": "Institution name",
     "addressPlaceholder": "Address (optional)",
     "phonePlaceholder": "Phone (optional)",
-    "csvFormat": "CSV format: <code>name/kurum/kampus</code>, <code>address/adres</code>, <code>phone/telefon</code> columns",
-    "csvPlaceholder": "name,address,phone\nMain Campus,Istanbul,02121234567",
+    "csvFormat": "CSV format: <code>name/kurum</code>, <code>address/adres</code>, <code>phone/telefon</code> columns",
+    "csvPlaceholder": "name,address,phone\nMain Office,Istanbul,02121234567",
     "headers": {
       "name": "Institution",
       "address": "Address",
@@ -155,7 +155,7 @@
         "paragraphs": [
           "Each institution's name, address and phone are defined here. Defined institutions are selected on the New User page and appear in the signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables. Bulk import via CSV is supported."
         ],
-        "callout": { "tone": "info", "text": "<b>The Institutions feature is meant for organizations with multiple branches or campuses.</b> Each branch/location is defined as a separate institution, so every user's signature carries their own branch details. Single-location companies can define just one institution." }
+        "callout": { "tone": "info", "text": "<b>The Institutions feature is meant for organizations with multiple branches or locations.</b> Each branch/location is defined as a separate institution, so every user's signature carries their own branch details. Single-location companies can define just one institution." }
       }
     ]
   }

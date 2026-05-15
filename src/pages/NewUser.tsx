@@ -309,9 +309,6 @@ export const NewUser: React.FC = () => {
                                 kurum_adi: buildingId.trim(),
                                 kurum_adres: institutionAddress,
                                 kurum_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
-                                kampus_adi: buildingId.trim(),
-                                kampus_adres: institutionAddress,
-                                kampus_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
                                 telefon: phone ? formatPhoneForSignature(phone) : '',
                                 eposta: email
                             }
@@ -689,9 +686,6 @@ export const NewUser: React.FC = () => {
                                             kurum_adi: buildingId.trim() || t('fields.institution'),
                                             kurum_adres: institutionOptions.find(c => c.name === buildingId.trim())?.address || '',
                                             kurum_telefon: formatPhoneForSignature(institutionOptions.find(c => c.name === buildingId.trim())?.phone || '') || '',
-                                            kampus_adi: buildingId.trim() || t('fields.institution'),
-                                            kampus_adres: institutionOptions.find(c => c.name === buildingId.trim())?.address || '',
-                                            kampus_telefon: formatPhoneForSignature(institutionOptions.find(c => c.name === buildingId.trim())?.phone || '') || '',
                                             telefon: formatPhoneForSignature(phone) || t('fields.phonePlaceholder'),
                                             eposta: `${username || t('fields.emailPlaceholder')}@${domain}`
                                         }}

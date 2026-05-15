@@ -145,7 +145,7 @@ function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): n
 }
 
 app.whenReady().then(async () => {
-  // SQLite DB'yi açılışta başlat (Title/Campus/Template/Media/Job tabloları)
+  // SQLite DB'yi açılışta başlat (Title/Institution/Template/Media/Job tabloları)
   try {
     getDb();
   } catch (err) {

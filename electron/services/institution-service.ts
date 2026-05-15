@@ -114,7 +114,6 @@ export const institutionService = {
         const parsed = Papa.parse<{
             name?: string;
             kurum?: string;
-            kampus?: string;
             address?: string;
             adres?: string;
             phone?: string;
@@ -125,13 +124,13 @@ export const institutionService = {
         });
         const rows = parsed.data
             .map((r) => ({
-                name: (r.name || r.kurum || r.kampus || '').trim(),
+                name: (r.name || r.kurum || '').trim(),
                 address: (r.address || r.adres || '').trim() || null,
                 phone: (r.phone || r.telefon || '').trim() || null,
             }))
             .filter((r) => r.name);
         if (rows.length === 0) {
-            throw new Error('Geçerli kurum bulunamadı. CSV "name", "kurum" veya "kampus" sütunu içermeli.');
+            throw new Error('Geçerli kurum bulunamadı. CSV "name" veya "kurum" sütunu içermeli.');
         }
         const insert = getDb().prepare(
             'INSERT OR IGNORE INTO institutions (name, address, phone, created_by) VALUES (?, ?, ?, ?)'

@@ -16,34 +16,18 @@ vi.mock('./institution-service', () => ({
 // Mock'lar tanımlandıktan sonra import et
 import { analyzeBulkCsv } from './csv-analysis';
 
-describe('analyzeBulkCsv — geri uyum (kampus_adi → kurum_adi)', () => {
+describe('analyzeBulkCsv — temel akış', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('eski kampus_adi sütunlu satır → header normalize edilip kurum_adi olarak işlenir', () => {
-        const result = analyzeBulkCsv('signature_push', [
-            { email: 'a@x.com', ad: 'A', soyad: 'B', unvan: 'X', kampus_adi: 'Merkez', telefon: '0555' },
-        ]);
-        expect(result.summary.invalidCount).toBe(0);
-        expect(result.summary.validCount).toBe(1);
-        expect(result.validRows[0].resolvedData?.institutionAddress).toBe('İstanbul');
-        expect(result.validRows[0].resolvedData?.institutionPhone).toBe('0212');
-    });
-
-    it('yeni kurum_adi sütunlu satır → direkt çalışır', () => {
+    it('kurum_adi sütunlu satır → direkt çalışır ve resolvedData doldurulur', () => {
         const result = analyzeBulkCsv('signature_push', [
             { email: 'a@x.com', ad: 'A', soyad: 'B', unvan: 'X', kurum_adi: 'Kadıköy', telefon: '0555' },
         ]);
         expect(result.summary.validCount).toBe(1);
         expect(result.validRows[0].resolvedData?.institutionAddress).toBe('Kadıköy/İstanbul');
-    });
-
-    it('hem kampus_adi hem kurum_adi varsa kurum_adi öncelikli', () => {
-        const result = analyzeBulkCsv('signature_push', [
-            { email: 'a@x.com', ad: 'A', soyad: 'B', unvan: 'X', kurum_adi: 'Merkez', kampus_adi: 'Kadıköy', telefon: '0555' },
-        ]);
-        expect(result.validRows[0].resolvedData?.institutionAddress).toBe('İstanbul');
+        expect(result.validRows[0].resolvedData?.institutionPhone).toBe('0216');
     });
 
     it('bilinmeyen kurum adı → "Kurum bulunamadı" hatası', () => {
@@ -105,13 +89,6 @@ describe('analyzeBulkCsv — iki dilli başlıklar (TR/EN)', () => {
         const err = result.invalidRows[0].errors.find((e) => e.field === 'kurum_adi');
         expect(err!.message).toContain("'kurum_adi'");
         expect(err!.message).toContain('zorunludur');
-    });
-
-    it('legacy kampus_adi + EN diğer başlıklar karışık → kabul edilir', () => {
-        const result = analyzeBulkCsv('signature_push', [
-            { email: 'a@x.com', first_name: 'A', last_name: 'B', title: 'X', kampus_adi: 'Merkez', phone: '0555' },
-        ]);
-        expect(result.summary.validCount).toBe(1);
     });
 
     it("err.field EN başlıklı CSV'de bile kanonik kalır", () => {

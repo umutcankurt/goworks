@@ -3,14 +3,9 @@ import sanitizeHtml from 'sanitize-html';
 export interface TemplateVariables {
     ad_soyad?: string;
     unvan?: string;
-    /** Yeni standart isimler (Faz 22 — Kurum) */
     kurum_adi?: string;
     kurum_adres?: string;
     kurum_telefon?: string;
-    /** Geri uyum: eski Kampüs isimleri — kayıtlı template'lerde hâlâ kullanılıyor olabilir */
-    kampus_adi?: string;
-    kampus_adres?: string;
-    kampus_telefon?: string;
     telefon?: string;
     eposta?: string;
     [key: string]: string | undefined;
@@ -18,22 +13,12 @@ export interface TemplateVariables {
 
 /**
  * Token alias eşlemesi. Render sırasında bir token aranırken karşılığı yoksa
- * eşlenik token'a bakılır.
- * - `kampus_* ↔ kurum_*`: Faz 22 yeniden adlandırması (bidirectional)
- * - `full_name → ad_soyad` vb.: İngilizce token'lar → kanonik TR anahtar.
- *   Editör (`src/utils/signatureTokens.ts`), uygulama dili EN iken bu token'ları
- *   yazar; worker'lar `variables`'ı daima kanonik TR anahtarlarla doldurduğu için
- *   tek-hop alias yeterlidir. İki dosya birlikte güncel tutulmalıdır.
+ * eşlenik token'a bakılır. İngilizce token'lar → kanonik TR anahtar.
+ * Editör (`src/utils/signatureTokens.ts`), uygulama dili EN iken bu token'ları
+ * yazar; worker'lar `variables`'ı daima kanonik TR anahtarlarla doldurduğu için
+ * tek-hop alias yeterlidir. İki dosya birlikte güncel tutulmalıdır.
  */
 const TOKEN_ALIAS: Record<string, string> = {
-    // Kampüs → Kurum (bidirectional — Faz 22)
-    kampus_adi: 'kurum_adi',
-    kampus_adres: 'kurum_adres',
-    kampus_telefon: 'kurum_telefon',
-    kurum_adi: 'kampus_adi',
-    kurum_adres: 'kampus_adres',
-    kurum_telefon: 'kampus_telefon',
-    // İngilizce token → kanonik TR anahtar
     full_name: 'ad_soyad',
     title: 'unvan',
     institution_name: 'kurum_adi',

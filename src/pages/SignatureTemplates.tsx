@@ -41,9 +41,6 @@ export function SignatureTemplates() {
       kurum_adi: institutionName,
       kurum_adres: institutionAddress,
       kurum_telefon: institutionPhone,
-      kampus_adi: institutionName,
-      kampus_adres: institutionAddress,
-      kampus_telefon: institutionPhone,
       telefon: t('preview.sample.phone'),
       eposta: `${t('preview.sample.emailLocalPart')}@${config.allowedDomain || 'example.com'}`,
     };

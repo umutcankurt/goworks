@@ -35,7 +35,6 @@ export default defineConfig({
       'lucide-react',
       'recharts',
       'clsx',
-      'tailwind-merge',
       'react-dropzone',
       'papaparse',
     ],

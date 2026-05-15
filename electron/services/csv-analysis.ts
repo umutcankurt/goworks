@@ -32,8 +32,8 @@ export interface BulkAnalyzeResponse {
 const REQUIRED_COLUMNS: Record<string, string[]> = {
     suspend: ['email'],
     delete: ['email'],
-    // Kanonik (TR) sütunlar. CSV'de İngilizce başlıklar (first_name vb.) veya
-    // eski kampus_adi de kabul edilir — normalizeColumns() kanonik forma çevirir.
+    // Kanonik (TR) sütunlar. CSV'de İngilizce başlıklar (first_name vb.) da
+    // kabul edilir — normalizeColumns() kanonik forma çevirir.
     signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
 };
 
@@ -47,14 +47,13 @@ const TURKISH_CHARS = /[çşğüöıİÇŞĞÜÖ]/;
  */
 type ColumnLang = 'tr' | 'en';
 
-/** Alias → kanonik (TR) sütun anahtarı: İngilizce başlıklar + legacy `kampus_adi`. */
+/** Alias → kanonik (TR) sütun anahtarı: İngilizce başlıklar. */
 const COLUMN_ALIAS: Record<string, string> = {
     first_name: 'ad',
     last_name: 'soyad',
     title: 'unvan',
     institution_name: 'kurum_adi',
     phone: 'telefon',
-    kampus_adi: 'kurum_adi', // geri uyum (legacy)
 };
 
 /** Kanonik anahtar → dile göre sütun başlığı. */
@@ -102,25 +101,15 @@ const MESSAGES: Record<ColumnLang, {
 };
 
 /**
- * Satır anahtarlarını kanonik (TR) forma çevirir. İki geçişli: önce doğrudan
- * kanonik anahtarlar, sonra alias'lar — böylece hem `kurum_adi` hem `kampus_adi`
- * (ya da `institution_name`) varsa doğrudan kanonik anahtar EZİLMEZ. Hem eski
- * `kampus_adi` hem İngilizce başlıkları (`first_name` vb.) kanonik forma çözer.
+ * Satır anahtarlarını kanonik (TR) forma çevirir: trim + lowercase + alias.
+ * İngilizce başlıkları (`first_name` vb.) kanonik forma çözer.
  */
 function normalizeColumns(row: Record<string, string>): Record<string, string> {
     const result: Record<string, string> = {};
-    // 1. geçiş: doğrudan kanonik (alias olmayan) anahtarlar.
     for (const [key, value] of Object.entries(row)) {
         const k = key.trim().toLowerCase();
-        if (COLUMN_ALIAS[k] === undefined) result[k] = value;
-    }
-    // 2. geçiş: alias anahtarlar — yalnızca kanonik hedef henüz yoksa yaz.
-    for (const [key, value] of Object.entries(row)) {
-        const k = key.trim().toLowerCase();
-        const canonical = COLUMN_ALIAS[k];
-        if (canonical !== undefined && result[canonical] === undefined) {
-            result[canonical] = value;
-        }
+        const canonical = COLUMN_ALIAS[k] ?? k;
+        result[canonical] = value;
     }
     return result;
 }

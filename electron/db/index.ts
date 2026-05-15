@@ -24,49 +24,13 @@ function getSchemaPath(): string {
 
 /**
  * Idempotent migration runner — `pragma user_version` ile sürüm takip eder.
- * Schema.exec()'ten ÖNCE çağrılır; çünkü mevcut DB'lerde tablo eski adıyla durur.
+ * Schema.exec()'ten ÖNCE çağrılır.
  *
- * v0 → v1: `campuses` tablosu `institutions`'a rename + signature_templates
- *          HTML içindeki {{kampus_*}} token'ları {{kurum_*}}'a çevrilir.
  * v1 → v2: Onboarding state. Mevcut kurulumlarda companyName + allowedDomain
  *          dolu ise `onboardingCompletedAt` set edilerek wizard atlanır.
  */
 export function runMigrations(db: Database.Database): void {
     const version = db.pragma('user_version', { simple: true }) as number;
-
-    if (version < 1) {
-        const tx = db.transaction(() => {
-            // campuses tablosu varsa institutions'a yeniden adlandır
-            const oldExists = db
-                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='campuses'")
-                .get();
-            const newExists = db
-                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='institutions'")
-                .get();
-            if (oldExists && !newExists) {
-                db.exec('ALTER TABLE campuses RENAME TO institutions;');
-            }
-
-            // signature_templates HTML içindeki eski token'ları yeni isimle değiştir
-            // (sadece tablo varsa — ilk açılışta henüz yoksa skip; schema.exec() sonra oluşturur)
-            const sigTplExists = db
-                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='signature_templates'")
-                .get();
-            if (sigTplExists) {
-                db.exec(`
-                    UPDATE signature_templates
-                    SET html_content = REPLACE(REPLACE(REPLACE(html_content,
-                        '{{kampus_adi}}', '{{kurum_adi}}'),
-                        '{{kampus_adres}}', '{{kurum_adres}}'),
-                        '{{kampus_telefon}}', '{{kurum_telefon}}')
-                    WHERE html_content LIKE '%{{kampus_%';
-                `);
-            }
-
-            db.pragma('user_version = 1');
-        });
-        tx();
-    }
 
     if (version < 2) {
         const tx = db.transaction(() => {

@@ -35,10 +35,7 @@ export const COLUMN_I18N: Record<string, Record<SupportedColumnLang, string>> = 
 };
 
 /**
- * Alias eşlemesi → kanonik (TR) anahtar.
- * - İngilizce başlıklar: `first_name → ad`, vb.
- * - Geri uyum: `kampus_adi → kurum_adi` (Faz 22 yeniden adlandırması).
- *   Eski `kampus_adi` başlıklı CSV'ler hâlâ KABUL edilir; üretilmez/gösterilmez.
+ * Alias eşlemesi → kanonik (TR) anahtar. İngilizce başlıklar: `first_name → ad`, vb.
  */
 export const COLUMN_ALIAS: Record<string, string> = {
   first_name: 'ad',
@@ -46,8 +43,6 @@ export const COLUMN_ALIAS: Record<string, string> = {
   title: 'unvan',
   institution_name: 'kurum_adi',
   phone: 'telefon',
-  // Geri uyum (legacy)
-  kampus_adi: 'kurum_adi',
 };
 
 /** Verilen kanonik anahtar için aktif dile uygun sütun başlığını döner. */
@@ -66,28 +61,16 @@ export function canonicalColumn(key: string): string {
 }
 
 /**
- * Bir satırın tüm anahtarlarını kanonik forma çevirir. İki geçişli:
- * önce doğrudan kanonik (alias olmayan) anahtarlar yazılır, sonra alias'lar
- * yalnızca kanonik hedef henüz yoksa yazar — böylece hem `kurum_adi` hem
- * `kampus_adi` (ya da `institution_name`) varsa doğrudan kanonik anahtar
- * alias tarafından EZİLMEZ.
+ * Bir satırın tüm anahtarlarını kanonik forma çevirir: trim + lowercase + alias.
+ * Çakışma durumunda (hem kanonik hem alias varsa) son yazılan kazanır — bu
+ * pratikte sorun değil çünkü CSV başlıkları benzersiz olmak zorunda.
  */
 export function normalizeRowColumns(row: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
-  // 1. geçiş: doğrudan kanonik (alias olmayan) anahtarlar.
   for (const [key, value] of Object.entries(row)) {
     const normalized = key.trim().toLowerCase();
-    if (COLUMN_ALIAS[normalized] === undefined) {
-      result[normalized] = value;
-    }
-  }
-  // 2. geçiş: alias anahtarlar — yalnızca kanonik hedef henüz yoksa yaz.
-  for (const [key, value] of Object.entries(row)) {
-    const normalized = key.trim().toLowerCase();
-    const canonical = COLUMN_ALIAS[normalized];
-    if (canonical !== undefined && result[canonical] === undefined) {
-      result[canonical] = value;
-    }
+    const canonical = COLUMN_ALIAS[normalized] ?? normalized;
+    result[canonical] = value;
   }
   return result;
 }

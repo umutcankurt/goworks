@@ -49,18 +49,9 @@ export function localeToken(key: CanonicalTagKey, lang: string): string {
 /**
  * Token alias eşlemesi. Render sırasında bir token'ın karşılığı `variables`
  * içinde doğrudan bulunamazsa eşlenik kanonik anahtara bakılır.
- * - `kampus_* ↔ kurum_*`: Faz 22 yeniden adlandırması (bidirectional)
- * - `full_name → ad_soyad` vb.: İngilizce token'lar → kanonik TR anahtar
+ * İngilizce token'lar → kanonik TR anahtar.
  */
 export const TOKEN_ALIAS: Record<string, string> = {
-  // Kampüs → Kurum (bidirectional — Faz 22)
-  kampus_adi: 'kurum_adi',
-  kampus_adres: 'kurum_adres',
-  kampus_telefon: 'kurum_telefon',
-  kurum_adi: 'kampus_adi',
-  kurum_adres: 'kampus_adres',
-  kurum_telefon: 'kampus_telefon',
-  // İngilizce token → kanonik TR anahtar
   full_name: 'ad_soyad',
   title: 'unvan',
   institution_name: 'kurum_adi',

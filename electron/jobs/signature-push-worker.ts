@@ -71,9 +71,7 @@ async function processJob(
                 rowNumber = v.rowNumber;
                 const institutionAddress = v.resolvedData?.institutionAddress || '';
                 const institutionPhone = v.resolvedData?.institutionPhone || '';
-                // Geri uyum: CSV hâlâ eski kampus_adi sütununu kullanmış olabilir
-                // (csv-analysis normalize ediyor; her ihtimale karşı fallback).
-                const institutionName = v.data.kurum_adi || v.data.kampus_adi || '';
+                const institutionName = v.data.kurum_adi || '';
 
                 // Build PATCH body — only non-empty fields
                 const patchBody: any = {};
@@ -105,10 +103,6 @@ async function processJob(
                     kurum_adi: institutionName,
                     kurum_adres: institutionAddress,
                     kurum_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
-                    // Geri uyum: kayıtlı template'ler hâlâ {{kampus_*}} kullanıyor olabilir
-                    kampus_adi: institutionName,
-                    kampus_adres: institutionAddress,
-                    kampus_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
                     telefon: v.data.telefon ? formatPhoneForSignature(v.data.telefon) : '',
                     eposta: email,
                 };
@@ -124,7 +118,7 @@ async function processJob(
                 if (rowNumber !== undefined) succeededItems.push({ email, rowNumber });
             } else if (emails) {
                 email = emails[i];
-                // Legacy path: Google'dan kullanıcı bilgisini çek + Campus DB lookup
+                // Google'dan kullanıcı bilgisini çek + yerel kurum kaydı lookup
                 const userInfo = await withRetry(
                     () => adminLimiter.schedule(() => getUserInfo(email, adminEmail)),
                     log, `getUserInfo(${email})`,
@@ -148,10 +142,6 @@ async function processJob(
                     kurum_adi: org.department || '',
                     kurum_adres: institutionAddress,
                     kurum_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
-                    // Geri uyum: eski {{kampus_*}} token'ları kayıtlı template'lerde kalmış olabilir
-                    kampus_adi: org.department || '',
-                    kampus_adres: institutionAddress,
-                    kampus_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
                     telefon: phone ? formatPhoneForSignature(phone) : '',
                     eposta: email,
                 };

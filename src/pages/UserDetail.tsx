@@ -232,9 +232,9 @@ export const UserDetail: React.FC = () => {
         let institutionAddress = '';
         let institutionPhone = '';
         if (institutionName && institutionOptions.length > 0) {
-            const campus = institutionOptions.find((c: any) => c.name === institutionName);
-            if (campus && (campus as any).address) institutionAddress = (campus as any).address;
-            if (campus && (campus as any).phone) institutionPhone = (campus as any).phone;
+            const institution = institutionOptions.find((c: any) => c.name === institutionName);
+            if (institution && (institution as any).address) institutionAddress = (institution as any).address;
+            if (institution && (institution as any).phone) institutionPhone = (institution as any).phone;
         }
         if (!institutionAddress && user.addresses && user.addresses.length > 0) {
             institutionAddress = user.addresses[0]?.formatted || '';
@@ -245,9 +245,6 @@ export const UserDetail: React.FC = () => {
             kurum_adi: institutionName,
             kurum_adres: institutionAddress,
             kurum_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
-            kampus_adi: institutionName,
-            kampus_adres: institutionAddress,
-            kampus_telefon: institutionPhone ? formatPhoneForSignature(institutionPhone) : '',
             telefon: phone ? formatPhoneForSignature(phone) : '',
             eposta: user.primaryEmail,
         };
@@ -364,8 +361,8 @@ export const UserDetail: React.FC = () => {
                 orgUnitPath: editForm.orgUnitPath,
                 addresses: (() => {
                     if (!editForm.buildingId.trim()) return [];
-                    const campus = institutionOptions.find(c => c.name === editForm.buildingId.trim());
-                    return campus?.address ? [{ type: 'work', formatted: campus.address }] : [];
+                    const institution = institutionOptions.find(c => c.name === editForm.buildingId.trim());
+                    return institution?.address ? [{ type: 'work', formatted: institution.address }] : [];
                 })(),
             };
 
