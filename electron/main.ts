@@ -28,6 +28,7 @@ import { AdminService } from './services/admin-service';
 import { CacheService } from './services/cache-service';
 import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
+import { logger, getLogsDir } from './services/logger';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -132,14 +133,41 @@ const getCrashLogPath = () => {
 };
 
 const writeLog = (prefix: string, detail: unknown) => {
-  const stamp = new Date().toISOString();
-  const msg = `[${stamp}] ${prefix}:\n${detail instanceof Error ? detail.stack : String(detail)}\n${'─'.repeat(80)}\n`;
-  console.error(msg);
-  try { fs.appendFileSync(getCrashLogPath(), msg, 'utf-8'); } catch {/* ignore */ }
+  // Önce logger üzerinden günlük log dosyasına + console'a yaz (file rotation dahil).
+  logger.error(`${prefix}:`, detail);
+  // Eski crash.log dosyasını geriye uyumluluk için yazmaya devam et —
+  // mevcut kurulumlarda crash.log destek için kullanılıyor.
+  try {
+    const stamp = new Date().toISOString();
+    const msg = `[${stamp}] ${prefix}:\n${detail instanceof Error ? detail.stack : String(detail)}\n${'─'.repeat(80)}\n`;
+    fs.appendFileSync(getCrashLogPath(), msg, 'utf-8');
+  } catch {/* ignore */ }
 };
 
 process.on('uncaughtException', (err) => writeLog('UNCAUGHT EXCEPTION', err));
 process.on('unhandledRejection', (reason) => writeLog('UNHANDLED REJECTION', reason));
+
+// Renderer'dan gelen log:write isteklerini logger'a yönlendir.
+// SerializedError objelerini Error instance'a geri çevirir ki stack korunsun.
+interface SerializedError { __error: true; name: string; message: string; stack?: string }
+function deserializeArg(a: unknown): unknown {
+  if (a && typeof a === 'object' && (a as SerializedError).__error) {
+    const se = a as SerializedError;
+    const err = new Error(se.message);
+    err.name = se.name;
+    if (se.stack) err.stack = se.stack;
+    return err;
+  }
+  return a;
+}
+ipcMain.on('log:write', (_event, payload: { level: 'debug' | 'info' | 'warn' | 'error'; args: unknown[] }) => {
+  try {
+    const args = payload.args.map(deserializeArg);
+    logger[payload.level]('[renderer]', ...args);
+  } catch {/* logger never throws */}
+});
+
+ipcMain.handle('log:getLogsDir', () => getLogsDir());
 // ─────────────────────────────────────────────────────────────────────────────
 
 function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): number {
