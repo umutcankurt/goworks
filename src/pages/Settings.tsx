@@ -234,16 +234,16 @@ function TitlesTab({ disabled }: { disabled: boolean }) {
                       />
                     </td>
                     <td className="px-4 py-2 flex items-center gap-1">
-                      <button onClick={() => handleUpdate(row.id)} className="text-eth-secondary hover:text-eth-secondary"><Check size={16} /></button>
-                      <button onClick={() => setEditingId(null)} className="text-on-surface-variant hover:text-on-surface-variant"><X size={16} /></button>
+                      <button onClick={() => handleUpdate(row.id)} aria-label={tCommon('save')} title={tCommon('save')} className="text-eth-secondary hover:text-eth-secondary"><Check size={16} aria-hidden="true" /></button>
+                      <button onClick={() => setEditingId(null)} aria-label={tCommon('cancel')} title={tCommon('cancel')} className="text-on-surface-variant hover:text-on-surface-variant"><X size={16} aria-hidden="true" /></button>
                     </td>
                   </>
                 ) : (
                   <>
                     <td className="px-4 py-2">{row.name}</td>
                     <td className="px-4 py-2 flex items-center gap-5">
-                      <button onClick={() => { setEditingId(row.id); setEditingName(row.name); }} className="text-on-surface-variant hover:text-primary-600"><Pencil size={16} /></button>
-                      <button onClick={() => handleDelete(row.id)} className="text-eth-danger hover:text-eth-danger"><Trash2 size={16} /></button>
+                      <button onClick={() => { setEditingId(row.id); setEditingName(row.name); }} aria-label={tCommon('edit')} title={tCommon('edit')} className="text-on-surface-variant hover:text-primary-600"><Pencil size={16} aria-hidden="true" /></button>
+                      <button onClick={() => handleDelete(row.id)} aria-label={tCommon('delete')} title={tCommon('delete')} className="text-eth-danger hover:text-eth-danger"><Trash2 size={16} aria-hidden="true" /></button>
                     </td>
                   </>
                 )}
@@ -467,8 +467,8 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
                       />
                     </td>
                     <td className="px-4 py-2 flex items-center gap-1">
-                      <button onClick={() => handleUpdate(c.id)} className="text-eth-secondary hover:text-eth-secondary"><Check size={16} /></button>
-                      <button onClick={() => setEditingId(null)} className="text-on-surface-variant hover:text-on-surface-variant"><X size={16} /></button>
+                      <button onClick={() => handleUpdate(c.id)} aria-label={tCommon('save')} title={tCommon('save')} className="text-eth-secondary hover:text-eth-secondary"><Check size={16} aria-hidden="true" /></button>
+                      <button onClick={() => setEditingId(null)} aria-label={tCommon('cancel')} title={tCommon('cancel')} className="text-on-surface-variant hover:text-on-surface-variant"><X size={16} aria-hidden="true" /></button>
                     </td>
                   </>
                 ) : (
@@ -477,8 +477,8 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
                     <td className="px-4 py-2 text-on-surface-variant">{c.address || '-'}</td>
                     <td className="px-4 py-2 text-on-surface-variant">{c.phone || '-'}</td>
                     <td className="px-4 py-2 flex items-center gap-5">
-                      <button onClick={() => { setEditingId(c.id); setEditForm({ name: c.name, address: c.address || '', phone: c.phone || '' }); }} className="text-on-surface-variant hover:text-primary-600"><Pencil size={16} /></button>
-                      <button onClick={() => handleDelete(c.id)} className="text-eth-danger hover:text-eth-danger"><Trash2 size={16} /></button>
+                      <button onClick={() => { setEditingId(c.id); setEditForm({ name: c.name, address: c.address || '', phone: c.phone || '' }); }} aria-label={tCommon('edit')} title={tCommon('edit')} className="text-on-surface-variant hover:text-primary-600"><Pencil size={16} aria-hidden="true" /></button>
+                      <button onClick={() => handleDelete(c.id)} aria-label={tCommon('delete')} title={tCommon('delete')} className="text-eth-danger hover:text-eth-danger"><Trash2 size={16} aria-hidden="true" /></button>
                     </td>
                   </>
                 )}

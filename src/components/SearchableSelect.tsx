@@ -98,11 +98,24 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         <div ref={containerRef} className="relative">
             {value && !isOpen ? (
                 <div
+                    role="button"
+                    tabIndex={disabled ? -1 : 0}
+                    aria-disabled={disabled}
+                    aria-haspopup="listbox"
+                    aria-expanded={isOpen}
                     className={`w-full p-2 border border-outline-variant/30 rounded-lg flex items-center justify-between cursor-pointer ${
                         disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container hover:border-outline-variant/40'
                     }`}
                     onClick={() => {
                         if (!disabled) {
+                            setIsOpen(true);
+                            setTimeout(() => inputRef.current?.focus(), 0);
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (disabled) return;
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                            e.preventDefault();
                             setIsOpen(true);
                             setTimeout(() => inputRef.current?.focus(), 0);
                         }
@@ -114,9 +127,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                             <button
                                 type="button"
                                 onClick={handleClear}
+                                aria-label={t('clear')}
+                                title={t('clear')}
                                 className="text-on-surface-variant hover:text-on-surface-variant"
                             >
-                                <X size={16} />
+                                <X size={16} aria-hidden="true" />
                             </button>
                         )}
                         <ChevronDown size={16} className="text-on-surface-variant" />
@@ -124,6 +139,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 </div>
             ) : (
                 <div
+                    role="presentation"
                     className={`w-full flex items-center border rounded-lg ${
                         isOpen ? 'border-eth-primary-container/40 ring-2 ring-blue-500' : 'border-outline-variant/30'
                     } ${disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container'}`}

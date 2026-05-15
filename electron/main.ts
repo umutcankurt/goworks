@@ -31,6 +31,7 @@ import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
 import { toUserMessage } from './lib/error-utils';
+import { throttle } from './lib/throttle';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -451,32 +452,32 @@ app.whenReady().then(async () => {
     let failedCount = 0;
     const errors: Array<{ user: string, error: string }> = [];
 
+    // Progress event'lerini 100ms throttle ile gönder. Renderer'da React
+    // re-render baskısını azaltır; her item'da 1 emit (önceden 2 idi: redundant
+    // "before action" kaldırıldı). Flush ile son durum garanti gönderilir.
+    const sendProgress = throttle(
+      (event: import('./types').BulkProgressEvent) => {
+        win?.webContents.send('admin:bulkProgress', event);
+      },
+      100,
+    );
+
     for (let i = 0; i < users.length; i++) {
+      const userKey = users[i];
+
       if (cancelBulkOperation) {
+        sendProgress.cancel();
         win?.webContents.send('admin:bulkProgress', {
           total: users.length,
           current: i,
           success: successCount,
           failed: failedCount,
-          currentUser: users[i],
+          currentUser: userKey,
           errors,
-          status: 'cancelled'
+          status: 'cancelled',
         } as import('./types').BulkProgressEvent);
         return { success: false, cancelled: true, message: 'Bulk operation cancelled by user.' };
       }
-
-      const userKey = users[i];
-
-      // Progress update before action
-      win?.webContents.send('admin:bulkProgress', {
-        total: users.length,
-        current: i,
-        success: successCount,
-        failed: failedCount,
-        currentUser: userKey,
-        errors,
-        status: 'running'
-      } as import('./types').BulkProgressEvent);
 
       try {
         if (action === 'suspend') {
@@ -485,16 +486,27 @@ app.whenReady().then(async () => {
           await adminService.deleteUser(userKey);
         }
         successCount++;
-      } catch (error: any) {
+      } catch (error) {
         failedCount++;
-        errors.push({ user: userKey, error: error.message });
+        errors.push({ user: userKey, error: toUserMessage(error) });
       }
+
+      sendProgress({
+        total: users.length,
+        current: i + 1,
+        success: successCount,
+        failed: failedCount,
+        currentUser: userKey,
+        errors,
+        status: 'running',
+      } as import('./types').BulkProgressEvent);
 
       // Add a small delay for rate limiting (500ms)
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Final progress update
+    // Final progress: throttle'daki bekleyen emit'i iptal et, completed event'i direkt gönder
+    sendProgress.cancel();
     win?.webContents.send('admin:bulkProgress', {
       total: users.length,
       current: users.length,
@@ -502,7 +514,7 @@ app.whenReady().then(async () => {
       failed: failedCount,
       currentUser: '',
       errors,
-      status: 'completed'
+      status: 'completed',
     } as import('./types').BulkProgressEvent);
 
     return { success: true, successCount, failedCount, errors };

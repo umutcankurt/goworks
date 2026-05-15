@@ -153,7 +153,16 @@ export function SignatureTemplates() {
               {templates.map(tmpl => (
                 <div
                   key={tmpl.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={selectedId === tmpl.id}
                   onClick={() => selectTemplate(tmpl)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      selectTemplate(tmpl);
+                    }
+                  }}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedId === tmpl.id
                       ? 'border-eth-primary-container/40 bg-eth-primary-container/15 ring-1 ring-eth-primary-container/40'
                       : 'border-outline-variant/30 hover:border-outline-variant/60 bg-surface-container'
