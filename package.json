@@ -91,5 +91,9 @@
     "vite-plugin-electron-renderer": "^0.14.5",
     "vitest": "^4.0.18"
   },
-  "main": "dist-electron/main.js"
+  "main": "dist-electron/main.js",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
 }
