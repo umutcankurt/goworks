@@ -17,7 +17,7 @@ export function WelcomeStep({ onStart }: WelcomeStepProps) {
     ] as const;
 
     return (
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 py-12">
+        <div className="mx-auto flex h-full max-w-5xl flex-col items-center justify-center gap-6 py-6">
             <div className="text-center">
                 <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-eth-primary">
                     {t('welcome.eyebrow')}

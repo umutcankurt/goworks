@@ -11,14 +11,14 @@ export function CloudProjectStep() {
     const apis = (t('cloud.apis', { returnObjects: true }) as string[]) || [];
 
     return (
-        <div className="mx-auto max-w-6xl py-8">
-            <div className="mb-8">
+        <div className="mx-auto flex h-full max-w-6xl flex-col py-4">
+            <div className="mb-4">
                 <h1 className="text-3xl font-semibold tracking-tight text-on-surface">{t('cloud.title')}</h1>
                 <p className="mt-2 text-on-surface-variant">{t('cloud.subtitle')}</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
-                <div className="space-y-3">
+            <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+                <div className="space-y-3 overflow-y-auto pr-2">
                     {instructions.map((step, idx) => (
                         <Card key={idx} tone="default" padding="md">
                             <div className="flex items-start gap-4">

@@ -58,12 +58,17 @@ function createWindow() {
   win = new BrowserWindow({
     show: false,
     title: 'GoWorks',
+    width: 1440,
+    height: 900,
+    minWidth: 1280,
+    minHeight: 720,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
 
   win.once('ready-to-show', () => {
+    win?.maximize()
     win?.show()
   })
 

@@ -25,16 +25,16 @@ export function CompletionStep() {
     };
 
     return (
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-8 py-8">
+        <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center gap-4 py-4">
             <div
-                className="flex h-20 w-20 items-center justify-center rounded-full border border-eth-secondary/40 bg-eth-secondary/15 text-eth-secondary eth-glow-success"
+                className="flex h-16 w-16 items-center justify-center rounded-full border border-eth-secondary/40 bg-eth-secondary/15 text-eth-secondary eth-glow-success"
                 aria-hidden
             >
-                <CheckCircle2 className="h-10 w-10" strokeWidth={2.5} />
+                <CheckCircle2 className="h-8 w-8" strokeWidth={2.5} />
             </div>
 
             <div className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-on-surface">
+                <h1 className="text-3xl font-bold tracking-tight text-on-surface">
                     {t('completion.title')}
                 </h1>
                 <p className="mt-3 text-on-surface-variant">{t('completion.subtitle')}</p>

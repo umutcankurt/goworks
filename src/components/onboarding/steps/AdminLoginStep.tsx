@@ -27,16 +27,16 @@ export function AdminLoginStep() {
     };
 
     return (
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 py-8">
+        <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-4 py-4">
             <div
-                className="flex h-20 w-20 items-center justify-center rounded-full border border-eth-primary/40 bg-eth-primary/15 text-eth-primary eth-glow-cyan-ambient"
+                className="flex h-16 w-16 items-center justify-center rounded-full border border-eth-primary/40 bg-eth-primary/15 text-eth-primary eth-glow-cyan-ambient"
                 aria-hidden
             >
-                <LogIn className="h-10 w-10" strokeWidth={2.5} />
+                <LogIn className="h-8 w-8" strokeWidth={2.5} />
             </div>
 
             <div className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-on-surface">
+                <h1 className="text-3xl font-bold tracking-tight text-on-surface">
                     {t('adminLogin.title')}
                 </h1>
                 <p className="mt-3 text-on-surface-variant">{t('adminLogin.subtitle')}</p>

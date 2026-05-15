@@ -23,13 +23,13 @@ export function OnboardingShell({
     children,
 }: OnboardingShellProps) {
     return (
-        <div className="eth-app min-h-screen">
+        <div className="eth-app h-screen overflow-hidden">
             <Sidebar current={step} />
 
-            <div className="flex min-h-screen flex-col md:ml-[280px]">
+            <div className="flex h-screen flex-col overflow-hidden md:ml-[280px]">
                 <Header />
 
-                <main className="flex-1 px-8 pb-12">{children}</main>
+                <main className="flex-1 min-h-0 overflow-hidden px-8 py-4">{children}</main>
 
                 {showFooter && (
                     <Footer
