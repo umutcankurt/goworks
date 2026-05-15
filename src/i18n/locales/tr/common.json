@@ -69,5 +69,9 @@
     "light": "Açık",
     "dark": "Koyu",
     "aria": "Tema değiştir"
+  },
+  "bootWarning": {
+    "serviceAccountMissingTitle": "Servis Hesabı Yapılandırılmamış",
+    "serviceAccountMissingDetail": "İmza gönderimi ve denetim için Settings → Servis Hesabı sekmesinden JSON anahtarını yükleyin."
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // --- Hoisted mocks ---
 
@@ -45,6 +45,13 @@ describe('AuthService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         fsMock.existsSync.mockReturnValue(false);
+        // Faz B sonrası constructor env zorunluluğu — testlerde stub'lıyoruz.
+        vi.stubEnv('GOOGLE_CLIENT_ID', 'test-client-id');
+        vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-client-secret');
+    });
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
     });
 
     describe('clearStoredTokens', () => {
@@ -66,6 +73,20 @@ describe('AuthService', () => {
             new AuthService();
 
             expect(fsMock.unlinkSync).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('env validation', () => {
+        it('GOOGLE_CLIENT_ID yoksa constructor throw eder', async () => {
+            vi.stubEnv('GOOGLE_CLIENT_ID', '');
+            const { AuthService } = await import('./auth-service');
+            expect(() => new AuthService()).toThrow(/GOOGLE_CLIENT_ID/);
+        });
+
+        it('GOOGLE_CLIENT_SECRET yoksa constructor throw eder', async () => {
+            vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
+            const { AuthService } = await import('./auth-service');
+            expect(() => new AuthService()).toThrow(/GOOGLE_CLIENT_SECRET/);
         });
     });
 });

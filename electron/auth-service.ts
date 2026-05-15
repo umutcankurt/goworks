@@ -27,9 +27,16 @@ export class AuthService {
     private currentUserEmail: string | null = null;
 
     constructor() {
-        // These should be load from env vars
-        const clientId = process.env.GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID';
-        const clientSecret = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_CLIENT_SECRET';
+        // Boot-check (electron/config/boot-check.ts) bu env'lerin tanımlı ve
+        // placeholder olmadığını zaten doğruluyor — burada düşürürsek
+        // misconfiguration sessiz değil, görünür olur.
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+        if (!clientId || !clientSecret) {
+            throw new Error(
+                'AuthService: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET tanımlı değil (boot-check geçersiz).',
+            );
+        }
 
         this.tokenPath = path.join(app.getPath('userData'), 'google_auth_token.json');
 

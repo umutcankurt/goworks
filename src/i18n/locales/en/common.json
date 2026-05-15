@@ -69,5 +69,9 @@
     "light": "Light",
     "dark": "Dark",
     "aria": "Toggle theme"
+  },
+  "bootWarning": {
+    "serviceAccountMissingTitle": "Service Account Not Configured",
+    "serviceAccountMissingDetail": "Upload the JSON key from Settings → Service Account to enable signature push and audit."
   }
 }

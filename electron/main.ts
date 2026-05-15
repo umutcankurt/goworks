@@ -29,6 +29,7 @@ import { CacheService } from './services/cache-service';
 import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir } from './services/logger';
+import { runBootCheck, type BootCheckResult } from './config/boot-check';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -177,7 +178,24 @@ function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): n
   return 0;
 }
 
+// Boot-check sonucu — soft-warn flag'lerini renderer'a `config:getBootStatus`
+// IPC handler üzerinden sunarız.
+let bootStatus: BootCheckResult = { soft: { serviceAccountMissing: false } };
+
+ipcMain.handle('config:getBootStatus', () => bootStatus);
+
 app.whenReady().then(async () => {
+  // Boot-time validation (env, userData writable, service account). Hard-fail
+  // durumunda runBootCheck dialog gösterir ve app.exit(1) çağırır.
+  try {
+    bootStatus = runBootCheck();
+  } catch (err) {
+    // app.exit() async — bu satıra düşmek anormal değildir, sadece exit'in
+    // tamamlanmasını bekliyoruz.
+    writeLog('BOOT CHECK FAILED', err);
+    return;
+  }
+
   // SQLite DB'yi açılışta başlat (Title/Institution/Template/Media/Job tabloları)
   try {
     getDb();

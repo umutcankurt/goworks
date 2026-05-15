@@ -100,6 +100,7 @@ GoWorks does not ship with credentials — each deployment uses its own Google C
    GOOGLE_CLIENT_ID=your_client_id_here
    GOOGLE_CLIENT_SECRET=your_client_secret_here
    ```
+   > **Note:** Both values are required. GoWorks performs a boot-time check and will refuse to start with a clear error dialog if either is missing or left as a placeholder. To bypass the check during early development (not recommended), set `GOWORKS_SKIP_BOOT_CHECK=1`.
 
 ### 2. Install and run
 
