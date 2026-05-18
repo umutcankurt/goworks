@@ -53,3 +53,10 @@ release/
 # Database backups
 *.dump
 
+# TypeScript incremental build cache (tsconfig references + composite)
+*.tsbuildinfo
+
+# tsconfig.node.json composite project compile output (vite.config.ts → JS+DTS)
+vite.config.js
+vite.config.d.ts
+
