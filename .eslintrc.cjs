@@ -16,5 +16,15 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'off',
     // autoFocus modal açılışında ilk input'a focus vermek standart UX — kapalı.
     'jsx-a11y/no-autofocus': 'off',
+    // `_name` prefix konvansiyonu: kasıtlı kullanılmayan parametre/değişken
+    // (mock imza uyumluluğu, destructuring vs.).
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      },
+    ],
   },
 }
