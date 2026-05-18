@@ -36,7 +36,7 @@
     "dev": "vite",
     "build": "tsc && vite build && electron-builder -mw",
     "postbuild": "electron-builder install-app-deps",
-    "rebuild": "electron-builder install-app-deps && node scripts/sqlite-binary.mjs cache electron",
+    "rebuild": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "pretest": "node scripts/sqlite-binary.mjs use node",
@@ -46,7 +46,7 @@
     "i18n:check": "node scripts/check-i18n-parity.mjs",
     "abi:check": "node scripts/check-native-abi.mjs",
     "prepare": "husky || true",
-    "postinstall": "electron-builder install-app-deps && node scripts/sqlite-binary.mjs cache electron"
+    "postinstall": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron"
   },
   "dependencies": {
     "@types/papaparse": "^5.5.2",

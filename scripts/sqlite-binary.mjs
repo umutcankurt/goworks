@@ -280,15 +280,32 @@ function cmdPrepareTest({ force = false } = {}) {
         }
     }
 
+    // NOT: cmdCache içindeki `require('better-sqlite3')` probe'u native
+    // binding'i dlopen ile yüklüyor. Bir process içinde aynı .node dosyası
+    // iki kez yüklenemez — ikinci probe (electron) ilk yüklenen (node) ABI'yi
+    // görür ve yanlış teşhis koyar. Bunu önlemek için her cache adımını
+    // ayrı child process'te çalıştırıyoruz.
+    function spawnCache(mode) {
+        runStep(`Cache ${mode}`, process.execPath, [
+            new URL(import.meta.url).pathname,
+            'cache',
+            mode,
+        ]);
+    }
+
     // 1) Node ABI ile derle ve cache'le.
     purgeBuildDir();
     runStep('Node ABI derleme', 'npm', ['rebuild', 'better-sqlite3']);
-    cmdCache('node');
+    spawnCache('node');
 
     // 2) Electron ABI'ye geri derle ve cache'le.
+    // NOT: `electron-builder install-app-deps` better-sqlite3 için Node ABI
+    // prebuilt'ı indirip fallback olarak yerleştiriyor (Electron 40 prebuilt
+    // yok). `@electron/rebuild` doğrudan force build ile gerçek Electron ABI
+    // binary'sini üretir.
     purgeBuildDir();
-    runStep('Electron ABI derleme', 'npx', ['electron-builder', 'install-app-deps']);
-    cmdCache('electron');
+    runStep('Electron ABI derleme', 'npx', ['electron-rebuild', '-f', '-w', 'better-sqlite3']);
+    spawnCache('electron');
 
     console.log('\n✓ [sqlite-binary] prepare-test tamamlandı. Artık `npm test` swap ile çalışır.');
 }
