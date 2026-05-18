@@ -35,7 +35,7 @@
     "predev": "node scripts/check-native-abi.mjs",
     "dev": "vite",
     "build": "tsc && vite build && electron-builder -mw",
-    "postbuild": "electron-builder install-app-deps",
+    "postbuild": "electron-rebuild -f -w better-sqlite3",
     "rebuild": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
