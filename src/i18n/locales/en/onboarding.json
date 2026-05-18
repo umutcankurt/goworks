@@ -112,7 +112,34 @@
       "Reports API (Audit)"
     ],
     "openConsole": "Open Cloud Console",
-    "tip": "Tip: type the full API name in the search box — multiple APIs share similar prefixes."
+    "tip": "Tip: type the full API name in the search box — multiple APIs share similar prefixes.",
+    "credentials": {
+      "title": "OAuth Client ID and Secret",
+      "subtitle": "Cloud Console → APIs & Services → Credentials → \"Create OAuth client ID\" → type \"Desktop app\". Paste the two values you receive here. The secret is stored encrypted on this device via the OS keychain (Keychain / DPAPI).",
+      "clientIdLabel": "Client ID",
+      "clientIdPlaceholder": "1234567890-abc...apps.googleusercontent.com",
+      "clientIdHint": "Copy from the OAuth 2.0 Client ID list in Cloud Console.",
+      "clientSecretLabel": "Client Secret",
+      "clientSecretPlaceholder": "GOCSPX-...",
+      "clientSecretStoredPlaceholder": "•••••••• (stored — type to overwrite)",
+      "clientSecretHint": "Stored only on this device, encrypted via the OS keychain.",
+      "clientSecretRotateHint": "Existing secret is kept. Typing a new value overwrites it.",
+      "revealSecret": "Show",
+      "hideSecret": "Hide",
+      "testButton": "Test",
+      "testing": "Testing...",
+      "testSuccess": "Credentials look valid",
+      "testFailedUnknown": "Could not validate credentials",
+      "saveButton": "Save",
+      "saving": "Saving...",
+      "saved": "OAuth credentials saved",
+      "saveFailed": "Could not save: {{error}}",
+      "savedBadge": "Saved",
+      "clearButton": "Remove",
+      "clearConfirm": "Are you sure you want to remove the stored OAuth credentials? You'll have to re-enter them via the wizard on next launch.",
+      "cleared": "OAuth credentials removed",
+      "loading": "Checking stored credentials..."
+    }
   },
   "serviceAccount": {
     "title": "Service Account key",
@@ -183,6 +210,7 @@
   "errors": {
     "needServiceAccount": "Upload the Service Account JSON key first.",
     "needBranding": "Fill in the company name and allowed domain before continuing.",
-    "needDwdTest": "Run the DWD test successfully before continuing."
+    "needDwdTest": "Run the DWD test successfully before continuing.",
+    "needCredentials": "Save the Google OAuth Client ID and Secret before continuing."
   }
 }

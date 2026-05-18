@@ -94,13 +94,11 @@ GoWorks does not ship with credentials — each deployment uses its own Google C
 1. Create a project in the [Google Cloud Console](https://console.cloud.google.com/).
 2. Enable these APIs: **Admin SDK API**, **Groups Settings API**, and **Gmail API**.
 3. Configure the **OAuth consent screen** — choose the **Internal** user type (recommended for a single organization; no Google verification required).
-4. Create an **OAuth client ID** with application type **Desktop app**.
-5. Copy `.env.example` to `.env` and fill in the client ID and secret:
-   ```env
-   GOOGLE_CLIENT_ID=your_client_id_here
-   GOOGLE_CLIENT_SECRET=your_client_secret_here
-   ```
-   > **Note:** Both values are required. GoWorks performs a boot-time check and will refuse to start with a clear error dialog if either is missing or left as a placeholder. To bypass the check during early development (not recommended), set `GOWORKS_SKIP_BOOT_CHECK=1`.
+4. Create an **OAuth client ID** with application type **Desktop app**. Keep the Client ID and Secret handy — the onboarding wizard will ask for them on first launch.
+
+   > **No `.env` required.** The OAuth Client ID/Secret are collected via the onboarding wizard's "Google Cloud project" step and stored locally — Client ID in the SQLite `app_config` table and the secret encrypted in the OS keychain (Keychain on macOS, DPAPI on Windows). You can rotate them later from Settings → Genel → "Google OAuth Bilgileri".
+   >
+   > For local development you can still drop the values into `.env` (copy `.env.example`); on first launch they are auto-migrated to encrypted storage and the file is renamed to `.env.migrated` in production builds (kept untouched in dev).
 
 ### 2. Install and run
 
@@ -128,6 +126,22 @@ npm run build
 ```
 
 Produces platform installers under `release/{version}/` — macOS `.dmg`, Windows `.exe` (NSIS), and Linux `AppImage`. There is no auto-update; distribute new versions manually.
+
+## Troubleshooting
+
+### `No handler registered for 'X'` (random IPC errors after building installers)
+
+If you ran `npm run build` (which produces both `-m` and `-w` artifacts) and then went back to your dev machine, the native `better-sqlite3` binary in `node_modules/` may be compiled for the wrong platform or Electron ABI. The symptom is a random IPC error in the renderer — `config:set`, `auth:check`, `config:getAll`, etc.
+
+Three independent defenses are in place:
+
+1. **`npm run dev`** detects ABI mismatch via the `predev` hook and auto-rebuilds. A visible banner is printed so you know why startup is slow (~30–60s).
+2. **Boot-check** — if the mismatch is somehow still present at runtime, an error dialog shows the exact remediation command before the app exits.
+3. **Manual fix** — `npm run rebuild` (alias for `electron-builder install-app-deps`) at any time.
+
+**CI / strict mode**: set `CHECK_NATIVE_ABI_STRICT=1` (or run under `CI=true`, which GitHub Actions and most CI runners set automatically) to make the predev hook fail loudly instead of auto-rebuilding.
+
+You can also run `npm run abi:check` standalone to check the binary without invoking dev.
 
 ## Architecture
 

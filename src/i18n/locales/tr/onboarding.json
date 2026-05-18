@@ -112,7 +112,34 @@
       "Reports API (Audit)"
     ],
     "openConsole": "Cloud Console'u aç",
-    "tip": "İpucu: Bir API'yi etkinleştirmeden önce arama kutusuna tam adını yazın; benzer isimli farklı API'ler olabilir."
+    "tip": "İpucu: Bir API'yi etkinleştirmeden önce arama kutusuna tam adını yazın; benzer isimli farklı API'ler olabilir.",
+    "credentials": {
+      "title": "OAuth Client ID ve Secret",
+      "subtitle": "Cloud Console → API'ler ve Servisler → Kimlik Bilgileri → \"OAuth client ID oluştur\" → tip \"Masaüstü uygulaması\". Oluşturduktan sonra elde ettiğiniz iki değeri buraya girin. Secret bu cihazda işletim sistemi anahtar deposunda (Keychain / DPAPI) şifrelenerek saklanır.",
+      "clientIdLabel": "Client ID",
+      "clientIdPlaceholder": "1234567890-abc...apps.googleusercontent.com",
+      "clientIdHint": "Cloud Console'daki OAuth 2.0 Client ID listesinden kopyalayın.",
+      "clientSecretLabel": "Client Secret",
+      "clientSecretPlaceholder": "GOCSPX-...",
+      "clientSecretStoredPlaceholder": "•••••••• (kayıtlı — değiştirmek için yazın)",
+      "clientSecretHint": "Sadece bu cihazda OS anahtar deposunda şifreli olarak saklanır.",
+      "clientSecretRotateHint": "Mevcut secret korunur. Yeni bir değer yazarsanız üzerine yazılır.",
+      "revealSecret": "Göster",
+      "hideSecret": "Gizle",
+      "testButton": "Test et",
+      "testing": "Test ediliyor...",
+      "testSuccess": "Bilgiler geçerli görünüyor",
+      "testFailedUnknown": "Bilgiler doğrulanamadı",
+      "saveButton": "Kaydet",
+      "saving": "Kaydediliyor...",
+      "saved": "OAuth bilgileri kaydedildi",
+      "saveFailed": "Kaydedilemedi: {{error}}",
+      "savedBadge": "Kayıtlı",
+      "clearButton": "Sil",
+      "clearConfirm": "Kayıtlı OAuth bilgilerini silmek istediğinize emin misiniz? Sonraki girişte sihirbazdan yeniden tanımlamanız gerekecek.",
+      "cleared": "OAuth bilgileri silindi",
+      "loading": "Kayıtlı bilgiler kontrol ediliyor..."
+    }
   },
   "serviceAccount": {
     "title": "Service Account anahtarı",
@@ -183,6 +210,7 @@
   "errors": {
     "needServiceAccount": "Önce Service Account JSON anahtarını yükleyin.",
     "needBranding": "Devam etmeden önce firma adı ve izin verilen domain doldurulmalı.",
-    "needDwdTest": "Devam etmeden önce DWD bağlantısını başarıyla test edin."
+    "needDwdTest": "Devam etmeden önce DWD bağlantısını başarıyla test edin.",
+    "needCredentials": "Devam etmeden önce Google OAuth Client ID ve Secret'ı kaydedin."
   }
 }

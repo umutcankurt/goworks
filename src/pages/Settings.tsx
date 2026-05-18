@@ -11,6 +11,7 @@ import { initialsFrom } from '../utils/initials';
 import { useLanguage } from '../i18n/useLanguage';
 import { LANGUAGES } from '../i18n/types';
 import { HelpGuide } from '../components/HelpGuide';
+import { OAuthCredentialsForm } from '../components/onboarding/shared/OAuthCredentialsForm';
 
 type Tab = 'general' | 'titles' | 'institutions';
 
@@ -763,9 +764,28 @@ function GeneralTab() {
         </div>
       </div>
 
+      <GoogleCloudSection />
       <ServiceAccountSection />
       <DwdSection />
       <ResetWizardSection />
+    </div>
+  );
+}
+
+/* ============================================================
+ * Google Cloud OAuth credentials — clientId + clientSecret (Faz 31)
+ * ============================================================ */
+function GoogleCloudSection() {
+  const { t } = useTranslation('settings');
+  return (
+    <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+      <h2 className="text-lg font-semibold text-on-surface mb-1">
+        {t('general.googleCloud.title')}
+      </h2>
+      <p className="text-sm text-on-surface-variant mb-4">
+        {t('general.googleCloud.subtitle')}
+      </p>
+      <OAuthCredentialsForm requireSecret={false} showClearButton />
     </div>
   );
 }

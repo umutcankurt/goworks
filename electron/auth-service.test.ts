@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // --- Hoisted mocks ---
 
@@ -17,12 +17,20 @@ const oauth2Instance = vi.hoisted(() => ({
     credentials: {} as any,
 }));
 
-// vi.fn with regular function so it can be used as constructor
 const OAuth2Constructor = vi.hoisted(() =>
     vi.fn(function (this: any) {
         Object.assign(this, oauth2Instance);
     })
 );
+
+const appConfigMock = vi.hoisted(() => ({
+    get: vi.fn((_key: string): string => ''),
+}));
+
+const secureStorageMock = vi.hoisted(() => ({
+    getClientSecret: vi.fn((): string | null => null),
+    hasClientSecret: vi.fn(() => false),
+}));
 
 // --- Module mocks ---
 
@@ -41,17 +49,22 @@ vi.mock('./google-lazy', () => ({
     })),
 }));
 
+vi.mock('./services/app-config-service', () => ({
+    appConfigService: appConfigMock,
+}));
+
+vi.mock('./services/secure-storage', () => ({
+    secureStorage: secureStorageMock,
+}));
+
 describe('AuthService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         fsMock.existsSync.mockReturnValue(false);
-        // Faz B sonrası constructor env zorunluluğu — testlerde stub'lıyoruz.
-        vi.stubEnv('GOOGLE_CLIENT_ID', 'test-client-id');
-        vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-client-secret');
-    });
-
-    afterEach(() => {
-        vi.unstubAllEnvs();
+        // Faz 31 default: credential yok. Lazy init için.
+        appConfigMock.get.mockReturnValue('');
+        secureStorageMock.getClientSecret.mockReturnValue(null);
+        secureStorageMock.hasClientSecret.mockReturnValue(false);
     });
 
     describe('clearStoredTokens', () => {
@@ -76,17 +89,55 @@ describe('AuthService', () => {
         });
     });
 
-    describe('env validation', () => {
-        it('GOOGLE_CLIENT_ID yoksa constructor throw eder', async () => {
-            vi.stubEnv('GOOGLE_CLIENT_ID', '');
+    describe('credential validation (lazy)', () => {
+        it('constructor credential yokken throw etmez (Faz 31)', async () => {
             const { AuthService } = await import('./auth-service');
-            expect(() => new AuthService()).toThrow(/GOOGLE_CLIENT_ID/);
+            expect(() => new AuthService()).not.toThrow();
         });
 
-        it('GOOGLE_CLIENT_SECRET yoksa constructor throw eder', async () => {
-            vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
+        it('clientId yokken getClient() MissingOAuthCredentialsError fırlatır', async () => {
+            appConfigMock.get.mockReturnValue('');
+            secureStorageMock.getClientSecret.mockReturnValue('some-secret');
+
             const { AuthService } = await import('./auth-service');
-            expect(() => new AuthService()).toThrow(/GOOGLE_CLIENT_SECRET/);
+            const svc = new AuthService();
+            expect(() => svc.getClient()).toThrow(/OAuth bilgileri eksik/i);
+        });
+
+        it('clientSecret yokken getClient() MissingOAuthCredentialsError fırlatır', async () => {
+            appConfigMock.get.mockReturnValue('some-client-id');
+            secureStorageMock.getClientSecret.mockReturnValue(null);
+
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+            expect(() => svc.getClient()).toThrow(/OAuth bilgileri eksik/i);
+        });
+
+        it('hem clientId hem secret varsa getClient() OAuth2Client kurar', async () => {
+            appConfigMock.get.mockReturnValue('test-client-id');
+            secureStorageMock.getClientSecret.mockReturnValue('test-secret');
+
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+            expect(() => svc.getClient()).not.toThrow();
+            expect(OAuth2Constructor).toHaveBeenCalledWith(
+                'test-client-id',
+                'test-secret',
+                expect.stringContaining('/callback'),
+            );
+        });
+
+        it('hasCredentials() clientId + secret durumunu doğru raporlar', async () => {
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+
+            appConfigMock.get.mockReturnValue('');
+            secureStorageMock.hasClientSecret.mockReturnValue(false);
+            expect(svc.hasCredentials()).toBe(false);
+
+            appConfigMock.get.mockReturnValue('id');
+            secureStorageMock.hasClientSecret.mockReturnValue(true);
+            expect(svc.hasCredentials()).toBe(true);
         });
     });
 });

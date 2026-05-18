@@ -33,6 +33,7 @@ export function Onboarding() {
 
     // Per-step "next butonunu aktif et" sinyalleri
     const [brandingValid, setBrandingValid] = useState(false);
+    const [cloudCredentialsValid, setCloudCredentialsValid] = useState(false);
     const [serviceAccountStatus, setServiceAccountStatus] = useState<ServiceAccountStatus | null>(null);
     const [dwdVerified, setDwdVerified] = useState(false);
 
@@ -83,8 +84,8 @@ export function Onboarding() {
             stepNode = <BrandingStep onValidChange={setBrandingValid} />;
             break;
         case 'cloud':
-            canGoNext = true;
-            stepNode = <CloudProjectStep />;
+            canGoNext = cloudCredentialsValid;
+            stepNode = <CloudProjectStep onValidChange={setCloudCredentialsValid} />;
             break;
         case 'service-account':
             canGoNext = !!serviceAccountStatus?.configured;
@@ -112,6 +113,10 @@ export function Onboarding() {
     const handleNext = () => {
         if (step === 'branding' && !brandingValid) {
             addToast(t('errors.needBranding'), 'error');
+            return;
+        }
+        if (step === 'cloud' && !cloudCredentialsValid) {
+            addToast(t('errors.needCredentials'), 'error');
             return;
         }
         if (step === 'service-account' && !serviceAccountStatus?.configured) {

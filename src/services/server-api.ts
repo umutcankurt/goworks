@@ -49,6 +49,7 @@ export interface AppConfigDTO {
   language: AppLanguage;
   onboardingStep: OnboardingStep | null;
   onboardingCompletedAt: string | null;
+  googleClientId: string;
 }
 
 export interface DwdTestResult {
@@ -56,6 +57,11 @@ export interface DwdTestResult {
   adminEmail: string;
   failedScopes: string[];
   errorMessage?: string;
+}
+
+export interface OAuthCredentialsStatus {
+  clientId: string;
+  hasSecret: boolean;
 }
 
 export const appConfigApi = {
@@ -72,6 +78,19 @@ export const appConfigApi = {
   getDwdScopes: () => ipcInvoke<string[]>('config:getDwdScopes'),
   testDwdScopes: (adminEmail?: string) =>
     ipcInvoke<DwdTestResult>('config:testDwdScopes', { adminEmail }),
+
+  // Google OAuth credentials (Faz 31)
+  getOAuthCredentials: () =>
+    ipcInvoke<OAuthCredentialsStatus>('config:getOAuthCredentials'),
+  /**
+   * clientSecret boş geçilirse mevcut secret korunur (Settings rotasyonu için).
+   * Onboarding'de ikisi de zorunlu — UI bunu pre-validate eder.
+   */
+  setOAuthCredentials: (clientId: string, clientSecret: string) =>
+    ipcInvoke<OAuthCredentialsStatus>('config:setOAuthCredentials', { clientId, clientSecret }),
+  clearOAuthCredentials: () => ipcInvoke('config:clearOAuthCredentials'),
+  testOAuthCredentials: (clientId: string, clientSecret: string) =>
+    ipcInvoke<{ ok: boolean }>('config:testOAuthCredentials', { clientId, clientSecret }),
 };
 
 // Titles CRUD — Electron IPC (yerel SQLite)

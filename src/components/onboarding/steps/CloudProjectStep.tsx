@@ -2,10 +2,15 @@ import { useTranslation } from 'react-i18next';
 import { ExternalLink, Lightbulb } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
+import { OAuthCredentialsForm } from '../shared/OAuthCredentialsForm';
 
 const CLOUD_CONSOLE_URL = 'https://console.cloud.google.com/';
 
-export function CloudProjectStep() {
+interface CloudProjectStepProps {
+    onValidChange: (valid: boolean) => void;
+}
+
+export function CloudProjectStep({ onValidChange }: CloudProjectStepProps) {
     const { t } = useTranslation('onboarding');
     const instructions = (t('cloud.instructions', { returnObjects: true }) as Array<{ title: string; body: string }>) || [];
     const apis = (t('cloud.apis', { returnObjects: true }) as string[]) || [];
@@ -43,6 +48,18 @@ export function CloudProjectStep() {
                             {t('cloud.openConsole')}
                         </Button>
                     </div>
+
+                    <Card tone="elevated" padding="lg" className="mt-4">
+                        <div className="mb-3">
+                            <h2 className="text-base font-semibold text-on-surface">
+                                {t('cloud.credentials.title')}
+                            </h2>
+                            <p className="mt-1 text-sm text-on-surface-variant">
+                                {t('cloud.credentials.subtitle')}
+                            </p>
+                        </div>
+                        <OAuthCredentialsForm requireSecret onValidChange={onValidChange} />
+                    </Card>
                 </div>
 
                 <div className="space-y-4 lg:sticky lg:top-6 self-start">

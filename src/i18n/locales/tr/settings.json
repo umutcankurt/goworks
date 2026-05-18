@@ -52,6 +52,10 @@
       "deleteButton": "Logoyu Sil",
       "confirmDelete": "Logoyu silmek istediğinize emin misiniz?"
     },
+    "googleCloud": {
+      "title": "Google OAuth Bilgileri",
+      "subtitle": "Cloud Console'da oluşturduğunuz Desktop OAuth Client ID ve Secret. Secret OS anahtar deposunda şifreli olarak saklanır; ekranda gösterilmez."
+    },
     "serviceAccount": {
       "heading": "Google Service Account",
       "description": "Domain-wide Delegation ile Gmail imza yönetimi için gereklidir. JSON anahtarınız bu cihazda <code>userData/secrets/</code> altında saklanır.",

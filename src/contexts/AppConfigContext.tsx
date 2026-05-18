@@ -23,6 +23,7 @@ const FALLBACK_CONFIG: AppConfigDTO = {
     language: 'tr',
     onboardingStep: null,
     onboardingCompletedAt: null,
+    googleClientId: '',
 };
 
 interface AppConfigContextType {

@@ -94,12 +94,11 @@ GoWorks kimlik bilgileriyle dağıtılmaz — her kurulum kendi Google Cloud OAu
 1. [Google Cloud Console](https://console.cloud.google.com/) üzerinde bir proje oluşturun.
 2. Şu API'leri etkinleştirin: **Admin SDK API**, **Groups Settings API** ve **Gmail API**.
 3. **OAuth onay ekranını** yapılandırın — **Internal (Dahili)** kullanıcı türünü seçin (tek bir kurum için önerilir; Google doğrulaması gerekmez).
-4. Uygulama türü **Desktop app (Masaüstü uygulaması)** olan bir **OAuth istemci kimliği** oluşturun.
-5. `.env.example` dosyasını `.env` olarak kopyalayıp istemci kimliğini ve gizli anahtarı doldurun:
-   ```env
-   GOOGLE_CLIENT_ID=your_client_id_here
-   GOOGLE_CLIENT_SECRET=your_client_secret_here
-   ```
+4. Uygulama türü **Desktop app (Masaüstü uygulaması)** olan bir **OAuth istemci kimliği** oluşturun. Client ID ve Secret'ı bir kenara not edin — onboarding sihirbazı ilk açılışta soracak.
+
+   > **`.env` gerekmiyor.** OAuth Client ID/Secret onboarding sihirbazının "Google Cloud projesi" adımında toplanır ve cihazınızda yerel olarak saklanır — Client ID SQLite `app_config` tablosunda, Secret ise işletim sisteminin anahtar deposunda (macOS Keychain / Windows DPAPI) şifreli olarak. Daha sonra Settings → Genel → "Google OAuth Bilgileri" kartından değiştirebilirsiniz.
+   >
+   > Yerel geliştirme için isterseniz değerleri `.env`'e koyabilirsiniz (`.env.example`'dan kopyalayın); ilk açılışta otomatik şifreli depoya migrate edilir. Production'da `.env` → `.env.migrated` olarak yeniden adlandırılır; geliştirme modunda dokunulmaz.
 
 ### 2. Kurun ve çalıştırın
 
@@ -127,6 +126,22 @@ npm run build
 ```
 
 Platforma özel kurulum dosyalarını `release/{version}/` altında üretir — macOS `.dmg`, Windows `.exe` (NSIS) ve Linux `AppImage`. Otomatik güncelleme yoktur; yeni sürümler elle dağıtılır.
+
+## Sorun Giderme
+
+### `No handler registered for 'X'` (kurulum dosyası derleme sonrası rastgele IPC hataları)
+
+`npm run build` çalıştırıp (hem `-m` hem `-w` çıktıları üretir) ardından dev makinenize geri döndüyseniz, `node_modules/` altındaki `better-sqlite3` native binary'si yanlış platform veya Electron ABI'sine derlenmiş olabilir. Belirti: renderer'da rastgele bir IPC çağrısı hata verir — `config:set`, `auth:check`, `config:getAll` vb.
+
+Üç bağımsız savunma katmanı devrede:
+
+1. **`npm run dev`** — `predev` hook'u ABI mismatch'i tespit ederse otomatik yeniden derleme tetikler. Geç açılışın nedenini bilmeniz için terminale dikkat çekici bir banner basılır (~30–60s sürer).
+2. **Boot-check** — runtime'da hâlâ bir uyumsuzluk varsa uygulama açılırken hata diyaloğu çözüm komutunu gösterir ve çıkar.
+3. **Manuel çözüm** — `npm run rebuild` (`electron-builder install-app-deps` için alias) istediğiniz zaman.
+
+**CI / strict mod**: `CHECK_NATIVE_ABI_STRICT=1` (veya GitHub Actions ve birçok CI runner'ının otomatik atadığı `CI=true`) ile predev hook'u otomatik rebuild yerine sert şekilde hata verir.
+
+Dev'i tetiklemeden binary'yi kontrol etmek için `npm run abi:check` tek başına çalıştırılabilir.
 
 ## Mimari
 

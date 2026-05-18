@@ -25,6 +25,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 import { AuthService } from './auth-service';
 import { AdminService } from './services/admin-service';
+import { secureStorage } from './services/secure-storage';
 import { CacheService } from './services/cache-service';
 import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
@@ -39,9 +40,23 @@ import { registerSignatureAuditWorker } from './jobs/signature-audit-worker';
 
 let win: BrowserWindow | null
 let authService: AuthService
-let adminService: AdminService
+let adminService: AdminService | null = null
 let cache: CacheService
 let cancelBulkOperation = false
+
+/**
+ * adminService accessor — credential yoksa MissingOAuthCredentialsError fırlatır
+ * (authService.getClient() üzerinden). IPC handler'ın try/catch'i bunu yakalar
+ * ve renderer'a anlaşılır mesaj çevirir. Credential reset (invalidateCredentials)
+ * sonrası adminService null'a alınır ki bir sonraki çağrıda yeni client ile
+ * yeniden oluşsun.
+ */
+function ensureAdminService(): AdminService {
+  if (!adminService) {
+    adminService = new AdminService(authService.getClient());
+  }
+  return adminService;
+}
 
 const FOUR_HOURS = 4 * 60 * 60 * 1000;
 const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -189,7 +204,9 @@ function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): n
 
 // Boot-check sonucu — soft-warn flag'lerini renderer'a `config:getBootStatus`
 // IPC handler üzerinden sunarız.
-let bootStatus: BootCheckResult = { soft: { serviceAccountMissing: false } };
+let bootStatus: BootCheckResult = {
+  soft: { serviceAccountMissing: false, oauthCredentialsMissing: false },
+};
 
 ipcMain.handle('config:getBootStatus', () => bootStatus);
 
@@ -276,7 +293,17 @@ app.whenReady().then(async () => {
   jobRunner.resumeOnStartup();
 
   authService = new AuthService();
-  adminService = new AdminService(authService.getClient());
+  // adminService lazy: credential yoksa null kalır; auth:login success sonrası
+  // ya da config:setOAuthCredentials çağrısı sonrası ensureAdminService()
+  // tarafından oluşturulur.
+  if (authService.hasCredentials()) {
+    try {
+      adminService = new AdminService(authService.getClient());
+    } catch (err) {
+      writeLog('ADMIN SERVICE INIT FAILED', err);
+      adminService = null;
+    }
+  }
   cache = new CacheService();
   cancelBulkOperation = false;
 
@@ -297,6 +324,9 @@ app.whenReady().then(async () => {
     if (!win) return null;
     try {
       const result = await authService.login();
+      // Login başarılı; adminService henüz yoksa (ilk kurulum, credential yeni
+      // girildi) lazy init et ki sonraki admin çağrıları için hazır olsun.
+      ensureAdminService();
       return { success: true, ...result };
     } catch (error: any) {
       console.error('Login failed:', error);
@@ -336,7 +366,7 @@ app.whenReady().then(async () => {
   // Admin Handlers
   ipcMain.handle('admin:getUsers', async (_, { customer, maxResults, pageToken, query }) => {
     try {
-      const result = await adminService.getUsers(customer, maxResults, pageToken, query);
+      const result = await ensureAdminService().getUsers(customer, maxResults, pageToken, query);
       return { success: true, ...result };
     } catch (error) {
       // Stack trace log dosyasında kalır, renderer'a sadece kullanıcı mesajı gider
@@ -347,7 +377,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:getUser', async (_, userKey) => {
     try {
-      const user = await adminService.getUser(userKey);
+      const user = await ensureAdminService().getUser(userKey);
       return { success: true, user };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -356,7 +386,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:suspendUser', async (_, userKey) => {
     try {
-      const user = await adminService.suspendUser(userKey);
+      const user = await ensureAdminService().suspendUser(userKey);
       return { success: true, user };
     } catch (error) {
       logger.error('[admin:suspendUser] failed', error);
@@ -366,7 +396,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:deleteUser', async (_, userKey) => {
     try {
-      await adminService.deleteUser(userKey);
+      await ensureAdminService().deleteUser(userKey);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -375,7 +405,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:setEmailForwarding', async (_, { userEmail, forwardingEmail }) => {
     try {
-      await adminService.setEmailForwarding(userEmail, forwardingEmail);
+      await ensureAdminService().setEmailForwarding(userEmail, forwardingEmail);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -384,7 +414,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:updateUser', async (_, { userKey, payload }) => {
     try {
-      const user = await adminService.updateUser(userKey, payload);
+      const user = await ensureAdminService().updateUser(userKey, payload);
       return { success: true, user };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -393,7 +423,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:getUserGroups', async (_, userKey) => {
     try {
-      const groups = await adminService.getUserGroups(userKey);
+      const groups = await ensureAdminService().getUserGroups(userKey);
       return { success: true, groups };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -405,7 +435,7 @@ app.whenReady().then(async () => {
       const cacheKey = `availableGroups:${customer || 'my_customer'}`;
       const cached = cache.get<any[]>(cacheKey);
       if (cached) return { success: true, groups: cached };
-      const groups = await adminService.getAvailableGroups(customer);
+      const groups = await ensureAdminService().getAvailableGroups(customer);
       cache.set(cacheKey, groups, THIRTY_MINUTES);
       return { success: true, groups };
     } catch (error: any) {
@@ -415,7 +445,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:createUser', async (_, payload) => {
     try {
-      const user = await adminService.createUser(payload);
+      const user = await ensureAdminService().createUser(payload);
       return { success: true, user };
     } catch (error: any) {
       console.error('admin:createUser failed:', error);
@@ -428,7 +458,7 @@ app.whenReady().then(async () => {
       const cacheKey = `orgUnits:${customer || 'my_customer'}`;
       const cached = cache.get<any[]>(cacheKey);
       if (cached) return { success: true, orgUnits: cached };
-      const orgUnits = await adminService.getOrgUnits(customer);
+      const orgUnits = await ensureAdminService().getOrgUnits(customer);
       cache.set(cacheKey, orgUnits, THIRTY_MINUTES);
       return { success: true, orgUnits };
     } catch (error: any) {
@@ -442,7 +472,7 @@ app.whenReady().then(async () => {
       const cacheKey = `domains:${customer || 'my_customer'}`;
       const cached = cache.get<any[]>(cacheKey);
       if (cached) return { success: true, domains: cached };
-      const domains = await adminService.getDomains(customer);
+      const domains = await ensureAdminService().getDomains(customer);
       cache.set(cacheKey, domains, THIRTY_MINUTES);
       return { success: true, domains };
     } catch (error: any) {
@@ -453,7 +483,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:addUserToGroup', async (_, { userKey, groupKey, role }) => {
     try {
-      const member = await adminService.addUserToGroup(userKey, groupKey, role);
+      const member = await ensureAdminService().addUserToGroup(userKey, groupKey, role);
       return { success: true, member };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -462,7 +492,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:removeUserFromGroup', async (_, { userKey, groupKey }) => {
     try {
-      await adminService.removeUserFromGroup(userKey, groupKey);
+      await ensureAdminService().removeUserFromGroup(userKey, groupKey);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -471,7 +501,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:addAlias', async (_, { userKey, alias }) => {
     try {
-      await adminService.addAlias(userKey, alias);
+      await ensureAdminService().addAlias(userKey, alias);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -480,7 +510,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:removeAlias', async (_, { userKey, alias }) => {
     try {
-      await adminService.removeAlias(userKey, alias);
+      await ensureAdminService().removeAlias(userKey, alias);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -489,7 +519,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('admin:getLoginActivities', async (_, { userKey, maxResults }) => {
     try {
-      const activities = await adminService.getLoginActivities(userKey, maxResults);
+      const activities = await ensureAdminService().getLoginActivities(userKey, maxResults);
       return { success: true, activities };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -533,9 +563,9 @@ app.whenReady().then(async () => {
 
       try {
         if (action === 'suspend') {
-          await adminService.suspendUser(userKey);
+          await ensureAdminService().suspendUser(userKey);
         } else if (action === 'delete') {
-          await adminService.deleteUser(userKey);
+          await ensureAdminService().deleteUser(userKey);
         }
         successCount++;
       } catch (error) {
@@ -582,7 +612,7 @@ app.whenReady().then(async () => {
     try {
       const cached = cache.getWithMeta('storageUsage');
       if (cached) return { success: true, data: cached.data, updatedAt: cached.createdAt };
-      const data = await adminService.getCustomerStorageUsage();
+      const data = await ensureAdminService().getCustomerStorageUsage();
       const now = Date.now();
       cache.set('storageUsage', data, FOUR_HOURS);
       return { success: true, data, updatedAt: now };
@@ -595,7 +625,7 @@ app.whenReady().then(async () => {
     try {
       const cached = cache.getWithMeta('userCounts');
       if (cached) return { success: true, data: cached.data, updatedAt: cached.createdAt };
-      const data = await adminService.getCustomerUserCounts();
+      const data = await ensureAdminService().getCustomerUserCounts();
       const now = Date.now();
       cache.set('userCounts', data, FOUR_HOURS);
       return { success: true, data, updatedAt: now };
@@ -608,7 +638,7 @@ app.whenReady().then(async () => {
     try {
       const cached = cache.getWithMeta('recentUsers');
       if (cached) return { success: true, data: cached.data, updatedAt: cached.createdAt };
-      const data = await adminService.getRecentlyCreatedUsers(5);
+      const data = await ensureAdminService().getRecentlyCreatedUsers(5);
       const now = Date.now();
       cache.set('recentUsers', data, FOUR_HOURS);
       return { success: true, data, updatedAt: now };
@@ -1093,7 +1123,122 @@ app.whenReady().then(async () => {
   ipcMain.handle('config:resetOnboarding', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
+      // OAuth credentials da sıfırlanır: kullanıcı sihirbazı baştan çalışırken
+      // eski clientId/secret ile karışıklık yaşamasın.
+      appConfigService.set('googleClientId', null);
+      secureStorage.clearClientSecret();
+      authService?.invalidateCredentials();
+      adminService = null;
       return { success: true, data: appConfigService.resetOnboarding() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('config:getOAuthCredentials', async () => {
+    try {
+      const { appConfigService } = await import('./services/app-config-service');
+      return {
+        success: true,
+        data: {
+          clientId: appConfigService.get('googleClientId') ?? '',
+          hasSecret: secureStorage.hasClientSecret(),
+        },
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  /**
+   * Onboarding ve Settings karta yazma noktası.
+   * - clientId: boş geçilirse "değiştirme" anlamına gelir (Settings'ten partial update).
+   * - clientSecret: boş geçilirse "değiştirme" — mevcut secret korunur.
+   * - İkisi de doluysa: ikisi de yeni değerleriyle kaydedilir.
+   * - clientId verilip secret henüz hiç set edilmemişse hata döner (onboarding ilk
+   *   yaratım için her ikisini de zorunlu kılar; UI bunu çağırmadan önce zaten valide
+   *   eder).
+   */
+  ipcMain.handle('config:setOAuthCredentials', async (
+    _,
+    payload: { clientId?: string; clientSecret?: string },
+  ) => {
+    try {
+      const { appConfigService } = await import('./services/app-config-service');
+      const trimmedId = (payload?.clientId ?? '').trim();
+      const trimmedSecret = (payload?.clientSecret ?? '').trim();
+
+      if (trimmedId) {
+        appConfigService.set('googleClientId', trimmedId);
+      }
+      if (trimmedSecret) {
+        secureStorage.setClientSecret(trimmedSecret);
+      }
+
+      const currentId = appConfigService.get('googleClientId');
+      const hasSecret = secureStorage.hasClientSecret();
+      if (!currentId || !hasSecret) {
+        return {
+          success: false,
+          error: 'Hem Client ID hem de Client Secret eksiksiz girilmeli.',
+        };
+      }
+
+      // Credentials değişti — auth client'ı invalidate edip adminService'i de
+      // null'a alalım. Bir sonraki kullanım fresh client ile oluşur.
+      authService?.invalidateCredentials();
+      adminService = null;
+
+      return {
+        success: true,
+        data: { clientId: currentId, hasSecret },
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('config:clearOAuthCredentials', async () => {
+    try {
+      const { appConfigService } = await import('./services/app-config-service');
+      appConfigService.set('googleClientId', null);
+      secureStorage.clearClientSecret();
+      authService?.invalidateCredentials();
+      adminService = null;
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  /**
+   * Credential'ları kaydetmeden önce doğrulama: in-memory OAuth2Client oluştur,
+   * generateAuthUrl() ile geçerli bir authorization URL üretebildiğini kontrol et.
+   * Gerçek OAuth flow değil — format + library init testi (yanlış formatlı clientId
+   * generateAuthUrl içinde fırlar).
+   */
+  ipcMain.handle('config:testOAuthCredentials', async (
+    _,
+    payload: { clientId: string; clientSecret: string },
+  ) => {
+    try {
+      const trimmedId = (payload?.clientId ?? '').trim();
+      const trimmedSecret = (payload?.clientSecret ?? '').trim();
+      if (!trimmedId || !trimmedSecret) {
+        return { success: false, error: 'Client ID ve Secret boş olamaz.' };
+      }
+      const { OAuth2Client } = await import('google-auth-library');
+      const client = new OAuth2Client(
+        trimmedId,
+        trimmedSecret,
+        'http://localhost:3000/callback',
+      );
+      // generateAuthUrl yanlış parametrelerde throw atar; başarılı dönüş = init OK.
+      const url = client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/userinfo.email'],
+      });
+      return { success: true, data: { ok: !!url } };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -1317,9 +1462,9 @@ app.whenReady().then(async () => {
     try {
       console.log('Arka planda dashboard cache güncelleniyor...');
       const [storage, users, recent] = await Promise.all([
-        adminService.getCustomerStorageUsage(),
-        adminService.getCustomerUserCounts(),
-        adminService.getRecentlyCreatedUsers(5),
+        ensureAdminService().getCustomerStorageUsage(),
+        ensureAdminService().getCustomerUserCounts(),
+        ensureAdminService().getRecentlyCreatedUsers(5),
       ]);
       cache.set('storageUsage', storage, FOUR_HOURS);
       cache.set('userCounts', users, FOUR_HOURS);

@@ -52,6 +52,10 @@
       "deleteButton": "Delete Logo",
       "confirmDelete": "Are you sure you want to delete the logo?"
     },
+    "googleCloud": {
+      "title": "Google OAuth Credentials",
+      "subtitle": "The Desktop OAuth Client ID and Secret you created in Cloud Console. The secret is stored encrypted in the OS keychain and is never shown on screen."
+    },
     "serviceAccount": {
       "heading": "Google Service Account",
       "description": "Required for Gmail signature management via Domain-wide Delegation. Your JSON key is stored locally under <code>userData/secrets/</code>.",

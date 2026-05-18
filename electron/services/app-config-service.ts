@@ -11,7 +11,8 @@ export type AppConfigKey =
     | 'allowedDomain'
     | 'language'
     | 'onboardingStep'
-    | 'onboardingCompletedAt';
+    | 'onboardingCompletedAt'
+    | 'googleClientId';
 
 export type AppLanguage = 'tr' | 'en';
 
@@ -41,6 +42,7 @@ export interface AppConfig {
     language: AppLanguage;
     onboardingStep: OnboardingStep | null;
     onboardingCompletedAt: string | null;
+    googleClientId: string;
 }
 
 /**
@@ -56,6 +58,7 @@ const DEFAULTS: AppConfig = {
     language: 'tr',
     onboardingStep: null,
     onboardingCompletedAt: null,
+    googleClientId: '',
 };
 
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
@@ -124,6 +127,9 @@ export const appConfigService = {
         if (key === 'companyName' && normalized && normalized.length > 80) {
             throw new Error('Firma adı en fazla 80 karakter olabilir');
         }
+        if (key === 'googleClientId' && normalized && normalized.length > 256) {
+            throw new Error('Google Client ID en fazla 256 karakter olabilir');
+        }
 
         if (normalized === null) {
             getDb().prepare('DELETE FROM app_config WHERE key = ?').run(key);
@@ -147,6 +153,7 @@ export const appConfigService = {
             language: this.get('language'),
             onboardingStep: this.get('onboardingStep'),
             onboardingCompletedAt: this.get('onboardingCompletedAt'),
+            googleClientId: this.get('googleClientId'),
         };
     },
 
@@ -157,9 +164,15 @@ export const appConfigService = {
     markOnboardingComplete(): AppConfig {
         const company = this.get('companyName');
         const domain = this.get('allowedDomain');
+        const clientId = this.get('googleClientId');
         if (!company || !domain) {
             throw new Error(
                 'Onboarding tamamlanmadan önce firma adı ve izin verilen domain doldurulmalı.',
+            );
+        }
+        if (!clientId) {
+            throw new Error(
+                'Onboarding tamamlanmadan önce Google OAuth Client ID kaydedilmiş olmalı.',
             );
         }
         const now = nowIso();
