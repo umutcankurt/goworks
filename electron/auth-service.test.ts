@@ -32,6 +32,13 @@ const secureStorageMock = vi.hoisted(() => ({
     hasClientSecret: vi.fn(() => false),
 }));
 
+const authTokenStoreMock = vi.hoisted(() => ({
+    set: vi.fn(),
+    get: vi.fn((): string | null => null),
+    has: vi.fn(() => false),
+    clear: vi.fn(),
+}));
+
 // --- Module mocks ---
 
 vi.mock('electron', () => ({
@@ -55,6 +62,7 @@ vi.mock('./services/app-config-service', () => ({
 
 vi.mock('./services/secure-storage', () => ({
     secureStorage: secureStorageMock,
+    authTokenStore: authTokenStoreMock,
 }));
 
 describe('AuthService', () => {
@@ -68,7 +76,14 @@ describe('AuthService', () => {
     });
 
     describe('clearStoredTokens', () => {
-        it('constructor token dosyasını siler (dosya varsa)', async () => {
+        it('constructor şifreli token deposunu temizler', async () => {
+            const { AuthService } = await import('./auth-service');
+            new AuthService();
+
+            expect(authTokenStoreMock.clear).toHaveBeenCalled();
+        });
+
+        it('constructor eski düz google_auth_token.json artığını siler (varsa)', async () => {
             fsMock.existsSync.mockReturnValue(true);
 
             const { AuthService } = await import('./auth-service');
@@ -79,7 +94,7 @@ describe('AuthService', () => {
             );
         });
 
-        it('dosya yoksa unlinkSync çağrılmaz', async () => {
+        it('eski düz dosya yoksa unlinkSync çağrılmaz', async () => {
             fsMock.existsSync.mockReturnValue(false);
 
             const { AuthService } = await import('./auth-service');

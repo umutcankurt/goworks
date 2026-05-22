@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import { GoogleAuth } from 'google-auth-library';
 import { getGoogle } from '../google-lazy';
-import { getServiceAccountKeyPath, getStatus } from '../secrets/service-account-loader';
+import { getServiceAccountCredentials, getStatus } from '../secrets/service-account-loader';
 import { gmailLimiter } from './rate-limiters';
 import { getLogger } from './logger';
 import { jobQueue } from '../jobs/queue';
@@ -12,11 +12,12 @@ const sendAuthCache = new Map<string, GoogleAuth>();
 function getSendAuth(adminEmail: string): GoogleAuth {
     const existing = sendAuthCache.get(adminEmail);
     if (existing) return existing;
-    if (!getStatus().configured) {
+    const credentials = getServiceAccountCredentials();
+    if (!credentials) {
         throw new Error('Service Account yapılandırılmamış (gmail.send DWD için gerekli)');
     }
     const auth = new GoogleAuth({
-        keyFile: getServiceAccountKeyPath(),
+        credentials,
         scopes: ['https://www.googleapis.com/auth/gmail.send'],
         clientOptions: { subject: adminEmail },
     });

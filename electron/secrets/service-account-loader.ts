@@ -1,6 +1,4 @@
-import { app } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-import path from 'node:path';
+import { serviceAccountStore } from '../services/secure-storage';
 
 interface ServiceAccountKey {
     type?: string;
@@ -26,33 +24,56 @@ export interface ServiceAccountUploadResult {
     clientId: string | null;
 }
 
-let cachedKeyPath: string | null = null;
+/**
+ * `GoogleAuth({ credentials })`'a doğrudan verilebilen, parse edilmiş Service
+ * Account kimlik bilgileri. Decrypt edilmiş private key yalnızca bu objenin
+ * belleğinde yaşar — hiçbir zaman diske düz metin olarak yazılmaz.
+ */
+export interface ServiceAccountCredentials {
+    client_email: string;
+    private_key: string;
+    /** GoogleAuth `JWTInput` uyumlu — yoksa alan hiç eklenmez (undefined atanmaz). */
+    client_id?: string;
+}
 
-export function getServiceAccountKeyPath(): string {
-    if (cachedKeyPath) return cachedKeyPath;
-    const dir = path.join(app.getPath('userData'), 'secrets');
-    if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true, mode: 0o700 });
+/**
+ * Şifreli depodan Service Account anahtarını okuyup parse edilmiş credential
+ * objesini döndürür. Depo boşsa veya içerik geçersizse `null` döner.
+ *
+ * `safeStorage` kullanılamıyorsa (depo dosyası var ama açılamıyor)
+ * `serviceAccountStore.get()` hata fırlatır — bu hata bilinçli olarak yukarı
+ * taşınır; çağıran (tüketici servis / IPC handler) net hata gösterir.
+ *
+ * Cache YOK: decrypt+parse ucuz, `GoogleAuth` instance'ları zaten tüketici
+ * servislerde cache'leniyor — bu da stale-credential hata sınıfını eler.
+ */
+export function getServiceAccountCredentials(): ServiceAccountCredentials | null {
+    const raw = serviceAccountStore.get();
+    if (!raw) return null;
+    let json: ServiceAccountKey;
+    try {
+        json = JSON.parse(raw) as ServiceAccountKey;
+    } catch {
+        return null;
     }
-    cachedKeyPath = path.join(dir, 'service-account.json');
-    return cachedKeyPath;
+    if (json.type !== 'service_account' || !json.client_email || !json.private_key) {
+        return null;
+    }
+    const creds: ServiceAccountCredentials = {
+        client_email: json.client_email,
+        private_key: json.private_key,
+    };
+    if (json.client_id) creds.client_id = json.client_id;
+    return creds;
 }
 
 export function getStatus(): ServiceAccountStatus {
     try {
-        const p = getServiceAccountKeyPath();
-        if (!existsSync(p)) return { configured: false, email: null, clientId: null };
-        const raw = readFileSync(p, 'utf-8');
-        const json = JSON.parse(raw) as ServiceAccountKey;
-        if (json.type !== 'service_account' || !json.client_email || !json.private_key) {
-            return { configured: false, email: null, clientId: null };
-        }
-        return {
-            configured: true,
-            email: json.client_email,
-            clientId: json.client_id ?? null,
-        };
+        const creds = getServiceAccountCredentials();
+        if (!creds) return { configured: false, email: null, clientId: null };
+        return { configured: true, email: creds.client_email, clientId: creds.client_id ?? null };
     } catch {
+        // safeStorage kullanılamıyor — durum sorgusu sessizce "yapılandırılmamış".
         return { configured: false, email: null, clientId: null };
     }
 }
@@ -70,8 +91,9 @@ export function uploadFromContent(content: string): ServiceAccountUploadResult {
     if (!parsed.client_email || !parsed.private_key) {
         throw new Error('Service Account JSON gerekli alanları içermiyor (client_email, private_key)');
     }
-    const p = getServiceAccountKeyPath();
-    writeFileSync(p, content, { encoding: 'utf-8', mode: 0o600 });
+    // safeStorage kullanılamıyorsa burada hata fırlar — IPC handler'ın
+    // try/catch'i UI'a taşır (bkz. boot-check hard-fail politikası).
+    serviceAccountStore.set(content);
     return {
         configured: true,
         email: parsed.client_email,
@@ -80,8 +102,5 @@ export function uploadFromContent(content: string): ServiceAccountUploadResult {
 }
 
 export function clearKey(): void {
-    const p = getServiceAccountKeyPath();
-    if (existsSync(p)) {
-        unlinkSync(p);
-    }
+    serviceAccountStore.clear();
 }

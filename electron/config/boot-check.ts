@@ -4,11 +4,15 @@
  * `app.whenReady()` sonrası ÇOK ERKEN çağrılır. İki seviye + bir tek-seferlik
  * migration adımı:
  *
- * 0. Migration (idempotent): Proje kökündeki .env dosyasında GOOGLE_CLIENT_ID
- *    veya GOOGLE_CLIENT_SECRET varsa ve henüz app_config / safeStorage'a
- *    aktarılmadıysa, oraya kopyalanır. Production'da .env → .env.migrated
- *    rename edilir; rename başarısızsa CLIENT_* satırları satır-bazlı silinir.
- *    Development'ta .env dosyası dokunulmaz (yerel akış bozulmasın).
+ * 0. Migration (idempotent):
+ *    - .env: Proje kökündeki .env dosyasında GOOGLE_CLIENT_ID veya
+ *      GOOGLE_CLIENT_SECRET varsa ve henüz app_config / safeStorage'a
+ *      aktarılmadıysa, oraya kopyalanır. Production'da .env → .env.migrated
+ *      rename edilir; rename başarısızsa CLIENT_* satırları satır-bazlı silinir.
+ *      Development'ta .env dosyası dokunulmaz (yerel akış bozulmasın).
+ *    - Service Account: Eski düz-metin `secrets/service-account.json`, şifreli
+ *      `secrets/service-account.enc` deposuna taşınır; başarılı şifrelemeden
+ *      sonra düz dosya silinir (düz private key diskte kalmamalı).
  *
  * 1. Hard-fail: `dialog.showErrorBox` + `app.exit(1)`. Sadece:
  *    - userData klasörü yazılabilir değil
@@ -16,7 +20,7 @@
  *    devreye girer.
  *
  * 2. Soft-warn: logger.warn + return flag. Eksiklik:
- *    - service-account.json yok ya da parse edilemez
+ *    - service-account.enc yok ya da decrypt/parse edilemez
  *
  * Dev override: `GOWORKS_SKIP_BOOT_CHECK=1` env değişkeni ile tüm kontroller
  * atlanır.
@@ -28,7 +32,8 @@ import { createRequire } from 'node:module';
 import * as dotenv from 'dotenv';
 import { logger } from '../services/logger';
 import { appConfigService } from '../services/app-config-service';
-import { secureStorage } from '../services/secure-storage';
+import { secureStorage, serviceAccountStore } from '../services/secure-storage';
+import { getStatus } from '../secrets/service-account-loader';
 
 const PLACEHOLDER_VALUES = new Set([
     '',
@@ -206,11 +211,51 @@ function validateUserDataWritable(): FailureDetail | null {
 }
 
 function checkServiceAccount(): boolean {
+    // true = eksik/geçersiz. getStatus() şifreli depodan (service-account.enc)
+    // okur; safeStorage yoksa veya içerik bozuksa configured:false döner.
     try {
-        const userData = app.getPath('userData');
-        const saPath = path.join(userData, 'secrets', 'service-account.json');
-        if (!fs.existsSync(saPath)) return true; // yok = missing
-        const raw = fs.readFileSync(saPath, 'utf-8');
+        return !getStatus().configured;
+    } catch {
+        return true;
+    }
+}
+
+/**
+ * Eski düz-metin Service Account anahtarını (`secrets/service-account.json`)
+ * şifreli depoya (`secrets/service-account.enc`) taşır.
+ *
+ * - Düz dosya yoksa atlanır.
+ * - `.enc` zaten varsa: artakalan düz dosya yine de silinir (düz private key
+ *   diskte kalmamalı), migration atlanır.
+ * - Şifreleme başarılı olursa düz dosya silinir — `.migrated` rename EDİLMEZ,
+ *   çünkü o da diskte düz bir private key bırakır.
+ * - safeStorage kullanılamıyorsa düz dosya KORUNUR (tek kopya yok edilmez).
+ * Tüm adımlar idempotent.
+ */
+function runServiceAccountMigration(): void {
+    const plainPath = path.join(app.getPath('userData'), 'secrets', 'service-account.json');
+    if (!fs.existsSync(plainPath)) return;
+
+    if (serviceAccountStore.has()) {
+        try {
+            fs.unlinkSync(plainPath);
+            logger.info('[boot-check] Artakalan düz service-account.json silindi (.enc zaten mevcut).');
+        } catch (err) {
+            logger.warn('[boot-check] Artakalan düz service-account.json silinemedi:', err);
+        }
+        return;
+    }
+
+    let raw: string;
+    try {
+        raw = fs.readFileSync(plainPath, 'utf-8');
+    } catch (err) {
+        logger.warn('[boot-check] Düz service-account.json okunamadı, migration atlanıyor:', err);
+        return;
+    }
+
+    // Doğrulanamayan veriyi yok etme — sadece geçerli SA JSON taşınır.
+    try {
         const json = JSON.parse(raw) as {
             type?: string;
             client_email?: string;
@@ -218,9 +263,28 @@ function checkServiceAccount(): boolean {
         };
         const valid =
             json.type === 'service_account' && !!json.client_email && !!json.private_key;
-        return !valid;
+        if (!valid) {
+            logger.warn('[boot-check] Düz service-account.json geçersiz — migration atlanıyor, dosya korunuyor.');
+            return;
+        }
     } catch {
-        return true;
+        logger.warn('[boot-check] Düz service-account.json parse edilemedi — migration atlanıyor, dosya korunuyor.');
+        return;
+    }
+
+    try {
+        serviceAccountStore.set(raw);
+    } catch (err) {
+        // safeStorage kullanılamıyor — düz dosyayı koru, tek kopya kaybolmasın.
+        logger.warn('[boot-check] Service Account şifreli depoya yazılamadı, düz dosya korunuyor:', err);
+        return;
+    }
+
+    try {
+        fs.unlinkSync(plainPath);
+        logger.info('[boot-check] service-account.json → service-account.enc (şifreli depoya taşındı, düz dosya silindi).');
+    } catch (err) {
+        logger.warn('[boot-check] Şifreli kopya yazıldı ama düz service-account.json silinemedi:', err);
     }
 }
 
@@ -354,6 +418,14 @@ export function runBootCheck(): BootCheckResult {
         runEnvMigration();
     } catch (err) {
         logger.warn('[boot-check] runEnvMigration() beklenmeyen hata:', err);
+    }
+
+    // Service Account migration: checkServiceAccount()'tan ÖNCE çalışmalı ki
+    // getStatus() taze şifrelenmiş .enc dosyasını görsün.
+    try {
+        runServiceAccountMigration();
+    } catch (err) {
+        logger.warn('[boot-check] runServiceAccountMigration() beklenmeyen hata:', err);
     }
 
     const serviceAccountMissing = checkServiceAccount();

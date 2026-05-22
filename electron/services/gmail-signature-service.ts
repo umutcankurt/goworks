@@ -1,6 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 import { getGoogle } from '../google-lazy';
-import { getServiceAccountKeyPath, getStatus } from '../secrets/service-account-loader';
+import { getServiceAccountCredentials } from '../secrets/service-account-loader';
 import { institutionService } from './institution-service';
 import { templateService } from './template-service';
 import { renderTemplate, sanitizeTemplateHtml, type TemplateVariables } from './template-renderer';
@@ -13,12 +13,12 @@ const authCache = new Map<string, GoogleAuth>();
 function getAuthForUser(userEmail: string): GoogleAuth {
     const existing = authCache.get(userEmail);
     if (existing) return existing;
-    const status = getStatus();
-    if (!status.configured) {
+    const credentials = getServiceAccountCredentials();
+    if (!credentials) {
         throw new Error('Service Account yapılandırılmamış. Ayarlar → Service Account sekmesinden JSON yükleyin.');
     }
     const auth = new GoogleAuth({
-        keyFile: getServiceAccountKeyPath(),
+        credentials,
         scopes: ['https://www.googleapis.com/auth/gmail.settings.basic'],
         clientOptions: { subject: userEmail },
     });

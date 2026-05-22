@@ -1,7 +1,7 @@
 import { GoogleAuth } from 'google-auth-library';
 import https from 'node:https';
 import { getGoogle } from '../google-lazy';
-import { getServiceAccountKeyPath, getStatus } from '../secrets/service-account-loader';
+import { getServiceAccountCredentials } from '../secrets/service-account-loader';
 
 // keepAlive: false — her request yeni TCP bağlantısı kurar.
 // Bulk işlemlerde keep-alive havuzunda zombie socket birikip job'ı kilitliyordu.
@@ -32,12 +32,12 @@ const ADMIN_SCOPES = [
 ];
 
 function buildAuth(adminEmail: string, scopes: string[]): GoogleAuth {
-    const status = getStatus();
-    if (!status.configured) {
+    const credentials = getServiceAccountCredentials();
+    if (!credentials) {
         throw new Error('Service Account yapılandırılmamış. Ayarlar → Service Account sekmesinden JSON yükleyin.');
     }
     return new GoogleAuth({
-        keyFile: getServiceAccountKeyPath(),
+        credentials,
         scopes,
         clientOptions: { subject: adminEmail },
     });

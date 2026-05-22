@@ -6,7 +6,7 @@ import url from 'url';
 import path from 'path';
 import fs from 'fs';
 import { appConfigService } from './services/app-config-service';
-import { secureStorage } from './services/secure-storage';
+import { secureStorage, authTokenStore } from './services/secure-storage';
 
 const REDIRECT_URI = 'http://localhost:3000/callback';
 const SCOPES = [
@@ -33,12 +33,11 @@ export class MissingOAuthCredentialsError extends Error {
 export class AuthService {
     private oauth2Client: OAuth2Client | null = null;
     private server: http.Server | null = null;
-    private readonly tokenPath: string;
     private currentUserEmail: string | null = null;
 
     constructor() {
-        this.tokenPath = path.join(app.getPath('userData'), 'google_auth_token.json');
         this.clearStoredTokens();
+        this.clearLegacyPlainTokenFile();
     }
 
     /**
@@ -81,17 +80,33 @@ export class AuthService {
 
     private clearStoredTokens() {
         try {
-            if (fs.existsSync(this.tokenPath)) {
-                fs.unlinkSync(this.tokenPath);
-            }
+            authTokenStore.clear();
         } catch (e) {
             console.error('Failed to delete stored token file:', e);
         }
     }
 
+    /**
+     * safeStorage'a geçişten önce yazılmış düz-metin `google_auth_token.json`
+     * artığını temizler. Yeni sürümde token yalnız şifreli `auth-token.enc`'te
+     * tutulur; bir önceki sürümden kalan düz dosya diskte bırakılmamalı.
+     */
+    private clearLegacyPlainTokenFile() {
+        try {
+            const legacy = path.join(app.getPath('userData'), 'google_auth_token.json');
+            if (fs.existsSync(legacy)) {
+                fs.unlinkSync(legacy);
+            }
+        } catch (e) {
+            console.error('Failed to delete legacy plaintext token file:', e);
+        }
+    }
+
     private saveTokens(tokens: any) {
         try {
-            fs.writeFileSync(this.tokenPath, JSON.stringify(tokens));
+            // safeStorage ile şifreli yazılır; safeStorage yoksa hata yutulur
+            // (token kalıcılığı zaten best-effort — her açılışta temizleniyor).
+            authTokenStore.set(JSON.stringify(tokens));
         } catch (e) {
             console.error('Failed to save tokens:', e);
         }
@@ -196,9 +211,7 @@ export class AuthService {
                 console.error('Failed to revoke token on logout:', error);
             }
         }
-        if (fs.existsSync(this.tokenPath)) {
-            fs.unlinkSync(this.tokenPath);
-        }
+        this.clearStoredTokens();
         if (this.oauth2Client) {
             this.oauth2Client.setCredentials({});
         }

@@ -1,6 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 import { getGoogle } from '../google-lazy';
-import { getServiceAccountKeyPath, getStatus } from '../secrets/service-account-loader';
+import { getServiceAccountCredentials } from '../secrets/service-account-loader';
 import { appConfigService } from './app-config-service';
 import { DWD_SCOPES } from './dwd-scopes';
 
@@ -33,8 +33,8 @@ function deriveAdminEmail(explicit?: string): string {
  * için bu çoğu durumda tek bir başarı/başarısızlık sinyali verir.
  */
 export async function testDwdScopes(adminEmailOverride?: string): Promise<DwdTestResult> {
-    const status = getStatus();
-    if (!status.configured) {
+    const credentials = getServiceAccountCredentials();
+    if (!credentials) {
         throw new Error(
             'Service Account yapılandırılmamış. Önce JSON anahtarı yüklenmeli.',
         );
@@ -43,7 +43,7 @@ export async function testDwdScopes(adminEmailOverride?: string): Promise<DwdTes
     const adminEmail = deriveAdminEmail(adminEmailOverride);
 
     const auth = new GoogleAuth({
-        keyFile: getServiceAccountKeyPath(),
+        credentials,
         scopes: [...DWD_SCOPES],
         clientOptions: { subject: adminEmail },
     });
