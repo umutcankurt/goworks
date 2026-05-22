@@ -4,6 +4,13 @@
     "MANAGER": "Yönetici",
     "MEMBER": "Üye"
   },
+  "delivery": {
+    "label": "Abonelik",
+    "ALL_MAIL": "Herbiri",
+    "DAILY": "Özet",
+    "DIGEST": "Kısaltılmış",
+    "NONE": "E-Posta Yok"
+  },
   "memberPicker": {
     "searchPlaceholder": "Kullanıcı ara veya e-posta gir..."
   },

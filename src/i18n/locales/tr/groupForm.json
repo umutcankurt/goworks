@@ -29,7 +29,12 @@
     "clear": "Temizle",
     "addingMembers": "Ekleniyor...",
     "addMembers": "{{count}} üye ekle",
-    "createHelper": "Bu üyeler grup oluşturulduğunda eklenecektir."
+    "createHelper": "Bu üyeler grup oluşturulduğunda eklenecektir.",
+    "columns": {
+      "member": "Üye",
+      "role": "Rol",
+      "delivery": "Abonelik"
+    }
   },
   "access": {
     "save": "Erişim Ayarlarını Kaydet",

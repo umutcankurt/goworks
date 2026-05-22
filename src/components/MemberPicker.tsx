@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UserAutocomplete } from './UserAutocomplete';
-import type { SelectedMember, GroupRole } from '../types/admin';
+import type { SelectedMember, GroupRole, DeliverySetting } from '../types/admin';
 
 interface MemberPickerProps {
     selectedMembers: SelectedMember[];
@@ -32,13 +32,24 @@ export const MemberPicker: React.FC<MemberPickerProps> = ({
 
     const handleAdd = (user: { email: string; displayName?: string }) => {
         if (selectedMembers.some((m) => m.email.toLowerCase() === user.email.toLowerCase())) return;
-        onChange([...selectedMembers, { email: user.email, displayName: user.displayName, role: 'MEMBER' }]);
+        onChange([
+            ...selectedMembers,
+            { email: user.email, displayName: user.displayName, role: 'MEMBER', deliverySettings: 'ALL_MAIL' },
+        ]);
     };
 
     const handleRoleChange = (email: string, role: GroupRole) => {
         onChange(
             selectedMembers.map((m) =>
                 m.email === email ? { ...m, role } : m,
+            ),
+        );
+    };
+
+    const handleDeliveryChange = (email: string, deliverySettings: DeliverySetting) => {
+        onChange(
+            selectedMembers.map((m) =>
+                m.email === email ? { ...m, deliverySettings } : m,
             ),
         );
     };
@@ -69,6 +80,18 @@ export const MemberPicker: React.FC<MemberPickerProps> = ({
                                 <option value="MEMBER">{t('roles.MEMBER')}</option>
                                 <option value="MANAGER">{t('roles.MANAGER')}</option>
                                 <option value="OWNER">{t('roles.OWNER')}</option>
+                            </select>
+                            <select
+                                value={m.deliverySettings}
+                                onChange={(e) => handleDeliveryChange(m.email, e.target.value as DeliverySetting)}
+                                disabled={disabled}
+                                className="bg-surface-container border border-outline-variant/30 rounded text-xs px-1 py-0.5"
+                                title={t('delivery.label')}
+                            >
+                                <option value="ALL_MAIL">{t('delivery.ALL_MAIL')}</option>
+                                <option value="DAILY">{t('delivery.DAILY')}</option>
+                                <option value="DIGEST">{t('delivery.DIGEST')}</option>
+                                <option value="NONE">{t('delivery.NONE')}</option>
                             </select>
                             <button
                                 type="button"

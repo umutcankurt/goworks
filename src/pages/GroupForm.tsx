@@ -7,6 +7,7 @@ import { groupsApi } from '../services/server-api';
 import { useToast } from '../contexts/ToastContext';
 import { MemberPicker } from '../components/MemberPicker';
 import type {
+    DeliverySetting,
     Domain,
     GroupAlias,
     GroupMember,
@@ -134,7 +135,11 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                 const result = await groupsApi.create(
                     { email, name: groupName.trim(), description: description.trim() || undefined },
                     pendingMembers.length > 0
-                        ? pendingMembers.map((m) => ({ email: m.email, role: m.role }))
+                        ? pendingMembers.map((m) => ({
+                            email: m.email,
+                            role: m.role,
+                            deliverySettings: m.deliverySettings,
+                        }))
                         : undefined,
                 );
                 if (result.memberResult && result.memberResult.failed.length > 0) {
@@ -166,7 +171,11 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
         if (pendingMembers.length === 0) return;
         setMemberOpInProgress('add');
         try {
-            const toAdd = pendingMembers.map((m) => ({ email: m.email, role: m.role }));
+            const toAdd = pendingMembers.map((m) => ({
+                email: m.email,
+                role: m.role,
+                deliverySettings: m.deliverySettings,
+            }));
             const result = await groupsApi.addMembers(groupKey, toAdd);
 
             const succeededSet = new Set(result.succeeded.map((e) => e.toLowerCase()));
@@ -178,6 +187,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                     role: m.role,
                     type: 'USER',
                     status: 'ACTIVE',
+                    deliverySettings: m.deliverySettings,
                 }));
             setExistingMembers((prev) => {
                 const existing = new Set(prev.map((m) => m.email.toLowerCase()));
@@ -283,6 +293,19 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
             addToast(tToast('groups.roleUpdated'), 'success');
         } catch (err: any) {
             addToast(err.message || tToast('groups.roleUpdateFailed'), 'error');
+        } finally {
+            setMemberOpInProgress(null);
+        }
+    };
+
+    const handleChangeExistingDelivery = async (email: string, deliverySettings: DeliverySetting) => {
+        setMemberOpInProgress(email);
+        try {
+            await groupsApi.updateMemberDeliverySettings(groupKey, email, deliverySettings);
+            setExistingMembers((prev) => prev.map((m) => (m.email === email ? { ...m, deliverySettings } : m)));
+            addToast(tToast('groups.deliveryUpdated'), 'success');
+        } catch (err: any) {
+            addToast(err.message || tToast('groups.deliveryUpdateFailed'), 'error');
         } finally {
             setMemberOpInProgress(null);
         }
@@ -439,6 +462,14 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                         <p className="text-sm text-on-surface-variant italic">{t('members.empty')}</p>
                                     ) : (
                                         <div className="border border-outline-variant/30 rounded-lg divide-y divide-gray-100">
+                                            <div className="flex items-center justify-between px-4 py-2 bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                                                <div className="flex-1 min-w-0">{t('members.columns.member')}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-[110px] text-center">{t('members.columns.role')}</span>
+                                                    <span className="w-[140px] text-center">{t('members.columns.delivery')}</span>
+                                                    <span className="w-7" aria-hidden="true" />
+                                                </div>
+                                            </div>
                                             {existingMembers.map((m) => {
                                                 const busy = memberOpInProgress === m.email;
                                                 return (
@@ -452,17 +483,29 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                                                 value={m.role}
                                                                 onChange={(e) => handleChangeExistingRole(m.email, e.target.value as GroupRole)}
                                                                 disabled={busy}
-                                                                className="bg-surface-container border border-outline-variant/30 rounded text-xs px-2 py-1"
+                                                                className="w-[110px] bg-surface-container border border-outline-variant/30 rounded text-xs px-2 py-1"
                                                             >
                                                                 <option value="MEMBER">{tGroups('roles.MEMBER')}</option>
                                                                 <option value="MANAGER">{tGroups('roles.MANAGER')}</option>
                                                                 <option value="OWNER">{tGroups('roles.OWNER')}</option>
                                                             </select>
+                                                            <select
+                                                                value={m.deliverySettings}
+                                                                onChange={(e) => handleChangeExistingDelivery(m.email, e.target.value as DeliverySetting)}
+                                                                disabled={busy}
+                                                                className="w-[140px] bg-surface-container border border-outline-variant/30 rounded text-xs px-2 py-1"
+                                                                title={tGroups('delivery.label')}
+                                                            >
+                                                                <option value="ALL_MAIL">{tGroups('delivery.ALL_MAIL')}</option>
+                                                                <option value="DAILY">{tGroups('delivery.DAILY')}</option>
+                                                                <option value="DIGEST">{tGroups('delivery.DIGEST')}</option>
+                                                                <option value="NONE">{tGroups('delivery.NONE')}</option>
+                                                            </select>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleRemoveExistingMember(m.email)}
                                                                 disabled={busy}
-                                                                className="p-1.5 text-eth-danger hover:bg-eth-danger/10 rounded transition-colors disabled:opacity-50"
+                                                                className="w-7 h-7 inline-flex items-center justify-center text-eth-danger hover:bg-eth-danger/10 rounded transition-colors disabled:opacity-50"
                                                                 title={t('members.removeMember')}
                                                             >
                                                                 <Trash2 size={14} />

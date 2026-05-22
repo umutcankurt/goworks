@@ -208,6 +208,7 @@ import type {
   AdminGroup,
   GroupMember,
   GroupRole,
+  DeliverySetting,
   CreateGroupPayload,
   UpdateGroupPayload,
   GroupAlias,
@@ -241,6 +242,9 @@ export const groupsApi = {
 
   updateMemberRole: (groupKey: string, email: string, role: GroupRole) =>
     ipcInvoke<GroupMember>('groups:updateMemberRole', { groupKey, email, role }),
+
+  updateMemberDeliverySettings: (groupKey: string, email: string, deliverySettings: DeliverySetting) =>
+    ipcInvoke<GroupMember>('groups:updateMemberDeliverySettings', { groupKey, email, deliverySettings }),
 
   listAliases: (groupKey: string) =>
     ipcInvoke<GroupAlias[]>('groups:listAliases', { groupKey }),

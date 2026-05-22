@@ -4,6 +4,13 @@
     "MANAGER": "Manager",
     "MEMBER": "Member"
   },
+  "delivery": {
+    "label": "Subscription",
+    "ALL_MAIL": "Each email",
+    "DAILY": "Daily digest",
+    "DIGEST": "Abridged",
+    "NONE": "No email"
+  },
   "memberPicker": {
     "searchPlaceholder": "Search user or enter email..."
   },

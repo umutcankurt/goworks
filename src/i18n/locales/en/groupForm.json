@@ -29,7 +29,12 @@
     "clear": "Clear",
     "addingMembers": "Adding...",
     "addMembers": "Add {{count}} members",
-    "createHelper": "These members will be added when the group is created."
+    "createHelper": "These members will be added when the group is created.",
+    "columns": {
+      "member": "Member",
+      "role": "Role",
+      "delivery": "Subscription"
+    }
   },
   "access": {
     "save": "Save Access Settings",

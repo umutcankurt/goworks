@@ -52,7 +52,9 @@
     "settingsSaved": "Erişim ayarları kaydedildi",
     "settingsSaveFailed": "Ayarlar kaydedilemedi",
     "roleUpdated": "Rol güncellendi",
-    "roleUpdateFailed": "Rol güncellenemedi"
+    "roleUpdateFailed": "Rol güncellenemedi",
+    "deliveryUpdated": "Abonelik tercihi güncellendi",
+    "deliveryUpdateFailed": "Abonelik tercihi güncellenemedi"
   },
   "bulk": {
     "analyzeFailed": "Analiz hatası: {{error}}",

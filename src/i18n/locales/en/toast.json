@@ -52,7 +52,9 @@
     "settingsSaved": "Access settings saved",
     "settingsSaveFailed": "Could not save settings",
     "roleUpdated": "Role updated",
-    "roleUpdateFailed": "Could not update role"
+    "roleUpdateFailed": "Could not update role",
+    "deliveryUpdated": "Delivery preference updated",
+    "deliveryUpdateFailed": "Could not update delivery preference"
   },
   "bulk": {
     "analyzeFailed": "Analysis error: {{error}}",

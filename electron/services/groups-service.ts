@@ -4,6 +4,7 @@ import {
     AdminGroup,
     GroupMember,
     GroupRole,
+    DeliverySetting,
     CreateGroupPayload,
     UpdateGroupPayload,
     GroupAlias,
@@ -33,12 +34,18 @@ function mapGroup(g: any): AdminGroup {
 }
 
 function mapMember(m: any): GroupMember {
+    const raw = m.delivery_settings || m.deliverySettings;
+    const delivery: DeliverySetting =
+        raw === 'DAILY' || raw === 'DIGEST' || raw === 'NONE' || raw === 'ALL_MAIL'
+            ? raw
+            : 'ALL_MAIL';
     return {
         id: m.id || '',
         email: m.email || '',
         role: m.role || 'MEMBER',
         type: m.type || 'USER',
         status: m.status || '',
+        deliverySettings: delivery,
     };
 }
 
@@ -156,7 +163,11 @@ export async function addMembers(
                 withRetry(
                     () => dir.members.insert({
                         groupKey,
-                        requestBody: { email: m.email, role: m.role },
+                        requestBody: {
+                            email: m.email,
+                            role: m.role,
+                            ...(m.deliverySettings ? { delivery_settings: m.deliverySettings } : {}),
+                        },
                     }),
                     getLogger(),
                     `members.insert(${groupKey},${m.email})`,
@@ -210,6 +221,27 @@ export async function updateMemberRole(
             }),
             getLogger(),
             `members.patch(${groupKey},${email})`,
+        ),
+    );
+    return mapMember(res.data);
+}
+
+export async function updateMemberDeliverySettings(
+    auth: OAuth2Client,
+    groupKey: string,
+    email: string,
+    deliverySettings: DeliverySetting,
+): Promise<GroupMember> {
+    const dir = directory(auth);
+    const res = await adminLimiter.schedule(() =>
+        withRetry(
+            () => dir.members.patch({
+                groupKey,
+                memberKey: email,
+                requestBody: { delivery_settings: deliverySettings },
+            }),
+            getLogger(),
+            `members.patch.delivery(${groupKey},${email})`,
         ),
     );
     return mapMember(res.data);

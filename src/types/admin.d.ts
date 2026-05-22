@@ -37,12 +37,15 @@ export interface AdminGroup {
     description?: string;
 }
 
+export type DeliverySetting = 'ALL_MAIL' | 'DAILY' | 'DIGEST' | 'NONE';
+
 export interface GroupMember {
     id: string;
     email: string;
     role: string;
     type: string;
     status: string;
+    deliverySettings: DeliverySetting;
 }
 
 export interface UserUpdatePayload {
@@ -93,11 +96,13 @@ export interface SelectedMember {
     email: string;
     displayName?: string;
     role: GroupRole;
+    deliverySettings: DeliverySetting;
 }
 
 export interface MemberInput {
     email: string;
     role: GroupRole;
+    deliverySettings?: DeliverySetting;
 }
 
 export interface MemberBatchResult {

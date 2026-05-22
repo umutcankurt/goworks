@@ -759,6 +759,16 @@ app.whenReady().then(async () => {
     }
   });
 
+  ipcMain.handle('groups:updateMemberDeliverySettings', async (_, { groupKey, email, deliverySettings }: { groupKey: string; email: string; deliverySettings: import('./types').DeliverySetting }) => {
+    try {
+      const { updateMemberDeliverySettings } = await import('./services/groups-service');
+      const data = await updateMemberDeliverySettings(authService.getClient(), groupKey, email, deliverySettings);
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('groups:listAliases', async (_, { groupKey }: { groupKey: string }) => {
     try {
       const { listAliases } = await import('./services/groups-service');
