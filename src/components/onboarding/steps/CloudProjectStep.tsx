@@ -3,6 +3,7 @@ import { ExternalLink, Lightbulb } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { OAuthCredentialsForm } from '../shared/OAuthCredentialsForm';
+import { RequiredApisCard } from '../../shared/RequiredApisCard';
 
 const CLOUD_CONSOLE_URL = 'https://console.cloud.google.com/';
 
@@ -13,7 +14,6 @@ interface CloudProjectStepProps {
 export function CloudProjectStep({ onValidChange }: CloudProjectStepProps) {
     const { t } = useTranslation('onboarding');
     const instructions = (t('cloud.instructions', { returnObjects: true }) as Array<{ title: string; body: string }>) || [];
-    const apis = (t('cloud.apis', { returnObjects: true }) as string[]) || [];
 
     return (
         <div className="mx-auto flex h-full max-w-6xl flex-col py-4">
@@ -63,22 +63,7 @@ export function CloudProjectStep({ onValidChange }: CloudProjectStepProps) {
                 </div>
 
                 <div className="space-y-4 lg:sticky lg:top-6 self-start">
-                    <Card tone="elevated" padding="md">
-                        <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-on-surface-variant">
-                            {t('cloud.apisTitle')}
-                        </div>
-                        <ul className="mt-3 space-y-2">
-                            {apis.map((api) => (
-                                <li
-                                    key={api}
-                                    className="flex items-center gap-2 rounded-md bg-surface-container-lowest px-3 py-2 text-sm text-on-surface"
-                                >
-                                    <span className="h-1.5 w-1.5 rounded-full bg-eth-primary-container" />
-                                    {api}
-                                </li>
-                            ))}
-                        </ul>
-                    </Card>
+                    <RequiredApisCard variant="compact" />
 
                     <div className="flex items-start gap-2 rounded-lg bg-surface-container-lowest px-3 py-2.5 text-xs text-on-surface-variant">
                         <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-eth-primary" />

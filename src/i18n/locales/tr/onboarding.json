@@ -105,12 +105,7 @@
       }
     ],
     "apisTitle": "Etkinleştirilecek API'ler (4)",
-    "apis": [
-      "Admin SDK API",
-      "Gmail API",
-      "Groups Settings API",
-      "Reports API (Audit)"
-    ],
+    "enableButton": "Cloud Console'da aç",
     "openConsole": "Cloud Console'u aç",
     "tip": "İpucu: Bir API'yi etkinleştirmeden önce arama kutusuna tam adını yazın; benzer isimli farklı API'ler olabilir.",
     "credentials": {
@@ -166,7 +161,7 @@
     "subtitle": "Service Account'ın admin adına işlem yapabilmesi için aşağıdaki Client ID ve scope listesini Admin Console'a tanıtın.",
     "clientIdLabel": "Client ID",
     "clientIdMissing": "Client ID görüntülenebilmesi için önce Service Account JSON yüklenmeli.",
-    "scopesLabel": "OAuth scope'ları (8)",
+    "scopesLabel": "OAuth scope'ları ({{count}})",
     "copy": "Kopyala",
     "copyAll": "Tümünü kopyala",
     "copied": "Kopyalandı",

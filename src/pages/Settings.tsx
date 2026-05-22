@@ -12,6 +12,7 @@ import { useLanguage } from '../i18n/useLanguage';
 import { LANGUAGES } from '../i18n/types';
 import { HelpGuide } from '../components/HelpGuide';
 import { OAuthCredentialsForm } from '../components/onboarding/shared/OAuthCredentialsForm';
+import { RequiredApisCard } from '../components/shared/RequiredApisCard';
 
 type Tab = 'general' | 'titles' | 'institutions';
 
@@ -765,6 +766,7 @@ function GeneralTab() {
       </div>
 
       <GoogleCloudSection />
+      <RequiredApisCard variant="expanded" />
       <ServiceAccountSection />
       <DwdSection />
       <ResetWizardSection />
@@ -977,7 +979,7 @@ function DwdSection() {
 
         <div className="rounded-lg border eth-border-ghost bg-surface-container-low p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">{t('general.dwd.scopesLabel')}</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">{t('general.dwd.scopesLabel', { count: scopes.length })}</span>
             <button
               type="button"
               onClick={() => copy(scopes.join(','), 'all')}

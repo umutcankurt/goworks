@@ -105,12 +105,7 @@
       }
     ],
     "apisTitle": "APIs to enable (4)",
-    "apis": [
-      "Admin SDK API",
-      "Gmail API",
-      "Groups Settings API",
-      "Reports API (Audit)"
-    ],
+    "enableButton": "Open in Cloud Console",
     "openConsole": "Open Cloud Console",
     "tip": "Tip: type the full API name in the search box — multiple APIs share similar prefixes.",
     "credentials": {
@@ -166,7 +161,7 @@
     "subtitle": "Authorize the Service Account in Admin Console with the Client ID and scope list below so it can act on behalf of admins.",
     "clientIdLabel": "Client ID",
     "clientIdMissing": "Upload the Service Account JSON first to display its Client ID.",
-    "scopesLabel": "OAuth scopes (8)",
+    "scopesLabel": "OAuth scopes ({{count}})",
     "copy": "Copy",
     "copyAll": "Copy all",
     "copied": "Copied",

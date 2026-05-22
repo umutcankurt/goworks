@@ -56,7 +56,7 @@ export function DwdScopeGuide({ clientId }: DwdScopeGuideProps) {
             <div className="rounded-lg bg-surface-container-lowest eth-border-ghost-soft p-4">
                 <div className="mb-3 flex items-center justify-between">
                     <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-on-surface-variant">
-                        {t('dwd.scopesLabel')}
+                        {t('dwd.scopesLabel', { count: scopes.length })}
                     </span>
                     <button
                         type="button"

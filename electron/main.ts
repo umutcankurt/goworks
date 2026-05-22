@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session } from 'electron'
+import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -96,6 +96,16 @@ function createWindow() {
   win.once('ready-to-show', () => {
     win?.maximize()
     win?.show()
+  })
+
+  // window.open(url, '_blank') ile açılan tüm dış URL'leri uygulama içi
+  // BrowserWindow yerine OS varsayılan tarayıcısına yönlendir — kullanıcının
+  // Google session'ı vb. zaten orada açık.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
   })
 
   ipcMain.handle('window:maximize', () => {

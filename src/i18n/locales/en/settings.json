@@ -56,6 +56,10 @@
       "title": "Google OAuth Credentials",
       "subtitle": "The Desktop OAuth Client ID and Secret you created in Cloud Console. The secret is stored encrypted in the OS keychain and is never shown on screen."
     },
+    "requiredApis": {
+      "title": "Required Google APIs",
+      "subtitle": "The following APIs must be enabled in Cloud Console for Workspace features to work. Click a row to open its Cloud Console page."
+    },
     "serviceAccount": {
       "heading": "Google Service Account",
       "description": "Required for Gmail signature management via Domain-wide Delegation. Your JSON key is stored locally under <code>userData/secrets/</code>.",
@@ -76,7 +80,7 @@
       "description": "The Service Account must be authorized in Admin Console for these OAuth scopes to act domain-wide.",
       "clientIdLabel": "Service Account Client ID",
       "clientIdMissing": "Upload the Service Account JSON first to display its Client ID.",
-      "scopesLabel": "OAuth scopes (8)",
+      "scopesLabel": "OAuth scopes ({{count}})",
       "copy": "Copy",
       "copyAll": "Copy all",
       "copied": "Copied",

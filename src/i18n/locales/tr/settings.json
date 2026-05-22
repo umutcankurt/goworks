@@ -56,6 +56,10 @@
       "title": "Google OAuth Bilgileri",
       "subtitle": "Cloud Console'da oluşturduğunuz Desktop OAuth Client ID ve Secret. Secret OS anahtar deposunda şifreli olarak saklanır; ekranda gösterilmez."
     },
+    "requiredApis": {
+      "title": "Gerekli Google API'leri",
+      "subtitle": "Workspace özelliklerinin çalışması için aşağıdaki API'lerin Cloud Console'da etkinleştirilmiş olması gerekir. Bir satıra tıklayınca ilgili API'nin Cloud Console sayfası açılır."
+    },
     "serviceAccount": {
       "heading": "Google Service Account",
       "description": "Domain-wide Delegation ile Gmail imza yönetimi için gereklidir. JSON anahtarınız bu cihazda <code>userData/secrets/</code> altında saklanır.",
@@ -76,7 +80,7 @@
       "description": "Service Account'ın bu OAuth scope'larıyla domain genelinde işlem yapabilmesi için Admin Console'da yetkilendirilmiş olması gerekir.",
       "clientIdLabel": "Service Account Client ID",
       "clientIdMissing": "Client ID görüntülenebilmesi için önce Service Account JSON yüklenmeli.",
-      "scopesLabel": "OAuth scope'ları (8)",
+      "scopesLabel": "OAuth scope'ları ({{count}})",
       "copy": "Kopyala",
       "copyAll": "Tümünü kopyala",
       "copied": "Kopyalandı",
