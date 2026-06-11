@@ -12,11 +12,11 @@ export interface TemplateVariables {
 }
 
 /**
- * Token alias eşlemesi. Render sırasında bir token aranırken karşılığı yoksa
- * eşlenik token'a bakılır. İngilizce token'lar → kanonik TR anahtar.
- * Editör (`src/utils/signatureTokens.ts`), uygulama dili EN iken bu token'ları
- * yazar; worker'lar `variables`'ı daima kanonik TR anahtarlarla doldurduğu için
- * tek-hop alias yeterlidir. İki dosya birlikte güncel tutulmalıdır.
+ * Token alias map. During render, when a token is looked up and has no value,
+ * its aliased token is consulted. English tokens → canonical TR key.
+ * The editor (`src/utils/signatureTokens.ts`) writes these tokens when the app
+ * language is EN; since workers always fill `variables` with canonical TR keys,
+ * a single-hop alias is sufficient. The two files must be kept in sync.
  */
 const TOKEN_ALIAS: Record<string, string> = {
     full_name: 'ad_soyad',
@@ -107,9 +107,9 @@ function cleanTelHrefs(html: string): string {
 }
 
 /**
- * data-condition="var1,var2" olan elementleri işler:
- * - Listelenen TÜM değişkenler boş/undefined/whitespace ise → element komple kaldırılır
- * - En az bir değişken doluysa → element korunur, data-condition attribute'u silinir
+ * Processes elements with data-condition="var1,var2":
+ * - If ALL listed variables are empty/undefined/whitespace → the element is removed entirely
+ * - If at least one variable is filled → the element is kept, the data-condition attribute is removed
  */
 export function processConditionalBlocks(html: string, variables: TemplateVariables): string {
     const openTagRegex = /<(\w+)(\s[^>]*?)data-condition="([^"]*)"([^>]*?)>/g;

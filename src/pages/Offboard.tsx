@@ -114,7 +114,7 @@ export const Offboard: React.FC = () => {
                         try {
                             await adminApi.removeUserFromGroup(activeUser.primaryEmail, group.id);
                             removed++;
-                        } catch { /* tek grup hatası atlansın */ }
+                        } catch { /* skip a single group error */ }
                     }
                     addToast(tToast('offboard.groupsRemoved', { count: removed }), 'info');
                     break;

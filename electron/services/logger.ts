@@ -1,17 +1,17 @@
 /**
- * GoWorks logger — main process tarafı.
+ * GoWorks logger — main process side.
  *
- * Hedef: console.* çağrılarının yanına dosyaya yazma + hibrit rotation
- * (boot cleanup + size-based + daily rollover). Production debug için
- * `userData/logs/app-YYYY-MM-DD[-N].log` dosyaları toplanır; kullanıcı
- * destek için Settings'ten dışa aktarabilir.
+ * Goal: alongside console.* calls, write to a file + hybrid rotation
+ * (boot cleanup + size-based + daily rollover). For production debugging,
+ * `userData/logs/app-YYYY-MM-DD[-N].log` files are collected; the user can
+ * export them from Settings for support.
  *
- * Kurallar:
- * - Logger ASLA throw etmez (loglama akışı uygulamayı çökertmez).
- * - `app.getPath('userData')` mevcut değilse /tmp/goworks-logs'a düşer
- *   (test/erken-init senaryoları için).
- * - Console çıktısı korunur (Faz C2'de no-console: warn açılınca
- *   bu dosya için eslintrc override'ı eklenecek).
+ * Rules:
+ * - The logger NEVER throws (the logging path won't crash the app).
+ * - If `app.getPath('userData')` is not available, it falls back to /tmp/goworks-logs
+ *   (for test/early-init scenarios).
+ * - Console output is preserved (once no-console: warn is enabled in Phase C2,
+ *   an eslintrc override will be added for this file).
  */
 import { app } from 'electron';
 import * as fs from 'node:fs';
@@ -91,14 +91,14 @@ function selectFile(): string {
     const today = todayStr();
     const dir = ensureLogsDir();
 
-    // Daily rollover: tarih değişti → seq 0'dan başla
+    // Daily rollover: date changed → restart seq from 0
     if (currentDate !== today) {
         currentDate = today;
         currentSeq = 0;
         currentFile = path.join(dir, `app-${today}.log`);
     }
 
-    // Size-based rotation: mevcut dosya 10MB üstündeyse seq artır
+    // Size-based rotation: if the current file is over 10MB, increment seq
     if (currentFile && fs.existsSync(currentFile)) {
         try {
             const size = fs.statSync(currentFile).size;
@@ -136,13 +136,13 @@ function write(level: LogLevel, args: unknown[]): void {
     const ts = new Date().toISOString();
     const prefix = `[${ts}] [${level.toUpperCase()}]`;
 
-    // Console çıktısı (terminal ve devtools için)
+    // Console output (for terminal and devtools)
     if (level === 'debug') console.debug(prefix, ...args);
     else if (level === 'info') console.info(prefix, ...args);
     else if (level === 'warn') console.warn(prefix, ...args);
     else console.error(prefix, ...args);
 
-    // Dosyaya yazma
+    // Write to file
     try {
         const formatted = args.map(formatArg).join(' ');
         const line = `${prefix} ${formatted}\n`;
@@ -164,7 +164,7 @@ export function getLogger() {
     return logger;
 }
 
-/** Settings veya hata raporu için log klasörünün mutlak yolu. */
+/** Absolute path of the log folder for Settings or error reports. */
 export function getLogsDir(): string {
     return ensureLogsDir();
 }

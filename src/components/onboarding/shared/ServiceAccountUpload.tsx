@@ -6,7 +6,7 @@ import { useToast } from '../../../contexts/ToastContext';
 import { Button } from '../../ui/Button';
 
 interface ServiceAccountUploadProps {
-    /** Status değiştiğinde parent'a haber verir (onboarding "Devam et" butonu için). */
+    /** Notifies the parent when the status changes (for the onboarding "Devam et" button). */
     onStatusChange?: (status: ServiceAccountStatus | null) => void;
 }
 

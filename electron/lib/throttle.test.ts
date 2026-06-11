@@ -44,7 +44,7 @@ describe('throttle', () => {
         throttled(3);
         throttled(4);
         vi.advanceTimersByTime(100);
-        expect(fn).toHaveBeenCalledTimes(2); // ilk + son trailing
+        expect(fn).toHaveBeenCalledTimes(2); // first + last trailing
         expect(fn).toHaveBeenLastCalledWith(4);
     });
 
@@ -83,7 +83,7 @@ describe('throttle', () => {
         const fn = vi.fn();
         const throttled = throttle(fn, 100);
         throttled('a');
-        throttled.flush(); // hiçbir trailing yok
+        throttled.flush(); // no trailing call pending
         expect(fn).toHaveBeenCalledTimes(1);
     });
 });

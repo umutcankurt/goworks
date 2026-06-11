@@ -29,9 +29,9 @@ interface SignatureAuditPayload {
 }
 
 /**
- * SIGNATURE_AUDIT job worker'ı — bir kapsamdaki kişilerin imzasını taranıp seçilen
- * şablona göre kategorize eder, sonuçları `signature_audit_items` tablosuna yazar.
- * İmza basmaz; sadece okur ve raporlar (apply ayrı bir BULK_SIGNATURE_PUSH job'udur).
+ * SIGNATURE_AUDIT job worker — scans the signatures of people in a given scope and
+ * categorizes them against the selected template, writing results to the `signature_audit_items` table.
+ * It does not push signatures; it only reads and reports (apply is a separate BULK_SIGNATURE_PUSH job).
  */
 async function processJob(
     job: JobRecord,
@@ -47,15 +47,15 @@ async function processJob(
 
     const startedAt = Date.now();
 
-    // Yeniden başlatma (resumeOnStartup) durumunda mükerrer satır olmasın: temiz başla.
+    // On restart (resumeOnStartup), avoid duplicate rows: start clean.
     deleteAuditItems(job.id);
 
-    // Kitleyi çöz — kişi listesini ve profilleri getir
+    // Resolve the audience — fetch the person list and their profiles
     const audience = await resolveAudience(payload.scope, adminEmail);
     const total = audience.length;
     jobQueue.setTotal(job.id, total);
 
-    // Hızlı mod karşılaştırması için tüm durum kayıtlarını tek seferde çek
+    // Fetch all state records in one go for the Fast-mode comparison
     const stateMap = signatureStateService.getMany(audience.map((e) => e.profile.email));
 
     const counts: Record<AuditCategory, number> = {
@@ -102,8 +102,8 @@ async function processJob(
                     liveSignature,
                 });
 
-                // Derin mod: canlı imza hedefle birebir uyumluysa durum kaydını "iyileştir"
-                // ki sonraki Hızlı taramalar bu kişiyi doğru ("güncel") değerlendirsin.
+                // Deep mode: if the live signature matches the target exactly, "upgrade" the state record
+                // so that subsequent Fast scans evaluate this person correctly (as "up to date").
                 if (payload.depth === 'deep' && category === 'ok') {
                     signatureStateService.recordPush(
                         email, payload.templateId, desired.html, desired.variables,

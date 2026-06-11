@@ -128,7 +128,7 @@ export type BulkActionType = 'suspend' | 'delete' | 'signature_push';
 
 export interface BulkActionPayload {
     action: BulkActionType;
-    users: string[]; // email veya kimlik
+    users: string[]; // email or id
 }
 
 export interface BulkProgressEvent {

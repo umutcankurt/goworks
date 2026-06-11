@@ -18,7 +18,7 @@ export function AdminLoginStep() {
         setError(null);
         try {
             await login();
-            // Onboarding.tsx isAuthenticated değişimini izleyip otomatik DWD adımına geçecek.
+            // Onboarding.tsx watches the isAuthenticated change and automatically advances to the DWD step.
         } catch (err: any) {
             setError(err?.message || 'Login failed');
         } finally {

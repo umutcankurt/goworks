@@ -111,7 +111,7 @@ describe.each([
 
     it('iki depo birbirinden bağımsız dosyalara yazar', () => {
         store.set('payload');
-        // Diğer iki depo bu yazımdan etkilenmemeli.
+        // The other two stores must not be affected by this write.
         expect(secureStorage.hasClientSecret()).toBe(false);
     });
 });

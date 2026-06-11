@@ -45,7 +45,7 @@ export function SignatureAudit() {
     const [progress, setProgress] = useState<JobProgress>(EMPTY_PROGRESS);
     const startedRef = useRef(false);
 
-    // Aktif job (tarama veya uygulama) ilerleme aboneliği
+    // Progress subscription for the active job (scan or apply)
     useEffect(() => {
         if (step !== 'scanning' && step !== 'applying') return;
         const phase = step;
@@ -143,7 +143,7 @@ export function SignatureAudit() {
         setProgress(EMPTY_PROGRESS);
     };
 
-    // Tarama bitince tekrar tarama yapabilmek için review'dan re-scan
+    // Re-scan from review so a new scan can be run once the scan finishes
     const handleRescan = () => {
         setItems([]);
         setScanJobId(null);
@@ -164,7 +164,7 @@ export function SignatureAudit() {
                 <HelpGuide namespace="signatureAudit" />
             </div>
 
-            {/* Adım göstergesi */}
+            {/* Step indicator */}
             <div className="flex items-center gap-2 text-sm">
                 {STEP_ORDER.map((s, i) => {
                     const isActive = i === currentStepIndex;

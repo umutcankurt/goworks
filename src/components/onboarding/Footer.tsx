@@ -8,7 +8,7 @@ interface FooterProps {
     canGoNext: boolean;
     onBack?: () => void;
     onNext?: () => void;
-    /** Welcome step'inde counter render edilmez (intro). */
+    /** The counter is not rendered on the Welcome step (intro). */
     showCounter?: boolean;
 }
 

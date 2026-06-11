@@ -7,17 +7,17 @@ import { Skeleton } from './Skeleton';
 export interface Column<Row> {
     key: string;
     header: ReactNode;
-    /** Hücre içeriğini render eder; `row[key]` default render'ı yetmiyorsa kullan. */
+    /** Renders the cell content; use when the default `row[key]` render is not enough. */
     render?: (row: Row) => ReactNode;
-    /** Sıralanabilir sütun mu. Sıralama için sortable + accessor lazım. */
+    /** Whether the column is sortable. Sorting needs both sortable + accessor. */
     sortable?: boolean;
-    /** Sıralama için satırdan değer çıkaran fn (yoksa row[key] kullanılır). */
+    /** fn that extracts the sort value from a row (falls back to row[key]). */
     accessor?: (row: Row) => string | number | Date | null | undefined;
-    /** Sütun genişliği (Tailwind class). */
+    /** Column width (Tailwind class). */
     width?: string;
-    /** Hücre sınıfı. */
+    /** Cell class. */
     cellClassName?: string;
-    /** Header sınıfı. */
+    /** Header class. */
     headerClassName?: string;
     align?: 'left' | 'right' | 'center';
 }
@@ -32,7 +32,7 @@ interface DataTableProps<Row> {
     emptyIcon?: ReactNode;
     onRowClick?: (row: Row) => void;
     className?: string;
-    /** Loading sırasında kaç skeleton satırı göster. */
+    /** How many skeleton rows to show while loading. */
     loadingRows?: number;
 }
 
@@ -50,9 +50,9 @@ const ALIGN_CLASSES: Record<NonNullable<Column<unknown>['align']>, string> = {
 };
 
 /**
- * Minimal in-house DataTable wrapper — Users, GroupsList, JobHistory, Reports
- * gibi sayfaların tablo markup'ı için ortak iskelet. Sıralama opsiyonel,
- * pagination çağıran sayfaya bırakılır (rows prop'u zaten paged geçiyor).
+ * Minimal in-house DataTable wrapper — a shared skeleton for the table markup
+ * of pages like Users, GroupsList, JobHistory, Reports. Sorting is optional;
+ * pagination is left to the calling page (the rows prop already comes paged).
  */
 export function DataTable<Row>({
     columns,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// institution-service'i mock'la — getDb() bağımlılığını atlatmak için.
+// Mock institution-service — to bypass the getDb() dependency.
 const fakeInstitutions = [
     { id: 1, name: 'Merkez', address: 'İstanbul', phone: '0212' },
     { id: 2, name: 'Kadıköy', address: 'Kadıköy/İstanbul', phone: '0216' },
@@ -13,7 +13,7 @@ vi.mock('./institution-service', () => ({
     },
 }));
 
-// Mock'lar tanımlandıktan sonra import et
+// Import after the mocks are defined
 import { analyzeBulkCsv } from './csv-analysis';
 
 describe('analyzeBulkCsv — temel akış', () => {
@@ -73,7 +73,7 @@ describe('analyzeBulkCsv — iki dilli başlıklar (TR/EN)', () => {
 
     it('EN başlık + eksik kolon, lang=en → hata mesajı İngilizce ve lokalize alan adı', () => {
         const result = analyzeBulkCsv('signature_push', [
-            { email: 'a@x.com', first_name: 'A', last_name: 'B', title: 'X', phone: '0555' }, // institution_name yok
+            { email: 'a@x.com', first_name: 'A', last_name: 'B', title: 'X', phone: '0555' }, // no institution_name
         ], 'en');
         expect(result.summary.invalidCount).toBe(1);
         const err = result.invalidRows[0].errors.find((e) => e.field === 'kurum_adi');
@@ -84,7 +84,7 @@ describe('analyzeBulkCsv — iki dilli başlıklar (TR/EN)', () => {
 
     it('lang=tr (varsayılan) → hata mesajı Türkçe ve kanonik alan adı', () => {
         const result = analyzeBulkCsv('signature_push', [
-            { email: 'a@x.com', ad: 'A', soyad: 'B', unvan: 'X', telefon: '0555' }, // kurum_adi yok
+            { email: 'a@x.com', ad: 'A', soyad: 'B', unvan: 'X', telefon: '0555' }, // no kurum_adi
         ]);
         const err = result.invalidRows[0].errors.find((e) => e.field === 'kurum_adi');
         expect(err!.message).toContain("'kurum_adi'");

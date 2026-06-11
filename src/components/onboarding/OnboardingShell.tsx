@@ -9,7 +9,7 @@ interface OnboardingShellProps {
     canGoNext: boolean;
     onBack?: () => void;
     onNext?: () => void;
-    /** Welcome step'inde footer ve sayaç gizlenir (intro). */
+    /** The footer and counter are hidden on the Welcome step (intro). */
     showFooter?: boolean;
     children: ReactNode;
 }

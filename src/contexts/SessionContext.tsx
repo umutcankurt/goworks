@@ -43,14 +43,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('session-activity', handleActivity);
     }, [resetActivity]);
 
-    // Login olduğunda sayacı sıfırla
+    // Reset the counter on login
     useEffect(() => {
         if (isAuthenticated) {
             resetActivity();
         }
     }, [isAuthenticated, resetActivity]);
 
-    // Her saniye kalan süreyi hesapla
+    // Compute the remaining time every second
     useEffect(() => {
         if (!isAuthenticated) return;
 
@@ -59,12 +59,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             const remaining = Math.max(0, SESSION_DURATION - elapsed);
             setRemainingSeconds(remaining);
 
-            // Uyarı göster
+            // Show warning
             if (remaining <= WARNING_THRESHOLD && remaining > 0 && !warningDismissed) {
                 setShowWarning(true);
             }
 
-            // Süre doldu → logout
+            // Time is up → logout
             if (remaining <= 0 && !logoutCalledRef.current) {
                 logoutCalledRef.current = true;
                 logout();

@@ -1,26 +1,26 @@
 /**
- * IPC sınırında error işleme yardımcıları.
+ * Helpers for handling errors at the IPC boundary.
  *
- * Kritik kural: stack trace IPC üzerinde KAYBOLMAMALI. Pattern:
+ * Critical rule: the stack trace MUST NOT be lost across IPC. Pattern:
  *
  *     } catch (error) {
- *         logger.error('[admin:getUsers] failed', error);   // tam stack
- *         return { success: false, error: toUserMessage(error) }; // sadece message
+ *         logger.error('[admin:getUsers] failed', error);   // full stack
+ *         return { success: false, error: toUserMessage(error) }; // message only
  *     }
  *
- * Logger Faz C1'de error.stack'i dosyaya yazıyor; renderer'a sadece
- * okunaklı string gönderilir.
+ * As of Phase C1, the logger writes error.stack to the file; only a readable
+ * string is sent to the renderer.
  */
 import { isUserFacingError } from './errors';
 
 const GENERIC_TR = 'Beklenmeyen hata oluştu. Detaylar log dosyasındadır.';
 
 /**
- * Renderer'a gösterilecek mesajı döner.
- * - `UserFacingError` → kendi message'ı (Türkçe, hazırlanmış)
+ * Returns the message to show in the renderer.
+ * - `UserFacingError` → its own message (prepared, in Turkish)
  * - Generic Error / unknown → "Beklenmeyen hata oluştu (log dosyasında detay)"
  *
- * Stack/PII renderer'a SIZMAZ.
+ * Stack/PII does NOT leak to the renderer.
  */
 export function toUserMessage(error: unknown): string {
     if (isUserFacingError(error)) {
@@ -30,9 +30,9 @@ export function toUserMessage(error: unknown): string {
 }
 
 /**
- * Bir hatayı tek satır log mesajına dönüştürür. Logger.error genelde
- * Error instance'ı kabul eder ve stack'i kendi serialize eder; bu helper
- * label + serialized error stringi tek formatta toplamak için.
+ * Converts an error into a single-line log message. Logger.error usually accepts
+ * an Error instance and serializes the stack itself; this helper is for combining
+ * a label + serialized error string into a single format.
  */
 export function formatErrorForLog(error: unknown): string {
     if (error instanceof Error) {
@@ -48,11 +48,11 @@ export function formatErrorForLog(error: unknown): string {
 }
 
 /**
- * IPC response için generic discriminated union.
+ * Generic discriminated union for IPC responses.
  *
  *     async (_, params): Promise<IpcResult<UserList>> => { ... }
  *
- * Renderer tarafı `if (result.success) { use result.data } else { toast(result.error) }`.
+ * Renderer side: `if (result.success) { use result.data } else { toast(result.error) }`.
  */
 export type IpcResult<T> =
     | { success: true; data: T }

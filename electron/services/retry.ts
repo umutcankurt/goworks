@@ -12,11 +12,11 @@ function sleep(ms: number) {
 
 function isRetryable(err: any): boolean {
     const status = err?.code || err?.response?.status || err?.status;
-    // 429 (rate limit), 503 (service unavailable) — geçici API hataları retry edilebilir
+    // 429 (rate limit), 503 (service unavailable) — transient API errors can be retried
     if (status === 429 || status === 503) return true;
     if (err?.code === 'ECONNRESET' || err?.code === 'ENOTFOUND') return true;
-    // ETIMEDOUT retry EDİLMEZ — googleapis'ten düzgün abort alamıyoruz,
-    // retry zinciri 120s Watchdog'a yol açıyor (3 × 30s = 90s + retry overhead)
+    // ETIMEDOUT is NOT retried — we can't get a clean abort from googleapis,
+    // the retry chain leads to a 120s Watchdog (3 × 30s = 90s + retry overhead)
     return false;
 }
 

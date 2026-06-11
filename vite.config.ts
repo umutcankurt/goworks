@@ -4,7 +4,7 @@ import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
 import dotenv from 'dotenv'
 
-// Build zamanında .env yükle (geliştirici ortamı için)
+// Load .env at build time (for the developer environment)
 dotenv.config()
 
 const MAIN_EXTERNALS = [

@@ -13,8 +13,8 @@ export interface DwdTestResult {
 
 function deriveAdminEmail(explicit?: string): string {
     if (explicit && explicit.includes('@')) return explicit.trim();
-    // Renderer normalde aktif kullanıcının email'ini geçirir (Settings/Onboarding).
-    // Admin email belirsizse `admin@domain` tahmini fallback'e düş.
+    // The renderer normally passes the active user's email (Settings/Onboarding).
+    // If the admin email is unknown, fall back to the `admin@domain` guess.
     const domain = appConfigService.get('allowedDomain');
     if (!domain) {
         throw new Error(
@@ -25,12 +25,12 @@ function deriveAdminEmail(explicit?: string): string {
 }
 
 /**
- * Service Account'ın admin impersonation ile temel admin/gmail/audit
- * scope'larından bir token alıp gerçek bir API çağrısı yapabildiğini doğrular.
+ * Verifies that the Service Account, via admin impersonation, can obtain a token
+ * from the core admin/gmail/audit scopes and make a real API call.
  *
- * Granular per-scope test yerine kombine bir auth instance ile her scope'u
- * tek tek dener — DWD genelde "ya hepsi ya hiçbiri" şekilde konfigüre olduğu
- * için bu çoğu durumda tek bir başarı/başarısızlık sinyali verir.
+ * Instead of a granular per-scope test, it tries each scope with a single combined
+ * auth instance — since DWD is usually configured "all or nothing", this gives a
+ * single success/failure signal in most cases.
  */
 export async function testDwdScopes(adminEmailOverride?: string): Promise<DwdTestResult> {
     const credentials = getServiceAccountCredentials();
@@ -49,9 +49,9 @@ export async function testDwdScopes(adminEmailOverride?: string): Promise<DwdTes
     });
 
     try {
-        // Token isteği DWD scope listesi ile imzalanmış JWT döndürür.
-        // Burada hata genelde "unauthorized_client" — admin Client ID'yi
-        // henüz Admin Console DWD listesine eklememiş demektir.
+        // The token request returns a JWT signed with the DWD scope list.
+        // An error here is usually "unauthorized_client" — meaning the admin has
+        // not yet added the Client ID to the Admin Console DWD list.
         await auth.getAccessToken();
     } catch (err: any) {
         return {
@@ -62,8 +62,8 @@ export async function testDwdScopes(adminEmailOverride?: string): Promise<DwdTes
         };
     }
 
-    // Asıl scope onayı: admin.directory.user üzerinden minimum bir okuma.
-    // Bu çağrı başarılı olursa admin impersonation ve user okuma yetkisi vardır.
+    // Actual scope confirmation: a minimal read via admin.directory.user.
+    // If this call succeeds, admin impersonation and user read access are present.
     try {
         const admin = getGoogle().admin({ version: 'directory_v1', auth });
         await admin.users.list({ customer: 'my_customer', maxResults: 1 });

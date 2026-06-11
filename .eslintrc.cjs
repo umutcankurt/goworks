@@ -14,10 +14,10 @@ module.exports = {
     'react-refresh/only-export-components': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     'react-hooks/exhaustive-deps': 'off',
-    // autoFocus modal açılışında ilk input'a focus vermek standart UX — kapalı.
+    // autoFocus to focus the first input when a modal opens is standard UX — disabled.
     'jsx-a11y/no-autofocus': 'off',
-    // `_name` prefix konvansiyonu: kasıtlı kullanılmayan parametre/değişken
-    // (mock imza uyumluluğu, destructuring vs.).
+    // `_name` prefix convention: intentionally unused parameter/variable
+    // (mock signature compatibility, destructuring, etc.).
     '@typescript-eslint/no-unused-vars': [
       'error',
       {

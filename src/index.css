@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 /*
- * Tailwind v4 dark mode — HTML root'a `dark` class eklendiğinde aktive olur.
- * ThemeContext bu class'ı senkronize eder (sistem tercihi + localStorage override).
+ * Tailwind v4 dark mode — activated when the `dark` class is added to the HTML root.
+ * ThemeContext keeps this class in sync (system preference + localStorage override).
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-  /* Mavi primary scale — eski sayfalar (Login öncesi standart) bunu kullanır.
-     Faz 5 boyunca yerini Ethereal token'larına bırakacak; Faz 6 cleanup'ta deprecate. */
+  /* Blue primary scale — used by legacy pages (the pre-Login standard).
+     Being replaced by Ethereal tokens during Phase 5; deprecated in the Phase 6 cleanup. */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -25,9 +25,9 @@
 
   /*
    * Ethereal Command Center — light mode default.
-   * :root.dark scope'unda aşağıda dark variant override edilir.
-   * `bg-surface`, `text-on-surface-variant`, `bg-eth-primary-container` gibi
-   * Tailwind utility'leri her iki modda da otomatik tema-aware çalışır.
+   * The dark variant is overridden below under the :root.dark scope.
+   * Tailwind utilities like `bg-surface`, `text-on-surface-variant`, and
+   * `bg-eth-primary-container` automatically work theme-aware in both modes.
    */
   --color-surface: #f8fafc;
   --color-surface-container-lowest: #ffffff;
@@ -48,7 +48,7 @@
   --color-eth-danger: #dc2626;
 }
 
-/* Dark variant override — root'a `.dark` class eklenince aktive olur. */
+/* Dark variant override — activated when the `.dark` class is added to the root. */
 :root.dark {
   --color-surface: #0e1416;
   --color-surface-container-lowest: #090f11;
@@ -77,7 +77,7 @@ body {
 
 /*
  * .eth-app — Ethereal-themed root container.
- * Hem light hem dark mode için ambient gradient ayarlanmış; renk tonu mode'a göre değişir.
+ * An ambient gradient is set for both light and dark mode; the hue changes per mode.
  */
 .eth-app {
   background-color: var(--color-surface);
@@ -94,8 +94,8 @@ body {
     radial-gradient(900px 600px at 100% 100%, color-mix(in srgb, var(--color-eth-secondary) 5%, transparent), transparent 60%);
 }
 
-/* Glassmorphic surface — Card primitive bunu reuse eder.
-   Border light'ta hafif slate, dark'ta white/8 — color-mix ile mode-aware. */
+/* Glassmorphic surface — reused by the Card primitive.
+   Border is a light slate in light mode, white/8 in dark — mode-aware via color-mix. */
 .eth-glass {
   background-color: color-mix(in srgb, var(--color-surface-container-high) 70%, transparent);
   backdrop-filter: blur(20px);
@@ -103,11 +103,11 @@ body {
   border-radius: 0.75rem;
 }
 
-/* Cyan ambient — sidebar / hero kart */
+/* Cyan ambient — sidebar / hero card */
 .eth-glow-cyan-ambient {
   box-shadow: 0 0 30px color-mix(in srgb, var(--color-eth-primary-container) 8%, transparent);
 }
-/* Cyan accent — primary buton */
+/* Cyan accent — primary button */
 .eth-glow-cyan {
   box-shadow: 0 0 15px color-mix(in srgb, var(--color-eth-primary-container) 35%, transparent);
 }
@@ -127,7 +127,7 @@ body {
   box-shadow: 0 0 40px color-mix(in srgb, var(--color-eth-secondary) 18%, transparent);
 }
 
-/* Ghost border — Material'ın 1px white/8% reuse'u, light'ta slate karşılığı. */
+/* Ghost border — reuses Material's 1px white/8%, with a slate equivalent in light mode. */
 .eth-border-ghost {
   border: 1px solid color-mix(in srgb, var(--color-on-surface) 8%, transparent);
 }

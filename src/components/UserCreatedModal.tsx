@@ -142,8 +142,8 @@ export const UserCreatedModal: React.FC<UserCreatedModalProps> = ({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                 >
-                    {/* Backdrop: salt görsel overlay — ekran okuyucudan gizli;
-                        klavye kapatma modal seviyesindeki Escape handler ile sağlanıyor. */}
+                    {/* Backdrop: purely visual overlay — hidden from screen readers;
+                        keyboard dismissal is handled by the modal-level Escape handler. */}
                     <div
                         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         onClick={onClose}

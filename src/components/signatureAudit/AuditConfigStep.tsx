@@ -83,7 +83,7 @@ export function AuditConfigStep({ onStart }: AuditConfigStepProps) {
 
     return (
         <div className="space-y-6">
-            {/* Kapsam */}
+            {/* Scope */}
             <div>
                 <h3 className="text-sm font-semibold text-on-surface mb-3">{t('config.scope.heading')}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -129,7 +129,7 @@ export function AuditConfigStep({ onStart }: AuditConfigStepProps) {
                 )}
             </div>
 
-            {/* Şablon */}
+            {/* Template */}
             <div>
                 <h3 className="text-sm font-semibold text-on-surface mb-3">{t('config.template.heading')}</h3>
                 <select
@@ -149,7 +149,7 @@ export function AuditConfigStep({ onStart }: AuditConfigStepProps) {
                 )}
             </div>
 
-            {/* Derinlik */}
+            {/* Depth */}
             <div>
                 <h3 className="text-sm font-semibold text-on-surface mb-3">{t('config.depth.heading')}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

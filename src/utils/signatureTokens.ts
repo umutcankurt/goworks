@@ -1,19 +1,19 @@
 /**
- * İmza şablonu token'larının dile duyarlı yönetimi (renderer tarafı).
+ * Language-aware management of signature template tokens (renderer side).
  *
- * Kanonik token isimleri Türkçe'dir ve hiç değişmez — DB'deki kayıtlı şablonlar,
- * worker'lar ve CSV bu isimlere dayanır. İngilizce token'lar (`{{institution_name}}`
- * vb.) yalnızca editöre yazılır; render sırasında `TOKEN_ALIAS` üzerinden kanonik
- * Türkçe anahtara çözülür.
+ * Canonical token names are Turkish and never change — the templates stored in the
+ * DB, the workers, and the CSVs rely on these names. English tokens (`{{institution_name}}`
+ * etc.) are only written into the editor; at render time they are resolved to the
+ * canonical Turkish key via `TOKEN_ALIAS`.
  *
- * NOT: `electron/services/template-renderer.ts` Electron main process'te çalıştığı
- * için bu modülü import edemez; orada `TOKEN_ALIAS`'ın eşdeğeri ayrıca tutulur.
- * İki dosya birlikte güncel tutulmalıdır.
+ * NOTE: `electron/services/template-renderer.ts` runs in the Electron main process and
+ * therefore cannot import this module; an equivalent of `TOKEN_ALIAS` is kept separately there.
+ * The two files must be kept in sync.
  */
 
 export type SupportedTokenLang = 'tr' | 'en';
 
-/** Şablonlarda ve worker'larda kullanılan kanonik (TR) token anahtarları. */
+/** Canonical (TR) token keys used in templates and workers. */
 export const CANONICAL_TAG_KEYS = [
   'ad_soyad',
   'unvan',
@@ -26,7 +26,7 @@ export const CANONICAL_TAG_KEYS = [
 
 export type CanonicalTagKey = (typeof CANONICAL_TAG_KEYS)[number];
 
-/** Kanonik anahtar → dile göre token string'i. `tr` değeri daima kanonik anahtarın kendisidir. */
+/** Canonical key → token string per language. The `tr` value is always the canonical key itself. */
 export const TOKEN_I18N: Record<CanonicalTagKey, Record<SupportedTokenLang, string>> = {
   ad_soyad: { tr: 'ad_soyad', en: 'full_name' },
   unvan: { tr: 'unvan', en: 'title' },
@@ -38,8 +38,8 @@ export const TOKEN_I18N: Record<CanonicalTagKey, Record<SupportedTokenLang, stri
 };
 
 /**
- * Verilen kanonik anahtar için aktif dile uygun token string'ini döner.
- * `en` dışındaki her dil kanonik (TR) token'a düşer.
+ * Returns the token string for the given canonical key in the active language.
+ * Every language other than `en` falls back to the canonical (TR) token.
  */
 export function localeToken(key: CanonicalTagKey, lang: string): string {
   const normalized: SupportedTokenLang = lang === 'en' ? 'en' : 'tr';
@@ -47,9 +47,9 @@ export function localeToken(key: CanonicalTagKey, lang: string): string {
 }
 
 /**
- * Token alias eşlemesi. Render sırasında bir token'ın karşılığı `variables`
- * içinde doğrudan bulunamazsa eşlenik kanonik anahtara bakılır.
- * İngilizce token'lar → kanonik TR anahtar.
+ * Token alias mapping. At render time, if a token's value cannot be found
+ * directly in `variables`, its mapped canonical key is looked up instead.
+ * English tokens → canonical TR key.
  */
 export const TOKEN_ALIAS: Record<string, string> = {
   full_name: 'ad_soyad',
@@ -62,8 +62,8 @@ export const TOKEN_ALIAS: Record<string, string> = {
 };
 
 /**
- * Bir token anahtarının değerini `variables` içinden çözer:
- * önce doğrudan, bulunamazsa alias üzerinden (tek hop).
+ * Resolves a token key's value from `variables`:
+ * first directly, then via the alias if not found (single hop).
  */
 export function resolveVariable(
   key: string,

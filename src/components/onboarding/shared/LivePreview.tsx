@@ -2,10 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { useAppConfig } from '../../../contexts/AppConfigContext';
 
 /**
- * Onboarding firma bilgileri adımındaki canlı önizleme.
- * Kullanıcı input'lara yazdıkça gerçek uygulamanın sidebar + login form
- * mockup'ı gerçek zamanlı güncellenir (AppConfigContext'in optimistic
- * setConfig'i sayesinde IPC commit'i beklemeden).
+ * Live preview on the onboarding company-info step.
+ * As the user types into the inputs, the mockup of the real app's sidebar +
+ * login form updates in real time (thanks to AppConfigContext's optimistic
+ * setConfig, without waiting for the IPC commit).
  */
 export function LivePreview() {
     const { t } = useTranslation('onboarding');

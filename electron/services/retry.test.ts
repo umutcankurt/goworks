@@ -33,9 +33,9 @@ describe('retry / withRetry', () => {
         const stats: RetryStats = { throttleCount: 0 };
 
         const promise = withRetry(fn, logger, 'ctx-429', stats);
-        // İlk backoff: 2s (INITIAL_BACKOFF_MS * 2^0)
+        // First backoff: 2s (INITIAL_BACKOFF_MS * 2^0)
         await vi.advanceTimersByTimeAsync(2000);
-        // İkinci backoff: 4s (INITIAL_BACKOFF_MS * 2^1)
+        // Second backoff: 4s (INITIAL_BACKOFF_MS * 2^1)
         await vi.advanceTimersByTimeAsync(4000);
 
         const result = await promise;
@@ -78,7 +78,7 @@ describe('retry / withRetry', () => {
         const logger = mockLogger();
 
         await expect(withRetry(fn, logger, 'ctx-etimedout')).rejects.toEqual(err);
-        expect(fn).toHaveBeenCalledTimes(1); // ilk deneme, retry yok
+        expect(fn).toHaveBeenCalledTimes(1); // first attempt, no retry
     });
 
     it('400 gibi non-retryable hatalarda doğrudan throw eder', async () => {
@@ -96,27 +96,27 @@ describe('retry / withRetry', () => {
         const logger = mockLogger();
         const stats: RetryStats = { throttleCount: 0 };
 
-        // Promise'a önceden catch handler ekle (unhandled rejection'ı engellemek için)
+        // Attach a catch handler to the promise up front (to prevent an unhandled rejection)
         let caught: unknown;
         const promise = withRetry(fn, logger, 'ctx-max-retries', stats).catch((e) => {
             caught = e;
         });
 
-        // Backoff'lar: 2s + 4s + 8s
+        // Backoffs: 2s + 4s + 8s
         await vi.advanceTimersByTimeAsync(2000);
         await vi.advanceTimersByTimeAsync(4000);
         await vi.advanceTimersByTimeAsync(8000);
         await promise;
 
         expect(caught).toEqual(err);
-        // İlk deneme + 3 retry = 4 toplam çağrı
+        // First attempt + 3 retries = 4 total calls
         expect(fn).toHaveBeenCalledTimes(4);
         expect(stats.throttleCount).toBe(3);
     });
 
     it('backoff MAX_BACKOFF_MS (60s) ile sınırlanır', async () => {
-        // 2^attempt × 2000 normalde: 2s, 4s, 8s. Sınır 60s test etmek için
-        // burada sadece message'ı kontrol ediyoruz (3 attempt için sınıra ulaşmaz)
+        // 2^attempt × 2000 is normally: 2s, 4s, 8s. To test the 60s cap,
+        // here we only check the message (it won't reach the cap within 3 attempts)
         const fn = vi
             .fn()
             .mockRejectedValueOnce({ code: 429 })

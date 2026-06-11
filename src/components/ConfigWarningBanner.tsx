@@ -15,9 +15,9 @@ interface IpcWindow {
 }
 
 /**
- * Boot-time soft-warn banner. Sadece `config:getBootStatus` IPC handler'ı
- * bir uyarı bayrağı döndürürse render eder; aksi hâlde null. Banner App.tsx
- * en üst layer'a konur ki tüm sayfalarda görünsün.
+ * Boot-time soft-warn banner. Renders only if the `config:getBootStatus` IPC
+ * handler returns a warning flag; otherwise null. The banner is placed at the
+ * topmost layer of App.tsx so it shows on every page.
  */
 export function ConfigWarningBanner() {
     const { t } = useTranslation('common');
@@ -29,7 +29,7 @@ export function ConfigWarningBanner() {
         ipc.invoke('config:getBootStatus')
             .then((s) => setStatus(s as BootStatus))
             .catch(() => {
-                /* boot-status erişilemezse banner gizli kalır */
+                /* if boot-status is unreachable the banner stays hidden */
             });
     }, []);
 

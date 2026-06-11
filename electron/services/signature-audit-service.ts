@@ -13,9 +13,9 @@ import { withRetry } from './retry';
 import { getLogger } from './logger';
 
 /**
- * İmza Denetimi servisi — kitle çözümleme, hedef imza hesaplama, sapma kategorize etme
- * ve `signature_audit_items` tablosuna erişim. Tarama worker'ı (`signature-audit-worker`)
- * bu yardımcıları kullanır.
+ * Signature Audit service — audience resolution, desired-signature computation, drift
+ * categorization, and access to the `signature_audit_items` table. The scan worker
+ * (`signature-audit-worker`) uses these helpers.
  */
 
 export type AuditCategory = 'ok' | 'drift' | 'no_signature' | 'missing_data' | 'error';
@@ -23,13 +23,13 @@ export type AuditDepth = 'fast' | 'deep';
 
 export interface AuditScope {
     type: 'all' | 'group' | 'orgUnit';
-    /** group → grup e-postası/anahtarı, orgUnit → orgUnitPath */
+    /** group → group email/key, orgUnit → orgUnitPath */
     value?: string;
 }
 
 export interface AudienceEntry {
     profile: SignatureProfile;
-    /** Profil çözümlenemediyse (örn. grup üyesi alınamadı) hata mesajı */
+    /** Error message if the profile could not be resolved (e.g. group member fetch failed) */
     resolveError?: string;
 }
 
@@ -46,14 +46,14 @@ export interface CategorizeResult {
 }
 
 // ---------------------------------------------------------------------------
-// Kitle çözümleme
+// Audience resolution
 // ---------------------------------------------------------------------------
 
 /**
- * Denetlenecek kişi listesini kapsam (scope) seçimine göre çözer.
- * - `all` / `orgUnit`: `listUsers` (SA+DWD, projection=full) — profil dolu döner
- * - `group`: `listGroupMembers` → her üye için `getUserInfo`
- * Askıya alınmış (suspended) kullanıcılar listeden çıkarılır.
+ * Resolves the list of people to audit based on the scope selection.
+ * - `all` / `orgUnit`: `listUsers` (SA+DWD, projection=full) — returns a full profile
+ * - `group`: `listGroupMembers` → `getUserInfo` for each member
+ * Suspended users are removed from the list.
  */
 export async function resolveAudience(scope: AuditScope, adminEmail: string): Promise<AudienceEntry[]> {
     const log = getLogger();
@@ -88,15 +88,15 @@ export async function resolveAudience(scope: AuditScope, adminEmail: string): Pr
         }
     }
 
-    // Askıya alınmış kullanıcılar denetlenmez (profil hatası olanlar yine de gösterilir)
+    // Suspended users are not audited (those with a profile error are still shown)
     return entries.filter((e) => e.resolveError || !e.profile.suspended);
 }
 
 // ---------------------------------------------------------------------------
-// Hedef imza hesaplama
+// Desired-signature computation
 // ---------------------------------------------------------------------------
 
-/** Profil + şablondan hedef imzayı render eder ve parmak izini üretir. */
+/** Renders the desired signature from the profile + template and produces a fingerprint. */
 export function computeDesired(
     profile: SignatureProfile,
     templateHtml: string,
@@ -109,12 +109,12 @@ export function computeDesired(
 }
 
 // ---------------------------------------------------------------------------
-// Zorunlu alan kapısı
+// Required-field gate
 // ---------------------------------------------------------------------------
 
 /**
- * Zorunlu veri kontrolü: unvan, telefon veya kurum eşleşmesi eksikse kişi denetimde
- * atlanır (karar: kurumsuz/yarım imza basılmaz).
+ * Required-data check: if the title, phone, or institution match is missing, the person is
+ * skipped in the audit (decision: a signature without an institution / a partial one is not pushed).
  */
 export function checkRequiredData(
     profile: SignatureProfile,
@@ -129,13 +129,13 @@ export function checkRequiredData(
 }
 
 // ---------------------------------------------------------------------------
-// Normalize edilmiş karşılaştırma (Derin mod)
+// Normalized comparison (Deep mode)
 // ---------------------------------------------------------------------------
 
 /**
- * İmza HTML'ini karşılaştırma için normalize eder — boşluk, satır sonu ve tag-arası
- * boşluk farkları yok sayılır. Gmail imzayı saklarken bi­çimsel değişiklikler yapabildiği
- * için Derin mod yanlış-pozitiflerini azaltır.
+ * Normalizes signature HTML for comparison — whitespace, line-break, and inter-tag
+ * spacing differences are ignored. Since Gmail can make formatting changes when storing
+ * the signature, this reduces Deep-mode false positives.
  */
 export function normalizeSignatureHtml(html: string): string {
     return sanitizeTemplateHtml(html || '')
@@ -146,27 +146,27 @@ export function normalizeSignatureHtml(html: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Kategorize etme (saf fonksiyon — test edilebilir)
+// Categorization (pure function — testable)
 // ---------------------------------------------------------------------------
 
 export interface CategorizeInput {
     depth: AuditDepth;
-    /** Profil çözümlenemediyse hata mesajı */
+    /** Error message if the profile could not be resolved */
     resolveError?: string;
-    /** `checkRequiredData` sonucu */
+    /** Result of `checkRequiredData` */
     missingReason: 'missing_fields' | 'institution_unmatched' | null;
     desired: DesiredSignature;
-    /** `signature_state` kaydı (Hızlı modda asıl karşılaştırma kaynağı) */
+    /** `signature_state` record (the primary comparison source in Fast mode) */
     state: SignatureStateRow | null;
-    /** Derin modda canlı Gmail imzası */
+    /** Live Gmail signature in Deep mode */
     liveSignature?: string;
 }
 
 /**
- * Bir kişinin imza durumunu kategorize eder. Saf fonksiyon — DB/API'ye dokunmaz.
- * - Hızlı: `signature_state` hash/template karşılaştırması
- * - Derin: canlı Gmail imzası normalize edilip hedefle karşılaştırılır; sapma sebebi
- *   yine `signature_state`'ten türetilir.
+ * Categorizes a person's signature status. Pure function — does not touch the DB/API.
+ * - Fast: `signature_state` hash/template comparison
+ * - Deep: the live Gmail signature is normalized and compared against the desired one;
+ *   the drift reason is still derived from `signature_state`.
  */
 export function categorize(input: CategorizeInput): CategorizeResult {
     if (input.resolveError) return { category: 'error', reason: 'resolve_error' };
@@ -188,7 +188,7 @@ export function categorize(input: CategorizeInput): CategorizeResult {
         return { category: 'drift', reason: driftReason };
     }
 
-    // Hızlı mod
+    // Fast mode
     if (driftReason === 'manual_edit') return { category: 'ok', reason: null };
     return { category: 'drift', reason: driftReason };
 }
@@ -244,7 +244,7 @@ export function insertAuditItem(item: {
         );
 }
 
-/** Bir job'a ait tüm denetim sonuçlarını siler — worker yeniden başladığında temiz başlangıç için. */
+/** Deletes all audit results for a job — for a clean start when the worker restarts. */
 export function deleteAuditItems(jobId: string): void {
     getDb().prepare('DELETE FROM signature_audit_items WHERE job_id = ?').run(jobId);
 }

@@ -9,8 +9,8 @@ import { useLocaleFormat } from '../i18n/useLocaleFormat';
 import { Skeleton } from '../components/ui/Skeleton';
 import { HelpGuide } from '../components/HelpGuide';
 
-// Sabit Recharts renkleri — light + dark her ikisinde de okunabilir orta-doygunluk paleti.
-// CSS var'ları kullanılamıyor (Recharts string literal bekler).
+// Fixed Recharts colors — a mid-saturation palette readable in both light and dark.
+// CSS vars can't be used (Recharts expects a string literal).
 const CHART_PRIMARY = '#06b6d4'; // cyan-500
 const CHART_NEUTRAL_TRACK = '#cbd5e1'; // slate-300
 const CHART_SUCCESS = '#10b981'; // emerald-500

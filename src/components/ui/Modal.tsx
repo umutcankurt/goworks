@@ -56,7 +56,7 @@ export function Modal({
 
     useEffect(() => {
         if (!open) return;
-        // Açılışta dialog'a focus ver — basit focus yönetimi (full trap değil)
+        // Focus the dialog on open — simple focus handling (not a full trap)
         const t = window.setTimeout(() => dialogRef.current?.focus(), 30);
         return () => window.clearTimeout(t);
     }, [open]);

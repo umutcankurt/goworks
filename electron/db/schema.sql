@@ -1,6 +1,6 @@
 -- GoWorks local DB schema (SQLite)
--- Sunucu PostgreSQL şemasının (server/prisma/schema.prisma) lokal karşılığı.
--- Migrasyon runner: electron/db/index.ts. PRAGMA user_version ile sürüm takibi yapılır.
+-- Local counterpart of the server PostgreSQL schema (server/prisma/schema.prisma).
+-- Migration runner: electron/db/index.ts. Versioning is tracked via PRAGMA user_version.
 
 CREATE TABLE IF NOT EXISTS titles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS app_config (
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- İmza Denetimi: bir kişiye en son basılan imzanın durum kaydı.
--- pushSignature her başarılı push'ta buraya yazar; Hızlı tarama bununla karşılaştırır.
+-- Signature Audit: state record of the signature most recently pushed to a person.
+-- pushSignature writes here on every successful push; the Fast scan compares against this.
 CREATE TABLE IF NOT EXISTS signature_state (
   email               TEXT PRIMARY KEY,
   template_id         INTEGER,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS signature_state (
   last_pushed_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- İmza Denetimi: bir SIGNATURE_AUDIT tarama job'unun kişi başı sonuçları.
+-- Signature Audit: per-person results of a SIGNATURE_AUDIT scan job.
 CREATE TABLE IF NOT EXISTS signature_audit_items (
   id                  INTEGER PRIMARY KEY AUTOINCREMENT,
   job_id              TEXT NOT NULL,

@@ -8,8 +8,8 @@ type ThemeToggleVariant = 'classic' | 'ethereal';
 interface ThemeToggleProps {
     className?: string;
     /**
-     * `classic` — slate açık tema (eski sayfalar, login öncesi).
-     * `ethereal` — dark glass tema (onboarding + Faz 5+ migrate edilmiş sayfalar).
+     * `classic` — slate light theme (old pages, pre-login).
+     * `ethereal` — dark glass theme (onboarding + pages migrated in Phase 5+).
      */
     variant?: ThemeToggleVariant;
 }

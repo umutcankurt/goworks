@@ -1,19 +1,19 @@
 /**
- * OS keychain (Electron safeStorage) üzerinden hassas kimlik bilgilerini
- * şifreli saklayan ince wrapper.
+ * A thin wrapper that stores sensitive credentials encrypted via the
+ * OS keychain (Electron safeStorage).
  *
  * - macOS: Keychain
  * - Windows: DPAPI
- * - Linux: kwallet / gnome-libsecret (headless ortamlarda
- *   `isEncryptionAvailable()` false döner; set sırasında net hata fırlatılır).
+ * - Linux: kwallet / gnome-libsecret (in headless environments
+ *   `isEncryptionAvailable()` returns false; a clear error is thrown on set).
  *
- * Saklanan dosyalar (hepsi `userData/secrets/`, binary safeStorage çıktısı):
+ * Stored files (all in `userData/secrets/`, binary safeStorage output):
  * - `oauth-secret.enc`     — OAuth client secret
  * - `service-account.enc`  — Service Account JSON (DWD private key)
- * - `auth-token.enc`       — OAuth erişim/refresh token'ları
+ * - `auth-token.enc`       — OAuth access/refresh tokens
  *
- * NOT: safeStorage API'leri yalnız `app.whenReady()` sonrası geçerli — bu
- * modüldeki hiçbir fonksiyon modül seviyesinde (import anında) çağrılmamalı.
+ * NOTE: safeStorage APIs are only valid after `app.whenReady()` — no function
+ * in this module should be called at module level (at import time).
  */
 import { app, safeStorage } from 'electron';
 import {
@@ -42,8 +42,8 @@ function getFilePath(fileName: string): string {
 }
 
 /**
- * Düz metni safeStorage ile şifreleyip `secrets/<fileName>` dosyasına yazar.
- * `safeStorage.isEncryptionAvailable() === false` ise hata fırlatır.
+ * Encrypts plaintext via safeStorage and writes it to the `secrets/<fileName>` file.
+ * Throws if `safeStorage.isEncryptionAvailable() === false`.
  */
 function encryptToFile(fileName: string, plaintext: string): void {
     if (!safeStorage.isEncryptionAvailable()) {
@@ -60,9 +60,9 @@ function encryptToFile(fileName: string, plaintext: string): void {
 }
 
 /**
- * `secrets/<fileName>` dosyasını okuyup decrypt eder. Dosya yoksa `null` döner;
- * dosya var ama şifreleme kullanılamıyorsa hata fırlatır (sessizce null dönmek
- * yerine çağıran karar versin).
+ * Reads and decrypts the `secrets/<fileName>` file. Returns `null` if the file
+ * doesn't exist; if the file exists but encryption is unavailable, throws (so the
+ * caller decides, instead of silently returning null).
  */
 function decryptFromFile(fileName: string): string | null {
     const filePath = getFilePath(fileName);
@@ -88,13 +88,13 @@ function deleteFile(fileName: string): void {
 }
 
 /**
- * OAuth client secret deposu (Faz 31). Public API korunur — `auth-service.ts`
- * ve `boot-check.ts` bu metot adlarını çağırıyor.
+ * OAuth client secret store (Phase 31). The public API is preserved — `auth-service.ts`
+ * and `boot-check.ts` call these method names.
  */
 export const secureStorage = {
     /**
-     * Plain-text secret'ı safeStorage ile şifreleyip dosyaya yazar.
-     * `safeStorage.isEncryptionAvailable() === false` ise hata fırlatır.
+     * Encrypts the plain-text secret via safeStorage and writes it to a file.
+     * Throws if `safeStorage.isEncryptionAvailable() === false`.
      */
     setClientSecret(secret: string): void {
         encryptToFile(OAUTH_SECRET_FILE, secret);
@@ -111,9 +111,9 @@ export const secureStorage = {
 };
 
 /**
- * Service Account JSON deposu — DWD private key içerir, şifreli saklanır.
- * `set` ham JSON metnini alır; doğrulama/parse `service-account-loader.ts`'te
- * yapılır.
+ * Service Account JSON store — contains the DWD private key, stored encrypted.
+ * `set` takes the raw JSON text; validation/parsing is done in
+ * `service-account-loader.ts`.
  */
 export const serviceAccountStore = {
     set(json: string): void {
@@ -131,8 +131,8 @@ export const serviceAccountStore = {
 };
 
 /**
- * OAuth erişim/refresh token deposu — oturum boyunca şifreli saklanır.
- * `set` `JSON.stringify(tokens)` metnini alır.
+ * OAuth access/refresh token store — stored encrypted for the session.
+ * `set` takes the `JSON.stringify(tokens)` text.
  */
 export const authTokenStore = {
     set(json: string): void {

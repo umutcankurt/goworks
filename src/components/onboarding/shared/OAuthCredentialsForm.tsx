@@ -8,13 +8,13 @@ import { appConfigApi } from '../../../services/server-api';
 
 interface OAuthCredentialsFormProps {
     /**
-     * Onboarding: secret zorunlu (yeni kurulum). Settings: secret boş bırakılırsa
-     * mevcut kayıtlı secret korunur (rotasyon).
+     * Onboarding: secret is required (new install). Settings: if the secret is left
+     * empty, the existing stored secret is kept (rotation).
      */
     requireSecret: boolean;
-    /** Status değiştiğinde parent'a haber verir (canGoNext / kart "kayıtlı" rozeti). */
+    /** Notifies the parent when the status changes (canGoNext / card "kayıtlı" badge). */
     onValidChange?: (valid: boolean) => void;
-    /** Settings'te kaydetme sonrası "Sil" butonu gösterilebilir. */
+    /** In Settings, a "Sil" button can be shown after saving. */
     showClearButton?: boolean;
 }
 
@@ -51,8 +51,8 @@ export function OAuthCredentialsForm({
             const valid = !!status.clientId && status.hasSecret;
             onValidChange?.(valid);
         } catch {
-            // sessiz: ilk kurulumda key yoksa servis hata dönmez, ama IPC unavailable
-            // gibi extreme durumlarda buraya düşeriz.
+            // silent: on first install the service doesn't error when no key exists,
+            // but in extreme cases like IPC being unavailable we land here.
             onValidChange?.(false);
         } finally {
             setLoading(false);
@@ -64,7 +64,7 @@ export function OAuthCredentialsForm({
     }, [refresh]);
 
     useEffect(() => {
-        // clientId/secret değiştikçe önceki test sonucunu invalide et.
+        // Invalidate the previous test result whenever clientId/secret changes.
         if (test.kind !== 'idle' && test.kind !== 'testing') {
             setTest({ kind: 'idle' });
         }

@@ -1,13 +1,13 @@
 /**
- * GoWorks error tipleri.
+ * GoWorks error types.
  *
- * `UserFacingError`: Renderer'a toast olarak basılabilecek, kullanıcıya
- * okunaklı bir mesaj taşır (Türkçe). Servis/worker kodu kullanıcıya
- * göstermek istediği hatayı bu sınıfla atar.
+ * `UserFacingError`: carries a human-readable message (in Turkish) that can be
+ * shown to the user as a toast in the renderer. Service/worker code throws this
+ * class for errors it wants to surface to the user.
  *
- * Generic `Error`: İnternal hata. IPC sınırında `toUserMessage()` ile
- * "Beklenmeyen hata oluştu" generic toast'a düşer, stack log dosyasında
- * tutulur.
+ * Generic `Error`: internal error. At the IPC boundary, `toUserMessage()` maps it
+ * to the generic "Beklenmeyen hata oluştu" toast, while the stack is kept in the
+ * log file.
  */
 
 export class UserFacingError extends Error {
@@ -15,7 +15,7 @@ export class UserFacingError extends Error {
     constructor(message: string) {
         super(message);
         this.name = 'UserFacingError';
-        // V8 stack capture (Node ortamlarında çalışır)
+        // V8 stack capture (works in Node environments)
         if (typeof (Error as { captureStackTrace?: (target: object, ctor: unknown) => void })
             .captureStackTrace === 'function') {
             (Error as { captureStackTrace: (target: object, ctor: unknown) => void })

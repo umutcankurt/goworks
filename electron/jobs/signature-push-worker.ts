@@ -37,7 +37,7 @@ async function processJob(
     const startedAt = Date.now();
     let succeeded = job.succeeded || 0;
     let failed = job.failed || 0;
-    // Stall recovery: önceki seans batch flush'larından gelen item detaylarını yükle.
+    // Stall recovery: load item details carried over from previous session batch flushes.
     const prevReport = job.executionReport;
     const succeededItems: JobExecutionReport['succeededItems'] = prevReport?.succeededItems
         ? [...prevReport.succeededItems]
@@ -118,7 +118,7 @@ async function processJob(
                 if (rowNumber !== undefined) succeededItems.push({ email, rowNumber });
             } else if (emails) {
                 email = emails[i];
-                // Google'dan kullanıcı bilgisini çek + yerel kurum kaydı lookup
+                // Fetch user info from Google + look up the local institution record
                 const userInfo = await withRetry(
                     () => adminLimiter.schedule(() => getUserInfo(email, adminEmail)),
                     log, `getUserInfo(${email})`,
@@ -172,7 +172,7 @@ async function processJob(
 
         const now = Date.now();
 
-        // DB batch update + executionReport snapshot (stall recovery için item detayları korunur)
+        // DB batch update + executionReport snapshot (item details are preserved for stall recovery)
         if (i % DB_BATCH_SIZE === 0 || now - lastDbUpdate > DB_BATCH_INTERVAL_MS) {
             ctx.saveProgress({ progress: i + 1, succeeded, failed });
             ctx.setReport({

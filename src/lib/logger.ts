@@ -1,12 +1,12 @@
 /**
  * GoWorks renderer logger.
  *
- * Console'a yazar (DevTools'ta görünür) + IPC üzerinden main process'e
- * iletir. Main tarafı dosyaya yazar ve hibrit rotation uygular
+ * Writes to the console (visible in DevTools) + forwards to the main process
+ * over IPC. The main side writes to a file and applies hybrid rotation
  * (`electron/services/logger.ts`).
  *
- * IPC iletimi yan etkisiz — IPC kanalı yoksa sessizce yutulur (test
- * ortamı, henüz preload yüklenmemiş erken aşama vb.).
+ * IPC forwarding is side-effect-free — if the IPC channel is absent it is
+ * silently swallowed (test environment, early stage before preload is loaded, etc.).
  */
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

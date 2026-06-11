@@ -8,8 +8,8 @@ import { suspendUser, deleteUser } from '../services/google-admin-sa';
 const DB_BATCH_SIZE = 10;
 const DB_BATCH_INTERVAL_MS = 2000;
 const PROGRESS_DEBOUNCE_MS = 500;
-// Email başına sert üst sınır — withTimeout (30s) + withRetry (3 × 30s + backoff) zinciri
-// asılı kalırsa bu watchdog devreye girer ve hata fırlatır.
+// Hard upper bound per email — if the withTimeout (30s) + withRetry (3 × 30s + backoff) chain
+// hangs, this watchdog kicks in and throws an error.
 const EMAIL_WATCHDOG_MS = 60_000;
 
 function withWatchdog<T>(promise: Promise<T>, ms: number, context: string): Promise<T> {
@@ -43,7 +43,7 @@ async function processJob(
     const startedAt = Date.now();
     let succeeded = job.succeeded || 0;
     let failed = job.failed || 0;
-    // Stall recovery: önceki seans batch flush'larından gelen item detaylarını yükle.
+    // Stall recovery: load item details carried over from previous session batch flushes.
     const prevReport = job.executionReport;
     const succeededItems: JobExecutionReport['succeededItems'] = prevReport?.succeededItems
         ? [...prevReport.succeededItems]
@@ -90,7 +90,7 @@ async function processJob(
         } catch (err: any) {
             const status = err?.code || err?.response?.status;
             if (status === 404 && job.type === 'BULK_DELETE') {
-                // Kullanıcı zaten silinmiş — idempotent başarı say
+                // User already deleted — count as an idempotent success
                 succeeded++;
                 succeededItems.push({ email, rowNumber: i + 1 });
                 log.info(`User already deleted (404): ${email}`);

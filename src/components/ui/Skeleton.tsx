@@ -2,18 +2,18 @@ import { HTMLAttributes } from 'react';
 import clsx from 'clsx';
 
 interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
-    /** Tailwind tabanlı genişlik. Eksikse w-full. */
+    /** Tailwind-based width. Defaults to w-full if omitted. */
     width?: string;
-    /** Tailwind tabanlı yükseklik. Eksikse h-4. */
+    /** Tailwind-based height. Defaults to h-4 if omitted. */
     height?: string;
-    /** `circle` → tam yuvarlak (avatar). `text` → text satırı. `box` → genel. */
+    /** `circle` → fully round (avatar). `text` → text line. `box` → generic. */
     variant?: 'box' | 'text' | 'circle';
 }
 
 /**
- * Shimmer animation arka planı:
- * surface-container-high → surface-container-highest gradyan + animate-pulse.
- * Light/dark her ikisinde de düzgün — token tabanlı.
+ * Shimmer animation background:
+ * surface-container-high → surface-container-highest gradient + animate-pulse.
+ * Works cleanly in both light/dark — token-based.
  */
 export function Skeleton({
     width,
@@ -40,9 +40,9 @@ export function Skeleton({
 }
 
 interface SkeletonStackProps {
-    /** Kaç satır render edilsin (her biri text variant). */
+    /** How many rows to render (each a text variant). */
     rows?: number;
-    /** Width pattern array — circular, fewer width'lerle daha doğal görünüm. */
+    /** Width pattern array — circular, gives a more natural look with fewer widths. */
     widths?: string[];
     className?: string;
 }

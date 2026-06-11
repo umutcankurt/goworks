@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { SignatureAuditItem, AuditCategory } from '../../services/server-api';
 import { AuditResultRow } from './AuditResultRow';
 
-/** Kategori → rozet stili. AuditResultRow da bunu kullanır. */
+/** Category → badge style. AuditResultRow uses this too. */
 export const CATEGORY_META: Record<AuditCategory, { badgeClass: string; cardClass: string }> = {
     ok: {
         badgeClass: 'bg-eth-secondary/15 text-eth-secondary',
@@ -28,7 +28,7 @@ export const CATEGORY_META: Record<AuditCategory, { badgeClass: string; cardClas
 };
 
 const CATEGORY_ORDER: AuditCategory[] = ['drift', 'no_signature', 'ok', 'missing_data', 'error'];
-/** Push (güncelleme) gerektiren — yani seçilebilir — kategoriler. */
+/** Categories that require a push (update) — i.e. selectable ones. */
 const SELECTABLE: AuditCategory[] = ['drift', 'no_signature'];
 
 interface AuditReviewTableProps {
@@ -72,7 +72,7 @@ export function AuditReviewTable({ items, onApply, onReset }: AuditReviewTablePr
 
     return (
         <div className="space-y-4">
-            {/* Özet kartları — tıklayınca filtreler */}
+            {/* Summary cards — clicking filters */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {CATEGORY_ORDER.map((cat) => (
                     <button
@@ -89,7 +89,7 @@ export function AuditReviewTable({ items, onApply, onReset }: AuditReviewTablePr
                 ))}
             </div>
 
-            {/* Aksiyon çubuğu */}
+            {/* Action bar */}
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <button
@@ -138,7 +138,7 @@ export function AuditReviewTable({ items, onApply, onReset }: AuditReviewTablePr
                 </div>
             </div>
 
-            {/* Tablo */}
+            {/* Table */}
             <div className="border border-outline-variant/30 rounded-xl overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-surface-container-high">

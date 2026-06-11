@@ -23,19 +23,19 @@ function getSchemaPath(): string {
 }
 
 /**
- * Idempotent migration runner — `pragma user_version` ile sürüm takip eder.
- * Schema.exec()'ten ÖNCE çağrılır.
+ * Idempotent migration runner — tracks the version via `pragma user_version`.
+ * Called BEFORE Schema.exec().
  *
- * v1 → v2: Onboarding state. Mevcut kurulumlarda companyName + allowedDomain
- *          dolu ise `onboardingCompletedAt` set edilerek wizard atlanır.
+ * v1 → v2: Onboarding state. In existing installs, if companyName + allowedDomain
+ *          are populated, `onboardingCompletedAt` is set so the wizard is skipped.
  */
 export function runMigrations(db: Database.Database): void {
     const version = db.pragma('user_version', { simple: true }) as number;
 
     if (version < 2) {
         const tx = db.transaction(() => {
-            // app_config tablosu mevcut kurulumlarda zaten var; ilk açılışta
-            // schema.exec() henüz çağrılmadığı için tablo yoksa atla.
+            // The app_config table already exists in existing installs; on first launch
+            // schema.exec() hasn't run yet, so skip if the table is missing.
             const cfgExists = db
                 .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_config'")
                 .get();
@@ -74,8 +74,8 @@ export function getDb(): Database.Database {
     db.pragma('foreign_keys = ON');
     db.pragma('busy_timeout = 5000');
 
-    // Migration ÖNCE: tabloları yeni isimleriyle bekleyen schema.exec()'ten önce
-    // mevcut tabloları rename et; sonra schema.exec() yeni tabloları (varsa) oluşturur.
+    // Migration FIRST: rename existing tables before schema.exec(), which expects
+    // tables under their new names; schema.exec() then creates any new tables.
     runMigrations(db);
 
     const schema = readFileSync(getSchemaPath(), 'utf-8');

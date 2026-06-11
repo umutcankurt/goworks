@@ -32,9 +32,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Onboarding tamamlanmadıysa kullanıcıyı /onboarding'e zorlar; tamamlanmışsa
- * /onboarding'e gidilirse ana sayfaya yönlendirir. AppConfigProvider'dan beslendiği
- * için login öncesi de aktiftir.
+ * Forces the user to /onboarding if onboarding is not complete; once complete,
+ * redirects to the home page if /onboarding is visited. Fed by AppConfigProvider,
+ * so it is active before login too.
  */
 function OnboardingGate({ children }: { children: ReactNode }) {
   const { config, isLoading } = useAppConfig();

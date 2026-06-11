@@ -82,8 +82,8 @@ export function BulkOperations() {
             addToast(tToast('bulk.analyzeFailed', { error: err.message }), 'error');
             setState(prev => ({
                 ...prev,
-                // Analiz başarısız oldu: worker'a giden satırları yine de kanonik
-                // forma çevir (TR/EN başlıklar normalize edilmiş olsun).
+                // Analysis failed: still convert the rows going to the worker into
+                // canonical form (so TR/EN headers are normalized).
                 validRows: rows.map((data, i) => ({ rowNumber: i + 1, data: normalizeRowColumns(data) })),
                 step: 'executing',
             }));

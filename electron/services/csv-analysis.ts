@@ -32,8 +32,8 @@ export interface BulkAnalyzeResponse {
 const REQUIRED_COLUMNS: Record<string, string[]> = {
     suspend: ['email'],
     delete: ['email'],
-    // Kanonik (TR) sütunlar. CSV'de İngilizce başlıklar (first_name vb.) da
-    // kabul edilir — normalizeColumns() kanonik forma çevirir.
+    // Canonical (TR) columns. English headers (first_name etc.) are also
+    // accepted in the CSV — normalizeColumns() converts them to the canonical form.
     signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
 };
 
@@ -41,13 +41,13 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const TURKISH_CHARS = /[çşğüöıİÇŞĞÜÖ]/;
 
 /**
- * `src/utils/bulkColumns.ts`'in Electron main eşdeğeri — bu süreç renderer
- * modüllerini import edemez; iki dosya birlikte güncel tutulmalıdır.
- * (Aynı pattern: `signatureTokens.ts` ↔ `template-renderer.ts`.)
+ * Electron main equivalent of `src/utils/bulkColumns.ts` — this process cannot
+ * import renderer modules; the two files must be kept in sync.
+ * (Same pattern: `signatureTokens.ts` ↔ `template-renderer.ts`.)
  */
 type ColumnLang = 'tr' | 'en';
 
-/** Alias → kanonik (TR) sütun anahtarı: İngilizce başlıklar. */
+/** Alias → canonical (TR) column key: English headers. */
 const COLUMN_ALIAS: Record<string, string> = {
     first_name: 'ad',
     last_name: 'soyad',
@@ -56,7 +56,7 @@ const COLUMN_ALIAS: Record<string, string> = {
     phone: 'telefon',
 };
 
-/** Kanonik anahtar → dile göre sütun başlığı. */
+/** Canonical key → column header per language. */
 const COLUMN_I18N: Record<string, Record<ColumnLang, string>> = {
     email: { tr: 'email', en: 'email' },
     ad: { tr: 'ad', en: 'first_name' },
@@ -66,17 +66,17 @@ const COLUMN_I18N: Record<string, Record<ColumnLang, string>> = {
     telefon: { tr: 'telefon', en: 'phone' },
 };
 
-/** Kanonik anahtar için aktif dile uygun sütun başlığı (bilinmeyen → olduğu gibi). */
+/** Column header for the active language given a canonical key (unknown → as-is). */
 export function localeColumn(canonical: string, lang: ColumnLang): string {
     return COLUMN_I18N[canonical]?.[lang] ?? canonical;
 }
 
-/** Bir action için dile göre lokalize sütun başlık listesi (CSV şablonu / UI). */
+/** Localized column header list for an action per language (CSV template / UI). */
 export function localeColumnsForAction(actionType: string, lang: ColumnLang): string[] {
     return (REQUIRED_COLUMNS[actionType] || ['email']).map(c => localeColumn(c, lang));
 }
 
-/** CSV doğrulama hata mesajları — Electron main `t()` kullanamaz, inline TR/EN. */
+/** CSV validation error messages — Electron main cannot use `t()`, inline TR/EN. */
 const MESSAGES: Record<ColumnLang, {
     missingRequired: (field: string) => string;
     invalidEmail: (email: string) => string;
@@ -101,8 +101,8 @@ const MESSAGES: Record<ColumnLang, {
 };
 
 /**
- * Satır anahtarlarını kanonik (TR) forma çevirir: trim + lowercase + alias.
- * İngilizce başlıkları (`first_name` vb.) kanonik forma çözer.
+ * Converts row keys to the canonical (TR) form: trim + lowercase + alias.
+ * Resolves English headers (`first_name` etc.) to the canonical form.
  */
 function normalizeColumns(row: Record<string, string>): Record<string, string> {
     const result: Record<string, string> = {};

@@ -3,14 +3,14 @@ const path = require('path');
 const fs = require('fs');
 
 /**
- * afterSign hook — electron-builder imzaladıktan sonra çalışır.
- * Tüm framework bileşenlerini entitlements.mac.plist ile yeniden imzalar.
- * macOS ARM64 üzerindeki EXC_BREAKPOINT / JIT crash'ını önler.
+ * afterSign hook — runs after electron-builder has signed.
+ * Re-signs all framework components with entitlements.mac.plist.
+ * Prevents the EXC_BREAKPOINT / JIT crash on macOS ARM64.
  */
 exports.default = async function afterSign(context) {
     const { appOutDir, packager } = context;
 
-    // Sadece macOS build'inde çalış
+    // Only run on macOS builds
     if (packager.platform.name !== 'mac') {
         return;
     }
@@ -20,13 +20,13 @@ exports.default = async function afterSign(context) {
     const entitlements = path.join(__dirname, 'build', 'entitlements.mac.plist');
 
     if (!fs.existsSync(entitlements)) {
-        console.warn('[afterSign] entitlements.mac.plist bulunamadı, atlanıyor.');
+        console.warn('[afterSign] entitlements.mac.plist not found, skipping.');
         return;
     }
 
-    console.log(`[afterSign] Yeniden imzalanıyor: ${appPath}`);
+    console.log(`[afterSign] Re-signing: ${appPath}`);
 
-    // Önce tüm iç framework ve helper'ları imzala (içten dışa)
+    // First sign all inner frameworks and helpers (inside out)
     const innerPaths = [
         `Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework`,
         `Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libffmpeg.dylib`,
@@ -47,22 +47,22 @@ exports.default = async function afterSign(context) {
                     `codesign --force --options runtime --sign - --entitlements "${entitlements}" "${fullPath}"`,
                     { stdio: 'pipe' }
                 );
-                console.log(`[afterSign] ✅ İmzalandı: ${inner}`);
+                console.log(`[afterSign] ✅ Signed: ${inner}`);
             } catch (e) {
-                console.warn(`[afterSign] ⚠️  Atlandı (${inner}): ${e.stderr ? e.stderr.toString() : e.message}`);
+                console.warn(`[afterSign] ⚠️  Skipped (${inner}): ${e.stderr ? e.stderr.toString() : e.message}`);
             }
         }
     }
 
-    // En son ana .app'i imzala
+    // Finally sign the main .app
     try {
         execSync(
             `codesign --force --options runtime --sign - --entitlements "${entitlements}" "${appPath}"`,
             { stdio: 'pipe' }
         );
-        console.log(`[afterSign] ✅ Ana uygulama imzalandı.`);
+        console.log(`[afterSign] ✅ Main application signed.`);
     } catch (e) {
-        console.error(`[afterSign] ❌ Ana uygulama imzalanamadı: ${e.stderr ? e.stderr.toString() : e.message}`);
+        console.error(`[afterSign] ❌ Main application could not be signed: ${e.stderr ? e.stderr.toString() : e.message}`);
         throw e;
     }
 };

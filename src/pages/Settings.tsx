@@ -546,7 +546,7 @@ function GeneralTab() {
     const next = draftAllowedDomain.trim();
     if (!next) {
       addToast(t('general.allowedDomain.requiredError'), 'error');
-      // Form-level zorunluluk: domain boş bırakılamaz. Eski değere geri dön.
+      // Form-level requirement: the domain cannot be left empty. Revert to the previous value.
       setDraftAllowedDomain(config.allowedDomain);
       return;
     }
@@ -775,7 +775,7 @@ function GeneralTab() {
 }
 
 /* ============================================================
- * Google Cloud OAuth credentials — clientId + clientSecret (Faz 31)
+ * Google Cloud OAuth credentials — clientId + clientSecret (Phase 31)
  * ============================================================ */
 function GoogleCloudSection() {
   const { t } = useTranslation('settings');
@@ -793,7 +793,7 @@ function GoogleCloudSection() {
 }
 
 /* ============================================================
- * Service Account — eski "Servis Hesabı" sekmesi yerine GeneralTab altında
+ * Service Account — under GeneralTab, replacing the old "Service Account" tab
  * ============================================================ */
 function ServiceAccountSection() {
   const { addToast } = useToast();
@@ -1055,7 +1055,7 @@ function DwdSection() {
 }
 
 /* ============================================================
- * "Sihirbazı tekrar başlat" — onboarding'i sıfırlar
+ * "Restart the wizard" — resets onboarding
  * ============================================================ */
 function ResetWizardSection() {
   const { t } = useTranslation('settings');

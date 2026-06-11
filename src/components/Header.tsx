@@ -19,7 +19,7 @@ export function Header() {
     const { config } = useAppConfig();
     const { t } = useTranslation('header');
 
-    const isWarning = remainingSeconds <= 300; // 5 dakika
+    const isWarning = remainingSeconds <= 300; // 5 minutes
 
     return (
         <header className="h-16 flex items-center justify-between px-8 bg-surface-container-low/60 backdrop-blur-md border-b border-outline-variant/30 z-10">

@@ -2,18 +2,18 @@
 /**
  * Native ABI parity check — predev hook.
  *
- * better-sqlite3'ün derlenmiş `.node` binary'sini host platform/arch ile
- * karşılaştırır. Cross-platform `npm run build` (-mw) sonrası dev makinesine
- * dönüldüğünde binary yanlış platform/ABI ile kalabilir; bu da Electron'da
- * "No handler registered for 'X'" zincir hatasına yol açar.
+ * Compares better-sqlite3's compiled `.node` binary against the host
+ * platform/arch. After a cross-platform `npm run build` (-mw), when returning
+ * to the dev machine the binary may be left with the wrong platform/ABI; this
+ * leads to the "No handler registered for 'X'" chain error in Electron.
  *
- * Modlar:
- *   default — mismatch'te `npm run rebuild`'i otomatik tetikler, görünür banner basar.
- *   strict  — mismatch'te exit 1, manuel `npm run rebuild` ister.
- *             Tetikleyici: CHECK_NATIVE_ABI_STRICT=1 veya CI=true (GitHub Actions vs.)
+ * Modes:
+ *   default — on mismatch, automatically triggers `npm run rebuild` and prints a visible banner.
+ *   strict  — on mismatch, exits 1 and requires a manual `npm run rebuild`.
+ *             Triggered by: CHECK_NATIVE_ABI_STRICT=1 or CI=true (GitHub Actions, etc.)
  *
- * Strateji: magic byte sniff (ilk 32 byte) — Mach-O / PE / ELF tespit eder.
- * Dış bağımlılık yok (`file` komutu gibi platform-bağımlı araçlardan kaçınıldı).
+ * Strategy: magic byte sniff (first 32 bytes) — detects Mach-O / PE / ELF.
+ * No external dependencies (avoided platform-dependent tools like the `file` command).
  */
 import { existsSync, openSync, readSync, closeSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -49,8 +49,8 @@ function resolveBinaryPath() {
 }
 
 /**
- * Magic byte parse — saf fonksiyon, test edilebilir.
- * Buffer'ın ilk 32 byte'ı yeterli.
+ * Magic byte parse — pure function, testable.
+ * The first 32 bytes of the buffer are sufficient.
  */
 export function parseBinaryMagic(buf) {
     if (!buf || buf.length < 16) return { platform: 'unknown', arch: 'unknown' };
@@ -106,7 +106,7 @@ function readBinaryHead(filePath) {
 function isCompatible(binary, host) {
     if (binary.platform !== host.platform) return false;
     if (binary.arch === 'universal') return host.platform === 'darwin';
-    if (binary.arch === 'unknown') return true; // arch detection eksik → şüpheliyiz ama match sayalım
+    if (binary.arch === 'unknown') return true; // arch detection missing → suspicious but count it as a match
     return binary.arch === host.arch;
 }
 
@@ -163,16 +163,16 @@ function main() {
 
     banner([
         '[check-native-abi] ABI mismatch detected',
-        `  binary: ${binary.platform}/${binary.arch}   ← önceki build'den kalmış`,
-        `  host:   ${host.platform}/${host.arch}   ← şu anki sistem`,
+        `  binary: ${binary.platform}/${binary.arch}   ← left over from a previous build`,
+        `  host:   ${host.platform}/${host.arch}   ← current system`,
         '',
         '  Auto-rebuilding native modules for development. This may take ~30-60s...',
     ]);
     process.exit(runRebuild() ? 0 : 1);
 }
 
-// ESM module: doğrudan çalıştırıldıysa main(). Import edildiyse (test için)
-// sadece parseBinaryMagic export edilsin.
+// ESM module: if run directly, call main(). If imported (for tests),
+// only parseBinaryMagic is exported.
 const invokedDirectly = import.meta.url === `file://${process.argv[1]}`;
 if (invokedDirectly) {
     main();

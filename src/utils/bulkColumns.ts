@@ -1,30 +1,30 @@
 /**
- * Toplu İşlemler (Bulk Operations) CSV sütunlarının dile duyarlı yönetimi
- * (renderer tarafı).
+ * Language-aware management of Bulk Operations CSV columns
+ * (renderer side).
  *
- * Kanonik sütun isimleri Türkçe'dir ve hiç değişmez — backend CSV parser
- * (`electron/services/csv-analysis.ts`) ve worker'lar bu isimlere dayanır.
- * İngilizce başlıklı CSV'ler de yüklenebilir; `canonicalColumn()` /
- * `normalizeRowColumns()` ile kanonik Türkçe anahtara çözülür. UI dile göre
- * `localeColumn()` ile gösterilir.
+ * Canonical column names are Turkish and never change — the backend CSV parser
+ * (`electron/services/csv-analysis.ts`) and the workers rely on these names.
+ * CSVs with English headers can also be uploaded; they are resolved to the
+ * canonical Turkish key via `canonicalColumn()` / `normalizeRowColumns()`. The UI
+ * displays them per language via `localeColumn()`.
  *
- * NOT: `electron/services/csv-analysis.ts` Electron main process'te çalıştığı
- * için bu modülü import edemez; orada COLUMN_ALIAS / COLUMN_I18N eşdeğeri
- * ayrıca tutulur. İki dosya birlikte güncel tutulmalıdır.
- * (Aynı pattern: `signatureTokens.ts` ↔ `template-renderer.ts`.)
+ * NOTE: `electron/services/csv-analysis.ts` runs in the Electron main process and
+ * therefore cannot import this module; an equivalent of COLUMN_ALIAS / COLUMN_I18N
+ * is kept separately there. The two files must be kept in sync.
+ * (Same pattern: `signatureTokens.ts` ↔ `template-renderer.ts`.)
  */
 import type { BulkActionType } from '../types/admin';
 
 export type SupportedColumnLang = 'tr' | 'en';
 
-/** Backend parser + worker'ların beklediği kanonik (TR) sütun anahtarları. */
+/** Canonical (TR) column keys expected by the backend parser + workers. */
 export const CANONICAL_COLUMNS: Record<BulkActionType, string[]> = {
   suspend: ['email'],
   delete: ['email'],
   signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
 };
 
-/** Kanonik anahtar → dile göre sütun başlığı. `tr` değeri daima kanonik anahtarın kendisidir. */
+/** Canonical key → column header per language. The `tr` value is always the canonical key itself. */
 export const COLUMN_I18N: Record<string, Record<SupportedColumnLang, string>> = {
   email: { tr: 'email', en: 'email' },
   ad: { tr: 'ad', en: 'first_name' },
@@ -35,7 +35,7 @@ export const COLUMN_I18N: Record<string, Record<SupportedColumnLang, string>> = 
 };
 
 /**
- * Alias eşlemesi → kanonik (TR) anahtar. İngilizce başlıklar: `first_name → ad`, vb.
+ * Alias mapping → canonical (TR) key. English headers: `first_name → ad`, etc.
  */
 export const COLUMN_ALIAS: Record<string, string> = {
   first_name: 'ad',
@@ -45,25 +45,25 @@ export const COLUMN_ALIAS: Record<string, string> = {
   phone: 'telefon',
 };
 
-/** Verilen kanonik anahtar için aktif dile uygun sütun başlığını döner. */
+/** Returns the column header for the given canonical key in the active language. */
 export function localeColumn(canonical: string, lang: string): string {
   const normalized: SupportedColumnLang = lang === 'en' ? 'en' : 'tr';
   const entry = COLUMN_I18N[canonical];
   if (entry) return entry[normalized];
-  // Bilinmeyen anahtar (örn. beklenmeyen bir field) → olduğu gibi geç.
+  // Unknown key (e.g. an unexpected field) → pass through as-is.
   return canonical;
 }
 
-/** Bir CSV başlığını kanonik anahtara çevirir: trim + lowercase + alias. */
+/** Converts a CSV header to its canonical key: trim + lowercase + alias. */
 export function canonicalColumn(key: string): string {
   const normalized = key.trim().toLowerCase();
   return COLUMN_ALIAS[normalized] ?? normalized;
 }
 
 /**
- * Bir satırın tüm anahtarlarını kanonik forma çevirir: trim + lowercase + alias.
- * Çakışma durumunda (hem kanonik hem alias varsa) son yazılan kazanır — bu
- * pratikte sorun değil çünkü CSV başlıkları benzersiz olmak zorunda.
+ * Converts all of a row's keys to canonical form: trim + lowercase + alias.
+ * On a conflict (both canonical and alias present) the last write wins — this
+ * is not a problem in practice because CSV headers must be unique.
  */
 export function normalizeRowColumns(row: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
@@ -75,7 +75,7 @@ export function normalizeRowColumns(row: Record<string, string>): Record<string,
   return result;
 }
 
-/** Bir action için dile göre lokalize sütun başlık listesi (template/UI gösterimi). */
+/** Language-localized list of column headers for an action (template/UI display). */
 export function localeColumnsForAction(action: BulkActionType, lang: string): string[] {
   return CANONICAL_COLUMNS[action].map(col => localeColumn(col, lang));
 }

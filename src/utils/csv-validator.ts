@@ -15,7 +15,7 @@ export function validateCsvColumns(
     return { valid: false, missingColumns: [] };
   }
 
-  // CSV başlıkları TR veya EN olabilir → kanonik forma çevirip karşılaştır.
+  // CSV headers can be TR or EN → convert to canonical form before comparing.
   const existingColumns = Object.keys(rows[0]).map(c => canonicalColumn(c));
   const missingColumns = config.requiredColumns.filter(
     col => !existingColumns.includes(col)

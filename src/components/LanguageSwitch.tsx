@@ -7,8 +7,8 @@ type LanguageSwitchVariant = 'classic' | 'ethereal';
 interface LanguageSwitchProps {
     className?: string;
     /**
-     * `classic` — slate açık tema (mevcut sayfalar, login).
-     * `ethereal` — dark glass tema (onboarding sihirbazı).
+     * `classic` — slate light theme (existing pages, login).
+     * `ethereal` — dark glass theme (onboarding wizard).
      */
     variant?: LanguageSwitchVariant;
 }

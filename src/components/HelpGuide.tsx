@@ -23,7 +23,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 
-/* ---------- Tipler ---------- */
+/* ---------- Types ---------- */
 type CalloutTone = 'info' | 'tip' | 'warning';
 
 interface GuideBullet {
@@ -76,7 +76,7 @@ const GUIDE_ICONS: Record<string, LucideIcon> = {
 };
 const resolveIcon = (name?: string): LucideIcon => (name && GUIDE_ICONS[name]) || Info;
 
-/* ---------- Callout stilleri ---------- */
+/* ---------- Callout styles ---------- */
 const CALLOUT_STYLES: Record<CalloutTone, { wrap: string; icon: LucideIcon; iconColor: string }> = {
     info: { wrap: 'bg-eth-secondary/10 border-eth-secondary/30', icon: Info, iconColor: 'text-eth-secondary' },
     tip: { wrap: 'bg-teal-500/10 border-teal-500/30', icon: Zap, iconColor: 'text-teal-600' },
@@ -96,7 +96,7 @@ function isGuideSectionArray(value: unknown): value is GuideSection[] {
     );
 }
 
-/* ---------- Inline rich text (<b> / <code> destekli) ---------- */
+/* ---------- Inline rich text (<b> / <code> supported) ---------- */
 function RichText({ text }: { text: string }) {
     return (
         <Trans
@@ -111,7 +111,7 @@ function RichText({ text }: { text: string }) {
     );
 }
 
-/* ---------- Bölüm renderer ---------- */
+/* ---------- Section renderer ---------- */
 function GuideSectionView({ section }: { section: GuideSection }) {
     const Icon = resolveIcon(section.icon);
     return (
@@ -207,13 +207,13 @@ function GuideSectionView({ section }: { section: GuideSection }) {
     );
 }
 
-/* ---------- Ana bileşen ---------- */
+/* ---------- Main component ---------- */
 export function HelpGuide({ namespace }: HelpGuideProps) {
     const { t } = useTranslation(namespace);
     const { t: tCommon } = useTranslation('common');
     const [open, setOpen] = useState(false);
 
-    // Escape ile kapatma — document seviyesinde dinleyici
+    // Close on Escape — document-level listener
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => {

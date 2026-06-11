@@ -45,11 +45,11 @@ let cache: CacheService
 let cancelBulkOperation = false
 
 /**
- * adminService accessor — credential yoksa MissingOAuthCredentialsError fırlatır
- * (authService.getClient() üzerinden). IPC handler'ın try/catch'i bunu yakalar
- * ve renderer'a anlaşılır mesaj çevirir. Credential reset (invalidateCredentials)
- * sonrası adminService null'a alınır ki bir sonraki çağrıda yeni client ile
- * yeniden oluşsun.
+ * adminService accessor — throws MissingOAuthCredentialsError when there are no
+ * credentials (via authService.getClient()). The IPC handler's try/catch catches
+ * it and turns it into a user-friendly message for the renderer. After a credential
+ * reset (invalidateCredentials), adminService is set to null so the next call
+ * recreates it with a fresh client.
  */
 function ensureAdminService(): AdminService {
   if (!adminService) {
@@ -83,9 +83,9 @@ function createWindow() {
     minHeight: 720,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
-      // Faz E security hardening — explicit yapıyoruz (Electron 40 default'larının
-      // çoğu zaten güvenli, ama açıkça belirtmek "biliyoruz" sinyali ve gelecekteki
-      // default değişikliklerine karşı koruma).
+      // Phase E security hardening — we set these explicitly (most of Electron 40's
+      // defaults are already safe, but being explicit signals intent and guards
+      // against future default changes).
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -98,9 +98,9 @@ function createWindow() {
     win?.show()
   })
 
-  // window.open(url, '_blank') ile açılan tüm dış URL'leri uygulama içi
-  // BrowserWindow yerine OS varsayılan tarayıcısına yönlendir — kullanıcının
-  // Google session'ı vb. zaten orada açık.
+  // Redirect every external URL opened via window.open(url, '_blank') to the OS
+  // default browser instead of an in-app BrowserWindow — the user's Google
+  // session etc. is already open there.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       shell.openExternal(url)
@@ -156,7 +156,7 @@ app.on('activate', () => {
 
 
 // ─── Crash Logger ────────────────────────────────────────────────────────────
-// Crash raporlayıcıyı başlat (dosya tabanlı, sunucu gerekmez)
+// Start the crash reporter (file-based, no server required)
 crashReporter.start({
   productName: 'GoWorks',
   submitURL: '',
@@ -168,10 +168,10 @@ const getCrashLogPath = () => {
 };
 
 const writeLog = (prefix: string, detail: unknown) => {
-  // Önce logger üzerinden günlük log dosyasına + console'a yaz (file rotation dahil).
+  // First write through the logger to the daily log file + console (file rotation included).
   logger.error(`${prefix}:`, detail);
-  // Eski crash.log dosyasını geriye uyumluluk için yazmaya devam et —
-  // mevcut kurulumlarda crash.log destek için kullanılıyor.
+  // Keep writing the legacy crash.log file for backward compatibility —
+  // existing installations still rely on crash.log for support.
   try {
     const stamp = new Date().toISOString();
     const msg = `[${stamp}] ${prefix}:\n${detail instanceof Error ? detail.stack : String(detail)}\n${'─'.repeat(80)}\n`;
@@ -182,8 +182,8 @@ const writeLog = (prefix: string, detail: unknown) => {
 process.on('uncaughtException', (err) => writeLog('UNCAUGHT EXCEPTION', err));
 process.on('unhandledRejection', (reason) => writeLog('UNHANDLED REJECTION', reason));
 
-// Renderer'dan gelen log:write isteklerini logger'a yönlendir.
-// SerializedError objelerini Error instance'a geri çevirir ki stack korunsun.
+// Forward log:write requests coming from the renderer to the logger.
+// Converts SerializedError objects back into Error instances so the stack is preserved.
 interface SerializedError { __error: true; name: string; message: string; stack?: string }
 function deserializeArg(a: unknown): unknown {
   if (a && typeof a === 'object' && (a as SerializedError).__error) {
@@ -212,8 +212,8 @@ function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): n
   return 0;
 }
 
-// Boot-check sonucu — soft-warn flag'lerini renderer'a `config:getBootStatus`
-// IPC handler üzerinden sunarız.
+// Boot-check result — we expose the soft-warn flags to the renderer via the
+// `config:getBootStatus` IPC handler.
 let bootStatus: BootCheckResult = {
   soft: { serviceAccountMissing: false, oauthCredentialsMissing: false },
 };
@@ -221,14 +221,14 @@ let bootStatus: BootCheckResult = {
 ipcMain.handle('config:getBootStatus', () => bootStatus);
 
 /**
- * Content Security Policy — dev/prod ayrımı.
+ * Content Security Policy — dev/prod split.
  *
- * Vite HMR `ws://`, hot reload `eval`, ve inline style ister. Production
- * tam tersine bunları reddetmeli. Statik `<meta http-equiv>` tag bu
- * ayrımı yapamaz → response header'ı runtime'da basıyoruz.
+ * Vite HMR needs `ws://`, hot reload needs `eval`, and inline style is required.
+ * Production must do the opposite and reject these. A static `<meta http-equiv>`
+ * tag cannot make this distinction → we emit the response header at runtime.
  *
- * Production'da blocked: `eval`, inline `<script>`, üçüncü taraf origin'ler
- * (googleapis hariç).
+ * Blocked in production: `eval`, inline `<script>`, third-party origins
+ * (except googleapis).
  */
 function applyContentSecurityPolicy() {
   const isDev = !!VITE_DEV_SERVER_URL;
@@ -244,8 +244,8 @@ function applyContentSecurityPolicy() {
     : [
         "default-src 'self'",
         "script-src 'self'",
-        // İmza editörü WYSIWYG inline style üretiyor — production'da da
-        // 'unsafe-inline' style gerekli. Eval ve script-inline kapalı kalır.
+        // The signature editor's WYSIWYG produces inline styles — 'unsafe-inline'
+        // style is required even in production. Eval and inline script stay disabled.
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: https://*.googleusercontent.com",
         "font-src 'self' data:",
@@ -263,21 +263,21 @@ function applyContentSecurityPolicy() {
 }
 
 app.whenReady().then(async () => {
-  // Faz E security: CSP'yi window oluşmadan ÖNCE bağla.
+  // Phase E security: attach the CSP BEFORE the window is created.
   applyContentSecurityPolicy();
 
-  // Boot-time validation (env, userData writable, service account). Hard-fail
-  // durumunda runBootCheck dialog gösterir ve app.exit(1) çağırır.
+  // Boot-time validation (env, userData writable, service account). On a hard-fail,
+  // runBootCheck shows a dialog and calls app.exit(1).
   try {
     bootStatus = runBootCheck();
   } catch (err) {
-    // app.exit() async — bu satıra düşmek anormal değildir, sadece exit'in
-    // tamamlanmasını bekliyoruz.
+    // app.exit() is async — reaching this line is not abnormal, we're just
+    // waiting for the exit to complete.
     writeLog('BOOT CHECK FAILED', err);
     return;
   }
 
-  // SQLite DB'yi açılışta başlat (Title/Institution/Template/Media/Job tabloları)
+  // Initialize the SQLite DB at startup (Title/Institution/Template/Media/Job tables)
   try {
     getDb();
   } catch (err) {
@@ -287,7 +287,7 @@ app.whenReady().then(async () => {
   createWindow();
   if (win) jobRunner.setWindow(win);
 
-  // Window title'ı kullanıcının dil tercihine göre ayarla
+  // Set the window title according to the user's language preference
   try {
     const { appConfigService } = await import('./services/app-config-service');
     applyWindowTitle(appConfigService.get('language'));
@@ -295,17 +295,17 @@ app.whenReady().then(async () => {
     writeLog('LOCALE TITLE INIT FAILED', err);
   }
 
-  // Worker handler'larını runner'a bağla — resume edilen veya yeni gelen jobları
-  // bu fonksiyonlar işler.
+  // Wire the worker handlers into the runner — these functions process resumed
+  // or newly arriving jobs.
   registerSignaturePushWorker();
   registerBulkActionWorker();
   registerSignatureAuditWorker();
   jobRunner.resumeOnStartup();
 
   authService = new AuthService();
-  // adminService lazy: credential yoksa null kalır; auth:login success sonrası
-  // ya da config:setOAuthCredentials çağrısı sonrası ensureAdminService()
-  // tarafından oluşturulur.
+  // adminService is lazy: stays null when there are no credentials; it is created
+  // by ensureAdminService() after a successful auth:login or after a
+  // config:setOAuthCredentials call.
   if (authService.hasCredentials()) {
     try {
       adminService = new AdminService(authService.getClient());
@@ -334,8 +334,8 @@ app.whenReady().then(async () => {
     if (!win) return null;
     try {
       const result = await authService.login();
-      // Login başarılı; adminService henüz yoksa (ilk kurulum, credential yeni
-      // girildi) lazy init et ki sonraki admin çağrıları için hazır olsun.
+      // Login succeeded; if adminService doesn't exist yet (first setup, credentials
+      // just entered), lazily init it so it's ready for subsequent admin calls.
       ensureAdminService();
       return { success: true, ...result };
     } catch (error: any) {
@@ -364,7 +364,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('auth:getAccessToken', async () => {
     try {
       const client = authService.getClient();
-      // getAccessToken() otomatik olarak expire olmuş token'ı refresh eder
+      // getAccessToken() automatically refreshes an expired token
       const { token } = await client.getAccessToken();
       if (!token) return { success: false, error: 'Token bulunamadı' };
       return { success: true, token };
@@ -379,7 +379,7 @@ app.whenReady().then(async () => {
       const result = await ensureAdminService().getUsers(customer, maxResults, pageToken, query);
       return { success: true, ...result };
     } catch (error) {
-      // Stack trace log dosyasında kalır, renderer'a sadece kullanıcı mesajı gider
+      // The stack trace stays in the log file; only the user message goes to the renderer
       logger.error('[admin:getUsers] failed', error);
       return { success: false, error: toUserMessage(error) };
     }
@@ -544,9 +544,9 @@ app.whenReady().then(async () => {
     let failedCount = 0;
     const errors: Array<{ user: string, error: string }> = [];
 
-    // Progress event'lerini 100ms throttle ile gönder. Renderer'da React
-    // re-render baskısını azaltır; her item'da 1 emit (önceden 2 idi: redundant
-    // "before action" kaldırıldı). Flush ile son durum garanti gönderilir.
+    // Send progress events throttled to 100ms. Reduces React re-render pressure
+    // in the renderer; 1 emit per item (previously 2: the redundant "before action"
+    // was removed). A flush guarantees the final state is sent.
     const sendProgress = throttle(
       (event: import('./types').BulkProgressEvent) => {
         win?.webContents.send('admin:bulkProgress', event);
@@ -597,7 +597,7 @@ app.whenReady().then(async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Final progress: throttle'daki bekleyen emit'i iptal et, completed event'i direkt gönder
+    // Final progress: cancel the pending throttled emit and send the completed event directly
     sendProgress.cancel();
     win?.webContents.send('admin:bulkProgress', {
       total: users.length,
@@ -657,12 +657,12 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Auto-update kaldırıldı — manuel dağıtım. Sürüm bilgisi yine sorulabiliyor:
+  // Auto-update removed — manual distribution. The version can still be queried:
   ipcMain.handle('app:getVersion', () => {
     return { version: app.getVersion() };
   });
 
-  // Renderer dil değişiminde window title'ı locale'e göre günceller
+  // Updates the window title to match the locale when the renderer changes language
   ipcMain.handle('app:setLocale', async (_, locale: 'tr' | 'en') => {
     try {
       applyWindowTitle(locale);
@@ -673,7 +673,7 @@ app.whenReady().then(async () => {
   });
 
   // Google Groups — Directory + Groups Settings API
-  // OAuth tokenı kullanılır; audit log'unda actor.email = giriş yapan admin.
+  // Uses the OAuth token; in the audit log, actor.email = the logged-in admin.
   ipcMain.handle('groups:list', async (_, params: { query?: string; pageToken?: string; maxResults?: number } = {}) => {
     try {
       const { listGroups } = await import('./services/groups-service');
@@ -829,7 +829,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Titles (Ünvanlar) — yerel SQLite üzerinden CRUD
+  // Titles — CRUD via local SQLite
   ipcMain.handle('titles:getAll', async () => {
     try {
       const { titleService } = await import('./services/title-service');
@@ -879,7 +879,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Institutions (Kurumlar) — yerel SQLite
+  // Institutions — local SQLite
   ipcMain.handle('institutions:getAll', async () => {
     try {
       const { institutionService } = await import('./services/institution-service');
@@ -929,7 +929,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Signature Templates — yerel SQLite (HTML sanitize + render burada)
+  // Signature Templates — local SQLite (HTML sanitize + render happen here)
   ipcMain.handle('templates:getAll', async () => {
     try {
       const { templateService } = await import('./services/template-service');
@@ -1003,7 +1003,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Media (Drive resim linkleri)
+  // Media (Drive image links)
   ipcMain.handle('media:getAll', async (_, payload: { templateId?: number } = {}) => {
     try {
       const { mediaService } = await import('./services/media-service');
@@ -1075,7 +1075,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // App Config (firma adı, kısaltma, logo, mail gönderici, izin verilen domain)
+  // App Config (company name, abbreviation, logo, email sender, allowed domain)
   ipcMain.handle('config:getAll', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
@@ -1143,8 +1143,8 @@ app.whenReady().then(async () => {
   ipcMain.handle('config:resetOnboarding', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      // OAuth credentials da sıfırlanır: kullanıcı sihirbazı baştan çalışırken
-      // eski clientId/secret ile karışıklık yaşamasın.
+      // OAuth credentials are reset too, so the user doesn't run into confusion
+      // with the old clientId/secret when running the wizard again from scratch.
       appConfigService.set('googleClientId', null);
       secureStorage.clearClientSecret();
       authService?.invalidateCredentials();
@@ -1171,13 +1171,13 @@ app.whenReady().then(async () => {
   });
 
   /**
-   * Onboarding ve Settings karta yazma noktası.
-   * - clientId: boş geçilirse "değiştirme" anlamına gelir (Settings'ten partial update).
-   * - clientSecret: boş geçilirse "değiştirme" — mevcut secret korunur.
-   * - İkisi de doluysa: ikisi de yeni değerleriyle kaydedilir.
-   * - clientId verilip secret henüz hiç set edilmemişse hata döner (onboarding ilk
-   *   yaratım için her ikisini de zorunlu kılar; UI bunu çağırmadan önce zaten valide
-   *   eder).
+   * Write point for the Onboarding and Settings card.
+   * - clientId: leaving it empty means "don't change" (partial update from Settings).
+   * - clientSecret: leaving it empty means "don't change" — the existing secret is kept.
+   * - If both are filled: both are saved with their new values.
+   * - If clientId is provided but the secret has never been set, an error is returned
+   *   (onboarding requires both for the initial creation; the UI already validates this
+   *   before calling).
    */
   ipcMain.handle('config:setOAuthCredentials', async (
     _,
@@ -1204,8 +1204,8 @@ app.whenReady().then(async () => {
         };
       }
 
-      // Credentials değişti — auth client'ı invalidate edip adminService'i de
-      // null'a alalım. Bir sonraki kullanım fresh client ile oluşur.
+      // Credentials changed — invalidate the auth client and set adminService to
+      // null too. The next use recreates it with a fresh client.
       authService?.invalidateCredentials();
       adminService = null;
 
@@ -1232,10 +1232,10 @@ app.whenReady().then(async () => {
   });
 
   /**
-   * Credential'ları kaydetmeden önce doğrulama: in-memory OAuth2Client oluştur,
-   * generateAuthUrl() ile geçerli bir authorization URL üretebildiğini kontrol et.
-   * Gerçek OAuth flow değil — format + library init testi (yanlış formatlı clientId
-   * generateAuthUrl içinde fırlar).
+   * Validation before saving credentials: create an in-memory OAuth2Client and
+   * check that it can produce a valid authorization URL via generateAuthUrl().
+   * Not a real OAuth flow — just a format + library init test (a malformed clientId
+   * throws inside generateAuthUrl).
    */
   ipcMain.handle('config:testOAuthCredentials', async (
     _,
@@ -1253,7 +1253,7 @@ app.whenReady().then(async () => {
         trimmedSecret,
         'http://localhost:3000/callback',
       );
-      // generateAuthUrl yanlış parametrelerde throw atar; başarılı dönüş = init OK.
+      // generateAuthUrl throws on bad parameters; a successful return = init OK.
       const url = client.generateAuthUrl({
         access_type: 'offline',
         scope: ['https://www.googleapis.com/auth/userinfo.email'],
@@ -1305,7 +1305,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Bulk CSV analysis (yerel SQLite + lookup)
+  // Bulk CSV analysis (local SQLite + lookup)
   ipcMain.handle('bulk:analyze', async (_, payload: { actionType: string; rows: Record<string, string>[]; lang?: 'tr' | 'en' }) => {
     try {
       const { analyzeBulkCsv } = await import('./services/csv-analysis');
@@ -1324,7 +1324,7 @@ app.whenReady().then(async () => {
       const resolvedLang: 'tr' | 'en' = lang === 'en' ? 'en' : 'tr';
       const domain = appConfigService.get('allowedDomain') || 'example.com';
       const sampleEmail = resolvedLang === 'en' ? `sample@${domain}` : `ornek@${domain}`;
-      // Başlıklar dile göre lokalize (TR: kurum_adi / EN: institution_name).
+      // Headers localized by language (TR: kurum_adi / EN: institution_name).
       const headers = localeColumnsForAction(actionType, resolvedLang);
       const exampleByAction: Record<'tr' | 'en', Record<string, string[]>> = {
         tr: {
@@ -1375,7 +1375,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // İmza Denetimi
+  // Signature Audit
   ipcMain.handle('signatureAudit:startScan', async (_, payload: { scope: { type: 'all' | 'group' | 'orgUnit'; value?: string }; templateId: number; depth: 'fast' | 'deep' }) => {
     try {
       const adminEmail = authService?.getCurrentUserEmail();

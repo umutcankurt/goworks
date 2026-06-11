@@ -59,7 +59,7 @@ export interface PushSignatureInput {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Bir kişinin imza ile ilgili profil alanları — Google Directory verisinin sadeleştirilmiş hâli.
+ * A person's signature-related profile fields — a simplified form of the Google Directory data.
  */
 export interface SignatureProfile {
     email: string;
@@ -72,7 +72,7 @@ export interface SignatureProfile {
     orgUnitPath?: string;
 }
 
-/** Ham Google Directory kullanıcı nesnesini `SignatureProfile`'a indirger. */
+/** Reduces a raw Google Directory user object to a `SignatureProfile`. */
 export function profileFromGoogleUser(email: string, user: any): SignatureProfile {
     const org = user?.organizations?.[0] || {};
     return {
@@ -88,9 +88,9 @@ export function profileFromGoogleUser(email: string, user: any): SignatureProfil
 }
 
 /**
- * Profilden + yerel kurum kaydından imza şablonu değişkenlerini kurar.
- * `pushSignature`, bulk push worker'ı ve İmza Denetimi tarama worker'ı **ortak** bu
- * fonksiyonu kullanmalı ki aynı veriden aynı hash üretilsin.
+ * Builds signature template variables from the profile + the local institution record.
+ * `pushSignature`, the bulk push worker, and the Signature Audit scan worker must **all**
+ * use this function so the same hash is produced from the same data.
  */
 export function buildSignatureVariables(profile: SignatureProfile): TemplateVariables {
     let institutionAddress = '';
@@ -115,7 +115,7 @@ export function buildSignatureVariables(profile: SignatureProfile): TemplateVari
 }
 
 /**
- * Bir kişinin imza şablonu değişkenlerini Google Admin profilinden (SA+DWD) çözer.
+ * Resolves a person's signature template variables from their Google Admin profile (SA+DWD).
  */
 export async function resolveSignatureVariables(
     userEmail: string,
@@ -135,7 +135,7 @@ export async function pushSignature(
         throw new Error('Geçersiz e-posta adresi');
     }
 
-    // Mode 1: Raw HTML (sanitize edip basla)
+    // Mode 1: Raw HTML (sanitize then push)
     if (input.html) {
         const html = sanitizeTemplateHtml(input.html);
         await setSignature(userEmail, html);
@@ -143,7 +143,7 @@ export async function pushSignature(
         return { success: true, email: userEmail };
     }
 
-    // Mode 2/3: Template-based (templateId yoksa default şablonu çöz)
+    // Mode 2/3: Template-based (if no templateId, resolve the default template)
     let resolvedTemplateId = input.templateId;
     if (!resolvedTemplateId) {
         const def = templateService.getDefault();
@@ -159,7 +159,7 @@ export async function pushSignature(
 
     let vars: TemplateVariables = input.variables || {};
     if (!input.variables || Object.keys(input.variables).length === 0) {
-        // Auto-resolve from Google Admin + yerel kurum kaydı
+        // Auto-resolve from Google Admin + the local institution record
         vars = await resolveSignatureVariables(userEmail, adminEmail);
     }
 

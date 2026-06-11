@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { SignatureAuditItem } from '../../services/server-api';
 import { CATEGORY_META } from './AuditReviewTable';
 
-/** Diff'te gösterilecek kanonik değişken anahtarları. */
+/** Canonical variable keys to show in the diff. */
 const DIFF_KEYS = ['ad_soyad', 'unvan', 'kurum_adi', 'kurum_adres', 'kurum_telefon', 'telefon', 'eposta'] as const;
 
 interface AuditResultRowProps {

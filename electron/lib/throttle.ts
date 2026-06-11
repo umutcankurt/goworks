@@ -1,20 +1,20 @@
 /**
- * Throttle helper — bir fonksiyonun çağrılma sıklığını sınırlar.
+ * Throttle helper — limits how often a function can be called.
  *
- * Trailing semantik: aralık içinde gelen son çağrı tutulur ve aralık
- * dolduğunda gönderilir. Bu, "progress event'inin son hâli kullanıcıda
- * göründüğünden emin olalım" pattern'i için doğru — son emit kaybolmaz.
+ * Trailing semantics: the last call within the interval is retained and emitted
+ * when the interval elapses. This is correct for the "make sure the final state
+ * of the progress event reaches the user" pattern — the last emit is never lost.
  *
- * IPC progress event spam'ini azaltmak için kullanılır
+ * Used to reduce IPC progress event spam
  * (`admin:bulkProgress`, `jobs:progress`).
  */
 type AnyFn = (...args: never[]) => void;
 
 export interface Throttled<T extends AnyFn> {
     (...args: Parameters<T>): void;
-    /** Bekleyen trailing çağrıyı (varsa) hemen tetikler. */
+    /** Immediately fires the pending trailing call, if any. */
     flush: () => void;
-    /** Bekleyen trailing çağrıyı iptal eder. */
+    /** Cancels the pending trailing call. */
     cancel: () => void;
 }
 

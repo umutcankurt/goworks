@@ -2,22 +2,23 @@
 /**
  * SQLite native binary swap — dev (Electron ABI) ↔ test (Node ABI).
  *
- * Faz 32 garantisi: `npm run dev` daima Electron ABI binary'sine ihtiyaç
- * duyar. vitest ise saf Node worker'ında çalıştığı için Node ABI ister.
- * Bu script iki binary'yi `node_modules/.cache/goworks-sqlite/`'ta cache'ler
- * ve `pretest`/`posttest` hook'larında milisaniyelik `cp` ile swap'lar.
+ * Phase 32 guarantee: `npm run dev` always needs the Electron ABI binary.
+ * vitest, on the other hand, runs in a pure Node worker, so it wants the
+ * Node ABI. This script caches both binaries in
+ * `node_modules/.cache/goworks-sqlite/` and swaps them with a millisecond
+ * `cp` in the `pretest`/`posttest` hooks.
  *
- * Cache anahtarı: `{mode}-{abi}-{platform}-{arch}.node` — runtime başına
- * bir entry. ABI farkı `process.versions.modules` üzerinden çözülür.
+ * Cache key: `{mode}-{abi}-{platform}-{arch}.node` — one entry per runtime.
+ * The ABI difference is resolved via `process.versions.modules`.
  *
- * Komutlar:
- *   cache <electron|node>   — Mevcut binary'yi sniff'le, modu doğrula, cache'le.
- *   use   <electron|node>   — Cache'ten binary'yi ana lokasyona kopyala.
- *   prepare-test            — Tek seferlik: hem Electron hem Node ABI'yi derle ve cache'le.
- *   status                  — Mevcut binary + cache durumunu raporla.
+ * Commands:
+ *   cache <electron|node>   — Sniff the current binary, verify the mode, cache it.
+ *   use   <electron|node>   — Copy the binary from cache to the main location.
+ *   prepare-test            — One-time: build and cache both Electron and Node ABI.
+ *   status                  — Report the current binary + cache state.
  *
- * Magic-byte sniff mantığı `scripts/check-native-abi.mjs` ile aynıdır;
- * duplikasyon küçük ve test edilmiş — DRY refactor opsiyonel (plan §1.2).
+ * The magic-byte sniff logic is the same as `scripts/check-native-abi.mjs`;
+ * the duplication is small and tested — a DRY refactor is optional (plan §1.2).
  */
 import {
     existsSync,
@@ -45,10 +46,10 @@ function fail(msg, hint) {
 }
 
 /**
- * Magic byte parse — `check-native-abi.mjs` ile aynı algoritma.
- * Sadece host platform/arch eşleşmesi için kullanılır; ABI bilgisi
- * (NODE_MODULE_VERSION) buradan çıkartılamaz — onu `require()` ile
- * runtime'da test ederiz.
+ * Magic byte parse — same algorithm as `check-native-abi.mjs`.
+ * Used only for host platform/arch matching; the ABI info
+ * (NODE_MODULE_VERSION) cannot be derived from here — we test that at
+ * runtime via `require()`.
  */
 function parseBinaryMagic(buf) {
     if (!buf || buf.length < 16) return { platform: 'unknown', arch: 'unknown' };
@@ -111,12 +112,12 @@ function resolveBinaryPath() {
 const CACHE_DIR = path.join(process.cwd(), 'node_modules', '.cache', 'goworks-sqlite');
 
 /**
- * Cache entry adı = `{mode}-{platform}-{arch}.node`. ABI numarası dahil
- * değil çünkü:
- *   - Electron ABI sürüm bumped olduğunda postinstall yeniden cache'ler
- *   - Node ABI sürüm bumped olduğunda test:prepare yeniden cache'ler
- *   - Cache miss durumu açık hata ile çıkar (`use` komutu)
- * Bu sade isim cross-platform pull'larda da net invalidate'e yardım eder.
+ * Cache entry name = `{mode}-{platform}-{arch}.node`. The ABI number is not
+ * included because:
+ *   - When the Electron ABI version is bumped, postinstall re-caches
+ *   - When the Node ABI version is bumped, test:prepare re-caches
+ *   - A cache miss exits with an explicit error (`use` command)
+ * This simple name also helps with clean invalidation across cross-platform pulls.
  */
 function cacheKey(mode) {
     return `${mode}-${process.platform}-${process.arch}.node`;
@@ -133,11 +134,11 @@ function ensureCacheDir() {
 }
 
 /**
- * Binary'nin `mode` ile uyumlu olduğunu doğrula:
- *  - platform/arch host'la eşleşmeli (magic-byte sniff)
- *  - `electron` modu için `require('better-sqlite3')` Node'da PATLAMALI
- *    (Electron ABI Node'da yüklenmez)
- *  - `node` modu için `require('better-sqlite3')` Node'da BAŞARILI olmalı
+ * Verify that the binary is compatible with `mode`:
+ *  - platform/arch must match the host (magic-byte sniff)
+ *  - for `electron` mode, `require('better-sqlite3')` must FAIL on Node
+ *    (the Electron ABI does not load on Node)
+ *  - for `node` mode, `require('better-sqlite3')` must SUCCEED on Node
  */
 function verifyBinaryMode(binaryPath, mode) {
     const buf = readMagic(binaryPath);
@@ -147,7 +148,7 @@ function verifyBinaryMode(binaryPath, mode) {
     if (binInfo.platform !== host.platform) {
         return {
             ok: false,
-            reason: `binary platform=${binInfo.platform}, host=${host.platform} — cross-platform binary cache'lenemez`,
+            reason: `binary platform=${binInfo.platform}, host=${host.platform} — cross-platform binary cannot be cached`,
         };
     }
     if (binInfo.arch !== 'unknown' && binInfo.arch !== 'universal' && binInfo.arch !== host.arch) {
@@ -157,11 +158,11 @@ function verifyBinaryMode(binaryPath, mode) {
         };
     }
 
-    // ABI doğrulaması: gerçek Database construction probe.
-    // `require('better-sqlite3')` SADECE JS wrapper'ı yükler — `bindings()`
-    // çağrısı `new Database()` zamanında gerçekleşir. Yani sadece require
-    // ile ABI test edilemez; native binding'i tetiklemek için Database
-    // constructor'ını çağırmak şart.
+    // ABI verification: a real Database construction probe.
+    // `require('better-sqlite3')` ONLY loads the JS wrapper — the `bindings()`
+    // call happens at `new Database()` time. So the ABI cannot be tested with
+    // require alone; calling the Database constructor is required to trigger
+    // the native binding.
     const require = createRequire(import.meta.url);
     const resolvedKey = (() => {
         try { return require.resolve('better-sqlite3'); } catch { return null; }
@@ -185,24 +186,24 @@ function verifyBinaryMode(binaryPath, mode) {
         if (!constructed) {
             return {
                 ok: false,
-                reason: `Node ABI binary bekleniyordu ama new Database() patladı: ${loadErr}`,
+                reason: `Expected a Node ABI binary but new Database() failed: ${loadErr}`,
             };
         }
         return { ok: true };
     }
 
-    // mode === 'electron': Node'da Database construction NODE_MODULE_VERSION
-    // mismatch atmalı (Electron 40 ABI 143, vitest Node 25 ABI 141 vb.).
+    // mode === 'electron': on Node, Database construction must throw a
+    // NODE_MODULE_VERSION mismatch (Electron 40 ABI 143, vitest Node 25 ABI 141, etc.).
     if (constructed) {
         return {
             ok: false,
-            reason: 'Electron ABI binary bekleniyordu ama Node\'da Database() oluşturulabildi (binary aslında Node ABI).',
+            reason: 'Expected an Electron ABI binary but Database() could be created on Node (the binary is actually Node ABI).',
         };
     }
     if (!loadErr || !/NODE_MODULE_VERSION/i.test(loadErr)) {
         return {
             ok: false,
-            reason: `Electron ABI binary bekleniyordu, new Database() farklı bir nedenle patladı: ${loadErr}`,
+            reason: `Expected an Electron ABI binary, but new Database() failed for a different reason: ${loadErr}`,
         };
     }
     return { ok: true };
@@ -212,13 +213,13 @@ function cmdCache(mode) {
     const binaryPath = resolveBinaryPath();
     if (!existsSync(binaryPath)) {
         fail(
-            `cache ${mode} — binary bulunamadı: ${binaryPath}`,
-            `Çalıştır: ${mode === 'electron' ? 'npm run rebuild' : 'npm rebuild better-sqlite3 --build-from-source'}`,
+            `cache ${mode} — binary not found: ${binaryPath}`,
+            `Run: ${mode === 'electron' ? 'npm run rebuild' : 'npm rebuild better-sqlite3 --build-from-source'}`,
         );
     }
     const verdict = verifyBinaryMode(binaryPath, mode);
     if (!verdict.ok) {
-        fail(`cache ${mode} — sanity check başarısız: ${verdict.reason}`);
+        fail(`cache ${mode} — sanity check failed: ${verdict.reason}`);
     }
     ensureCacheDir();
     const dest = cachedPath(mode);
@@ -232,8 +233,8 @@ function cmdUse(mode) {
     if (!existsSync(src)) {
         const hint =
             mode === 'electron'
-                ? 'Çalıştır: npm run rebuild   (Electron ABI binary derler ve cache\'ler)'
-                : 'Çalıştır: npm run test:prepare   (Node ABI binary derler ve cache\'ler)';
+                ? 'Run: npm run rebuild   (builds and caches the Electron ABI binary)'
+                : 'Run: npm run test:prepare   (builds and caches the Node ABI binary)';
         fail(`use ${mode} — cache miss: ${path.relative(process.cwd(), src)}`, hint);
     }
     const binaryPath = resolveBinaryPath();
@@ -241,7 +242,7 @@ function cmdUse(mode) {
         mkdirSync(path.dirname(binaryPath), { recursive: true });
     }
     copyFileSync(src, binaryPath);
-    console.log(`✓ [sqlite-binary] ${mode} ABI binary aktif (${path.relative(process.cwd(), binaryPath)})`);
+    console.log(`✓ [sqlite-binary] ${mode} ABI binary active (${path.relative(process.cwd(), binaryPath)})`);
 }
 
 function runStep(label, cmd, args) {
@@ -249,7 +250,7 @@ function runStep(label, cmd, args) {
     const npmCmd = process.platform === 'win32' && cmd === 'npm' ? 'npm.cmd' : cmd;
     const result = spawnSync(npmCmd, args, { stdio: 'inherit', env: process.env });
     if (result.status !== 0) {
-        fail(`${label} başarısız (exit ${result.status})`);
+        fail(`${label} failed (exit ${result.status})`);
     }
 }
 
@@ -258,19 +259,19 @@ function cmdPrepareTest({ force = false } = {}) {
     const electronCache = cachedPath('electron');
     if (!force && existsSync(nodeCache) && existsSync(electronCache)) {
         console.log(
-            `✓ [sqlite-binary] prepare-test: cache zaten dolu (node + electron) — atlanıyor. ` +
-            `Yeniden derlemek için: node scripts/sqlite-binary.mjs prepare-test --force`,
+            `✓ [sqlite-binary] prepare-test: cache already populated (node + electron) — skipping. ` +
+            `To rebuild: node scripts/sqlite-binary.mjs prepare-test --force`,
         );
         return;
     }
 
-    // `@electron/rebuild` ve `electron-builder install-app-deps` incremental:
-    // `build/Release/.forge-meta`'ya bakıp "zaten doğru ABI" derse derlemeyi
-    // atlar ve final `.node` dosyasını GÜNCELLEMEZ. `npm rebuild` + ardından
-    // `electron-rebuild` zincirinde, ikinci komut forge-meta'yı doğru güncelliyor
-    // ama binary'yi kopyalamıyor → her iki derleme sonrası da binary Node ABI'sinde
-    // kalıyor. Bunu önlemek için her derleme öncesi `build/` klasörünü tamamen
-    // sil — node-gyp temiz başlasın.
+    // `@electron/rebuild` and `electron-builder install-app-deps` are incremental:
+    // they look at `build/Release/.forge-meta` and if it says "already the correct
+    // ABI" they skip the build and DO NOT UPDATE the final `.node` file. In the
+    // `npm rebuild` + then `electron-rebuild` chain, the second command updates
+    // forge-meta correctly but does not copy the binary → after both builds the
+    // binary stays at the Node ABI. To prevent this, fully delete the `build/`
+    // folder before each build — let node-gyp start clean.
 
     function purgeBuildDir() {
         const buildDir = path.join(path.dirname(resolveBinaryPath()), '..', '..');
@@ -280,11 +281,11 @@ function cmdPrepareTest({ force = false } = {}) {
         }
     }
 
-    // NOT: cmdCache içindeki `require('better-sqlite3')` probe'u native
-    // binding'i dlopen ile yüklüyor. Bir process içinde aynı .node dosyası
-    // iki kez yüklenemez — ikinci probe (electron) ilk yüklenen (node) ABI'yi
-    // görür ve yanlış teşhis koyar. Bunu önlemek için her cache adımını
-    // ayrı child process'te çalıştırıyoruz.
+    // NOTE: the `require('better-sqlite3')` probe inside cmdCache loads the
+    // native binding via dlopen. The same .node file cannot be loaded twice
+    // within one process — the second probe (electron) sees the first-loaded
+    // (node) ABI and makes a wrong diagnosis. To prevent this, we run each
+    // cache step in a separate child process.
     function spawnCache(mode) {
         runStep(`Cache ${mode}`, process.execPath, [
             new URL(import.meta.url).pathname,
@@ -293,21 +294,21 @@ function cmdPrepareTest({ force = false } = {}) {
         ]);
     }
 
-    // 1) Node ABI ile derle ve cache'le.
+    // 1) Build with the Node ABI and cache it.
     purgeBuildDir();
-    runStep('Node ABI derleme', 'npm', ['rebuild', 'better-sqlite3']);
+    runStep('Node ABI build', 'npm', ['rebuild', 'better-sqlite3']);
     spawnCache('node');
 
-    // 2) Electron ABI'ye geri derle ve cache'le.
-    // NOT: `electron-builder install-app-deps` better-sqlite3 için Node ABI
-    // prebuilt'ı indirip fallback olarak yerleştiriyor (Electron 40 prebuilt
-    // yok). `@electron/rebuild` doğrudan force build ile gerçek Electron ABI
-    // binary'sini üretir.
+    // 2) Build back to the Electron ABI and cache it.
+    // NOTE: `electron-builder install-app-deps` downloads the Node ABI prebuilt
+    // for better-sqlite3 and places it as a fallback (there is no Electron 40
+    // prebuilt). `@electron/rebuild` produces the real Electron ABI binary
+    // directly with a force build.
     purgeBuildDir();
-    runStep('Electron ABI derleme', 'npx', ['electron-rebuild', '-f', '-w', 'better-sqlite3']);
+    runStep('Electron ABI build', 'npx', ['electron-rebuild', '-f', '-w', 'better-sqlite3']);
     spawnCache('electron');
 
-    console.log('\n✓ [sqlite-binary] prepare-test tamamlandı. Artık `npm test` swap ile çalışır.');
+    console.log('\n✓ [sqlite-binary] prepare-test complete. `npm test` now works with the swap.');
 }
 
 function cmdStatus() {
@@ -330,13 +331,13 @@ function main() {
     switch (subcommand) {
         case 'cache':
             if (arg !== 'electron' && arg !== 'node') {
-                fail(`cache: <electron|node> beklendi, "${arg}" geldi.`);
+                fail(`cache: expected <electron|node>, got "${arg}".`);
             }
             cmdCache(arg);
             break;
         case 'use':
             if (arg !== 'electron' && arg !== 'node') {
-                fail(`use: <electron|node> beklendi, "${arg}" geldi.`);
+                fail(`use: expected <electron|node>, got "${arg}".`);
             }
             cmdUse(arg);
             break;
@@ -348,8 +349,8 @@ function main() {
             break;
         default:
             fail(
-                `bilinmeyen komut: "${subcommand}"`,
-                'Kullanım: sqlite-binary.mjs <cache|use|prepare-test|status> [arg]',
+                `unknown command: "${subcommand}"`,
+                'Usage: sqlite-binary.mjs <cache|use|prepare-test|status> [arg]',
             );
     }
 }

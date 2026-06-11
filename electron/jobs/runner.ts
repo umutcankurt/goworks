@@ -20,7 +20,7 @@ class JobRunner {
     private cancelled = new Set<string>();
     private running = new Set<string>();
     private handlers = new Map<string, WorkerHandler>();
-    // type başına concurrency
+    // per-type concurrency
     private concurrency = new Map<string, number>([
         ['BULK_SIGNATURE_PUSH', 3],
         ['BULK_SUSPEND', 1],
@@ -47,17 +47,17 @@ class JobRunner {
     }
 
     /**
-     * Uygulama açılışında çağrılır:
-     * - PENDING jobları kuyrukta bırakır
-     * - RUNNING jobları (önceki seansta tamamlanmadan kapanan) PENDING'e çekip resume eder
-     * - Stale execution: RUNNING ama uygulama bu sefer bunları çalıştırmamış → PENDING
+     * Called on application startup:
+     * - Leaves PENDING jobs in the queue
+     * - Resumes RUNNING jobs (left over from a previous session that closed before completing) by moving them back to PENDING
+     * - Stale execution: RUNNING but this session never actually ran them → PENDING
      */
     resumeOnStartup(): void {
         const log = getLogger();
         const stale = jobQueue.listByStatus(['RUNNING']);
         for (const job of stale) {
             log.warn(`[runner] Resuming stale RUNNING job ${job.id} (progress=${job.progress}/${job.total})`);
-            // İlerlemeyi koru, sadece status'ü PENDING'e çek ki dispatch tekrar yakalasın
+            // Preserve progress, just move status back to PENDING so dispatch picks it up again
             try {
                 getDb().prepare("UPDATE jobs SET status = 'PENDING' WHERE id = ?").run(job.id);
             } catch (e) {
@@ -109,7 +109,7 @@ class JobRunner {
             setReport: (report) => jobQueue.setExecutionReport(job.id, report),
         };
 
-        // Resume case: payload zaten kayıtlı; handler içinde job.progress kontrol edilebilir
+        // Resume case: payload is already persisted; the handler can inspect job.progress
         const fresh = jobQueue.get(job.id) ?? job;
 
         handler(fresh, ctx)
@@ -164,7 +164,7 @@ class JobRunner {
     }
 
     private fireCompletionEmail(jobId: string): void {
-        // Lazy import: email servisi bu dosyaya circular import'a sebep olmasın.
+        // Lazy import: keep the email service from creating a circular import with this file.
         import('../services/email-notification-service')
             .then(({ sendJobCompletionEmail }) => sendJobCompletionEmail(jobId))
             .catch((err) => getLogger().error('[runner] Email send failed', err));

@@ -41,11 +41,11 @@ export class AuthService {
     }
 
     /**
-     * OAuth2 client'ı lazy oluştur. Credential'lar runtime'da app_config (clientId)
-     * + safeStorage (clientSecret) üzerinden okunur — env değil.
+     * Lazily create the OAuth2 client. Credentials are read at runtime from
+     * app_config (clientId) + safeStorage (clientSecret) — not from env.
      *
-     * Onboarding sihirbazı veya Settings'ten credential güncellendiğinde
-     * `invalidateCredentials()` çağrılarak cache invalide edilir.
+     * When credentials are updated via the onboarding wizard or Settings,
+     * `invalidateCredentials()` is called to invalidate the cache.
      */
     private ensureOAuth2Client(): OAuth2Client {
         if (this.oauth2Client) return this.oauth2Client;
@@ -62,8 +62,8 @@ export class AuthService {
     }
 
     /**
-     * Credential değiştiğinde (onboarding kaydet, Settings güncelle, reset) çağrılır.
-     * Mevcut session'daki erişim tokenları temizlenir ki kullanıcı yeniden login olsun.
+     * Called when credentials change (onboarding save, Settings update, reset).
+     * Clears the current session's access tokens so the user has to log in again.
      */
     invalidateCredentials(): void {
         if (this.oauth2Client) {
@@ -87,9 +87,10 @@ export class AuthService {
     }
 
     /**
-     * safeStorage'a geçişten önce yazılmış düz-metin `google_auth_token.json`
-     * artığını temizler. Yeni sürümde token yalnız şifreli `auth-token.enc`'te
-     * tutulur; bir önceki sürümden kalan düz dosya diskte bırakılmamalı.
+     * Removes the leftover plaintext `google_auth_token.json` written before the
+     * migration to safeStorage. In the new version the token is kept only in the
+     * encrypted `auth-token.enc`; a plaintext file left over from a previous
+     * version must not remain on disk.
      */
     private clearLegacyPlainTokenFile() {
         try {
@@ -104,8 +105,9 @@ export class AuthService {
 
     private saveTokens(tokens: any) {
         try {
-            // safeStorage ile şifreli yazılır; safeStorage yoksa hata yutulur
-            // (token kalıcılığı zaten best-effort — her açılışta temizleniyor).
+            // Written encrypted via safeStorage; if safeStorage is unavailable the
+            // error is swallowed (token persistence is best-effort anyway — it's
+            // cleared on every startup).
             authTokenStore.set(JSON.stringify(tokens));
         } catch (e) {
             console.error('Failed to save tokens:', e);
@@ -223,8 +225,8 @@ export class AuthService {
     }
 
     /**
-     * Halen credential'lar var mı? Renderer'ın "login butonunu göster/gizle"
-     * kararı için kullanılır. Şu anki authenticated state'ten bağımsız.
+     * Do credentials still exist? Used by the renderer to decide whether to
+     * show/hide the "login button". Independent of the current authenticated state.
      */
     hasCredentials(): boolean {
         try {
@@ -235,8 +237,8 @@ export class AuthService {
     }
 
     /**
-     * OAuth2Client'a erişim — yalnızca login sonrası çağrılmalı.
-     * Credential yoksa MissingOAuthCredentialsError fırlatır.
+     * Access to the OAuth2Client — should only be called after login.
+     * Throws MissingOAuthCredentialsError when there are no credentials.
      */
     getClient(): OAuth2Client {
         return this.ensureOAuth2Client();

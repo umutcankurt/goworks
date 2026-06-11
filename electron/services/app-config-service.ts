@@ -46,8 +46,8 @@ export interface AppConfig {
 }
 
 /**
- * Default değerler ilk kurulum içindir. Onboarding tamamlanmadan
- * (`onboardingCompletedAt` null) renderer `/onboarding`'e zorlanır.
+ * Default values are for the initial setup. Until onboarding is complete
+ * (`onboardingCompletedAt` null) the renderer is forced to `/onboarding`.
  */
 const DEFAULTS: AppConfig = {
     companyName: '',
@@ -113,10 +113,10 @@ export const appConfigService = {
 
     set<K extends AppConfigKey>(key: K, value: string | null): void {
         const normalized = normalizeValue(key, value);
-        // companyName boş bırakılabilir (ilk kurulum / onboarding senaryosu).
-        // Onboarding ekrani sonradan eklenince burada zorunluluk eklenebilir.
+        // companyName may be left empty (initial setup / onboarding scenario).
+        // Once the onboarding screen is added, a requirement can be enforced here.
         if (key === 'allowedDomain' && normalized) {
-            // Boş bırakmak serbest; ama doluysa formatı geçerli olmalı.
+            // Leaving it empty is allowed; but if filled, the format must be valid.
             if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(normalized)) {
                 throw new Error('Geçersiz domain formatı (örn: example.com)');
             }
@@ -158,8 +158,8 @@ export const appConfigService = {
     },
 
     /**
-     * Onboarding bitir: companyName + allowedDomain dolu olmalı.
-     * `onboardingCompletedAt` set edilir, `onboardingStep` temizlenir.
+     * Finish onboarding: companyName + allowedDomain must be filled.
+     * `onboardingCompletedAt` is set, `onboardingStep` is cleared.
      */
     markOnboardingComplete(): AppConfig {
         const company = this.get('companyName');
@@ -189,7 +189,7 @@ export const appConfigService = {
         return this.getAll();
     },
 
-    /** Sihirbazı tekrar başlat: completedAt null, step welcome'a alınır. */
+    /** Restart the wizard: completedAt null, step set to welcome. */
     resetOnboarding(): AppConfig {
         const db = getDb();
         const tx = db.transaction(() => {
@@ -211,7 +211,7 @@ export const appConfigService = {
         if (buffer.byteLength > MAX_LOGO_BYTES) {
             throw new Error(`Logo dosyası çok büyük (max ${MAX_LOGO_BYTES / 1024} KB)`);
         }
-        // Eski logo dosyalarını temizle (farklı extension'lı eski yüklemeler kalmasın)
+        // Clean up old logo files (so old uploads with a different extension don't remain)
         const dir = getBrandingDir();
         for (const file of readdirSync(dir)) {
             if (file.startsWith('logo.')) {
@@ -229,7 +229,7 @@ export const appConfigService = {
         if (current && existsSync(current)) {
             try { unlinkSync(current); } catch { /* ignore */ }
         }
-        // app_config'ten anahtarı tamamen sil
+        // Completely remove the key from app_config
         getDb().prepare('DELETE FROM app_config WHERE key = ?').run('logoPath');
     },
 

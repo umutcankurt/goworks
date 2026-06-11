@@ -64,7 +64,7 @@ export function LogoUpload() {
                         loading={busy}
                         type="button"
                         onClick={(e) => {
-                            // Wrapping label tıklamasını input'a iletir; button'un native action'ı yok.
+                            // Forwards the wrapping label click to the input; the button has no native action.
                             (e.currentTarget.parentElement?.querySelector('input[type=file]') as HTMLInputElement | null)?.click();
                         }}
                     >

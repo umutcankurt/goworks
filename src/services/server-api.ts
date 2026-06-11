@@ -1,4 +1,4 @@
-// Tüm operasyonlar Electron IPC üzerinden gider — sunucu kalmadı.
+// All operations go through Electron IPC — there is no server anymore.
 async function ipcInvoke<T = any>(channel: string, args?: unknown): Promise<T> {
   const ipc = (window as any).ipcRenderer;
   if (!ipc?.invoke) {
@@ -12,7 +12,7 @@ async function ipcInvoke<T = any>(channel: string, args?: unknown): Promise<T> {
   return result as T;
 }
 
-// Service Account / config (sunucu yerine yerel JSON anahtarı)
+// Service Account / config (local JSON key instead of a server)
 export interface ServiceAccountStatus {
   configured: boolean;
   email: string | null;
@@ -29,7 +29,7 @@ export const serverApi = {
   deleteServiceAccount: () => ipcInvoke('config:deleteServiceAccount'),
 };
 
-// App Config (firma adı, kısaltma, logo, mail gönderici, izin verilen domain, UI dili)
+// App Config (company name, abbreviation, logo, email sender, allowed domain, UI language)
 export type AppLanguage = 'tr' | 'en';
 
 export type OnboardingStep =
@@ -79,12 +79,12 @@ export const appConfigApi = {
   testDwdScopes: (adminEmail?: string) =>
     ipcInvoke<DwdTestResult>('config:testDwdScopes', { adminEmail }),
 
-  // Google OAuth credentials (Faz 31)
+  // Google OAuth credentials (Phase 31)
   getOAuthCredentials: () =>
     ipcInvoke<OAuthCredentialsStatus>('config:getOAuthCredentials'),
   /**
-   * clientSecret boş geçilirse mevcut secret korunur (Settings rotasyonu için).
-   * Onboarding'de ikisi de zorunlu — UI bunu pre-validate eder.
+   * If clientSecret is passed empty, the existing secret is kept (for Settings rotation).
+   * Both are required during onboarding — the UI pre-validates this.
    */
   setOAuthCredentials: (clientId: string, clientSecret: string) =>
     ipcInvoke<OAuthCredentialsStatus>('config:setOAuthCredentials', { clientId, clientSecret }),
@@ -93,7 +93,7 @@ export const appConfigApi = {
     ipcInvoke<{ ok: boolean }>('config:testOAuthCredentials', { clientId, clientSecret }),
 };
 
-// Titles CRUD — Electron IPC (yerel SQLite)
+// Titles CRUD — Electron IPC (local SQLite)
 export const titlesApi = {
   getAll: () => ipcInvoke<any[]>('titles:getAll'),
   create: (name: string) => ipcInvoke('titles:create', { name }),
@@ -102,7 +102,7 @@ export const titlesApi = {
   importCsv: (csv: string) => ipcInvoke('titles:importCsv', { csv }),
 };
 
-// Institutions CRUD — Electron IPC (yerel SQLite)
+// Institutions CRUD — Electron IPC (local SQLite)
 export const institutionsApi = {
   getAll: () => ipcInvoke<any[]>('institutions:getAll'),
   create: (data: { name: string; address?: string; phone?: string }) =>
@@ -113,7 +113,7 @@ export const institutionsApi = {
   importCsv: (csv: string) => ipcInvoke('institutions:importCsv', { csv }),
 };
 
-// Templates CRUD — Electron IPC (yerel SQLite + sanitize)
+// Templates CRUD — Electron IPC (local SQLite + sanitize)
 export const templatesApi = {
   getAll: () => ipcInvoke<any[]>('templates:getAll'),
   get: (id: number) => ipcInvoke('templates:get', { id }),
@@ -126,7 +126,7 @@ export const templatesApi = {
   setDefault: (id: number) => ipcInvoke('templates:setDefault', { id }),
 };
 
-// Media — Electron IPC (yerel SQLite + Drive URL parsing)
+// Media — Electron IPC (local SQLite + Drive URL parsing)
 export const mediaApi = {
   getAll: (templateId?: number) => ipcInvoke<any[]>('media:getAll', { templateId }),
   create: (data: { name: string; driveUrl: string; mimeType?: string; templateId: number }) =>
@@ -146,11 +146,11 @@ export const bulkApi = {
   analyze: (data: { actionType: string; rows: Record<string, string>[]; lang?: 'tr' | 'en' }) =>
     ipcInvoke('bulk:analyze', data),
 
-  // CSV şablonunu kaydetmek için kullanıcıya dosya seçici açar; URL döndürmez.
+  // Opens a file picker for the user to save the CSV template; does not return a URL.
   downloadTemplate: (actionType: string, lang?: 'tr' | 'en') =>
     ipcInvoke<{ canceled?: boolean; path?: string }>('bulk:downloadTemplate', { actionType, lang }),
 
-  // Job raporu için aynı yaklaşım: kullanıcıya dosya seçici açar.
+  // Same approach for the job report: opens a file picker for the user.
   downloadReport: (jobId: string, format: 'csv' | 'json' = 'csv') =>
     ipcInvoke<{ canceled?: boolean; path?: string }>('jobs:downloadReport', { id: jobId, format }),
 };
@@ -191,19 +191,19 @@ export interface PaginatedJobs {
   pageSize: number;
 }
 
-// Jobs — Electron IPC (yerel SQLite-backed kuyruk; SSE yerine 'jobs:progress' IPC event'i)
+// Jobs — Electron IPC (local SQLite-backed queue; 'jobs:progress' IPC event instead of SSE)
 export const jobsApi = {
   create: (data: { type: string; payload: any }) => ipcInvoke<{ id: string }>('jobs:create', data),
   list: (params?: { status?: string; type?: string; createdBy?: string; limit?: number; page?: number; pageSize?: number }) =>
     ipcInvoke('jobs:list', params || {}),
   get: (id: string) => ipcInvoke<ServerJob>('jobs:get', { id }),
   cancel: (id: string) => ipcInvoke('jobs:cancel', { id }),
-  // SSE yerine IPC event listener kullanılır:
+  // An IPC event listener is used instead of SSE:
   //   window.ipcRenderer.on('jobs:progress', (_, payload) => ...)
   //   window.ipcRenderer.on('jobs:done',     (_, { jobId, status }) => ...)
 };
 
-// Google Groups — Directory + Groups Settings API üzerinden CRUD
+// Google Groups — CRUD via Directory + Groups Settings API
 import type {
   AdminGroup,
   GroupMember,
@@ -262,7 +262,7 @@ export const groupsApi = {
     ipcInvoke<GroupSettings>('groups:updateSettings', { groupKey, settings }),
 };
 
-// İmza Denetimi — Electron IPC (SIGNATURE_AUDIT tarama job'u + BULK_SIGNATURE_PUSH apply)
+// Signature Audit — Electron IPC (SIGNATURE_AUDIT scan job + BULK_SIGNATURE_PUSH apply)
 export type AuditCategory = 'ok' | 'drift' | 'no_signature' | 'missing_data' | 'error';
 export type AuditDepth = 'fast' | 'deep';
 
@@ -284,15 +284,15 @@ export interface SignatureAuditItem {
 }
 
 export const signatureAuditApi = {
-  /** Tarama job'unu kuyruğa alır; ilerleme 'jobs:progress' / 'jobs:done' IPC event'leriyle izlenir. */
+  /** Enqueues the scan job; progress is tracked via 'jobs:progress' / 'jobs:done' IPC events. */
   startScan: (data: { scope: AuditScope; templateId: number; depth: AuditDepth }) =>
     ipcInvoke<{ jobId: string }>('signatureAudit:startScan', data),
 
-  /** Bir tarama job'unun kişi başı sonuçlarını getirir. */
+  /** Fetches the per-person results of a scan job. */
   getItems: (jobId: string) =>
     ipcInvoke<SignatureAuditItem[]>('signatureAudit:getItems', { jobId }),
 
-  /** Seçilen kişilere imzayı uygular (mevcut BULK_SIGNATURE_PUSH worker'ı kullanılır). */
+  /** Applies the signature to the selected people (uses the existing BULK_SIGNATURE_PUSH worker). */
   apply: (data: { emails: string[]; templateId: number }) =>
     ipcInvoke<{ jobId: string }>('signatureAudit:apply', data),
 };

@@ -53,7 +53,7 @@ describe('signatureTokens', () => {
 
         it('alias\'lar EN→TR yönünde çözer, TR→EN yönünde değil', () => {
             const vars = { full_name: 'Ali Veli' };
-            // ad_soyad doğrudan vars'da yok, alias da değil (TOKEN_ALIAS sadece EN→TR)
+            // ad_soyad is not directly in vars, nor is it an alias (TOKEN_ALIAS is EN→TR only)
             expect(resolveVariable('ad_soyad', vars)).toBeUndefined();
         });
     });

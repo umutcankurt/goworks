@@ -29,11 +29,11 @@ describe('phone', () => {
         });
 
         it('kısmi numaralar için aşamalı format döner', () => {
-            // 1 hane girdi → "90 5" (90 prefix + boşluk + tek hane)
+            // 1-digit input → "90 5" (90 prefix + space + single digit)
             expect(formatPhoneNumber('5')).toBe('90 5');
-            // 2 hane girdi → "90 55"
+            // 2-digit input → "90 55"
             expect(formatPhoneNumber('55')).toBe('90 55');
-            // 4 hane girdi → "90 555 1" (3-haneli ilk blok dolar, sonraki blok başlar)
+            // 4-digit input → "90 555 1" (the 3-digit first block fills, the next block starts)
             expect(formatPhoneNumber('5551')).toBe('90 555 1');
         });
     });
@@ -56,9 +56,9 @@ describe('phone', () => {
         });
 
         it('çok kısa girdi (4 haneden az dijital) ham digits döner', () => {
-            // "1" → 90 prefix eklenir, length 3 < 4 → "901" ham döner
+            // "1" → 90 prefix added, length 3 < 4 → returns raw "901"
             expect(formatPhoneForSignature('1')).toBe('901');
-            // "12" → 90+12 = 4 hane, domestic "012" (separator devreye girmez)
+            // "12" → 90+12 = 4 digits, domestic "012" (no separator kicks in)
             expect(formatPhoneForSignature('12')).toBe('012');
         });
 

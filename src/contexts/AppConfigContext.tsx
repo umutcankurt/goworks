@@ -11,8 +11,8 @@ const ERROR_BADGE_MS = 3000;
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 /**
- * IPC henüz yanıt vermeden önceki ilk render için neutral fallback.
- * companyName ve allowedDomain boş — ilk kurulum / onboarding'i tetikler.
+ * Neutral fallback for the first render, before IPC has responded.
+ * companyName and allowedDomain are empty — this triggers initial setup / onboarding.
  */
 const FALLBACK_CONFIG: AppConfigDTO = {
     companyName: '',
@@ -33,17 +33,17 @@ interface AppConfigContextType {
     saveStatus: SaveStatus;
     isLoading: boolean;
     refresh: () => Promise<void>;
-    /** Optimistic, debounced kalıcı kaydetme — UI input'larından çağrılır. */
+    /** Optimistic, debounced persistent save — called from UI inputs. */
     setConfig: (key: keyof AppConfigDTO, value: string | null) => Promise<void>;
-    /** Sadece local context state'ini günceller, IPC'ye yazmaz (canlı preview için). */
+    /** Updates only the local context state, does not write to IPC (for live preview). */
     setConfigLocal: (key: keyof AppConfigDTO, value: string | null) => void;
-    /** Anında IPC'ye yazıp dönen config'i state'e işler (logo gibi tek atımlı işlemlerde). */
+    /** Writes to IPC immediately and applies the returned config to state (for one-shot operations like logo). */
     commitConfig: (key: keyof AppConfigDTO, value: string | null) => Promise<void>;
     uploadLogo: (data: ArrayBuffer, ext: string) => Promise<void>;
     deleteLogo: () => Promise<void>;
-    /** Onboarding tamamlandığında çağrılır — completedAt'i set eder. */
+    /** Called when onboarding completes — sets completedAt. */
     markOnboardingComplete: () => Promise<void>;
-    /** Settings → Genel → "Sihirbazı tekrar başlat" tarafından çağrılır. */
+    /** Called by Settings → General → "Restart wizard". */
     resetOnboarding: () => Promise<void>;
 }
 
@@ -55,8 +55,8 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [isLoading, setIsLoading] = useState(true);
 
-    // Per-key debounce timer'ları — input'tan onChange ile gelen art arda yazımları
-    // birleştirip tek IPC'ye düşürür.
+    // Per-key debounce timers — coalesce successive onChange writes from an input
+    // into a single IPC call.
     const debounceTimers = useRef<Partial<Record<keyof AppConfigDTO, ReturnType<typeof setTimeout>>>>({});
     const statusBadgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -77,7 +77,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
             setLogoDataUrl(typeof dataUrl === 'string' && dataUrl.startsWith('data:') ? dataUrl : null);
         } catch (err) {
             console.error('[AppConfig] failed to load:', err);
-            // Fallback'i koruyoruz; uygulama çalışmaya devam etsin.
+            // Keep the fallback; let the app keep running.
         } finally {
             setIsLoading(false);
         }
@@ -87,9 +87,9 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         refresh();
     }, [refresh]);
 
-    // SQLite'tan dönen dil ile i18n.language farklıysa eşitle.
-    // Login öncesi localStorage fallback ile init olduktan sonra,
-    // SQLite'ta farklı bir tercih varsa burada hizalanır.
+    // Sync if the language returned from SQLite differs from i18n.language.
+    // After initializing from the localStorage fallback before login,
+    // if SQLite holds a different preference it is aligned here.
     useEffect(() => {
         if (isLoading) return;
         const target = config.language;
@@ -100,12 +100,12 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         try { localStorage.setItem(STORAGE_KEY_LANG, target); } catch { /* ignore */ }
     }, [isLoading, config.language]);
 
-    /** Sadece local state — IPC'ye yazmaz; canlı preview için. */
+    /** Local state only — does not write to IPC; for live preview. */
     const setConfigLocal = useCallback((key: keyof AppConfigDTO, value: string | null) => {
         setConfigState((prev) => ({ ...prev, [key]: value as any }));
     }, []);
 
-    /** Anında IPC'ye yazıp dönen config'i state'e işler. */
+    /** Writes to IPC immediately and applies the returned config to state. */
     const commitConfig = useCallback(async (key: keyof AppConfigDTO, value: string | null) => {
         setSaveStatus('saving');
         try {
@@ -113,7 +113,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
             setConfigState(updated);
             flashStatus('saved');
         } catch (err) {
-            // Hata: server'dan gerçek state'i tekrar çek (revert)
+            // Error: re-fetch the real state from the server (revert)
             await refresh();
             flashStatus('error');
             throw err;
@@ -121,12 +121,12 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
     }, [refresh, flashStatus]);
 
     /**
-     * Optimistic + debounced. Input'tan her onChange çağrısında:
-     * 1. Local state'i hemen günceller (UI anlık tepki)
-     * 2. DEBOUNCE_MS sonra IPC'ye yazar (yazım fırtınalarını birleştirir)
+     * Optimistic + debounced. On every onChange call from an input:
+     * 1. Updates local state immediately (instant UI feedback)
+     * 2. Writes to IPC after DEBOUNCE_MS (coalesces typing bursts)
      */
     const setConfig = useCallback((key: keyof AppConfigDTO, value: string | null): Promise<void> => {
-        // 1. Optimistic local update — Sidebar/Header anında yenilenir
+        // 1. Optimistic local update — Sidebar/Header refresh instantly
         setConfigState((prev) => ({ ...prev, [key]: value as any }));
         setSaveStatus('saving');
 
@@ -139,9 +139,9 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
                 debounceTimers.current[key] = undefined;
                 try {
                     const updated = await appConfigApi.set(key, value);
-                    // IPC'den dönen normalize edilmiş değerle senkronla
-                    // (örn. allowedDomain trim+lowercase). Eğer kullanıcı bu sırada
-                    // yeni bir tuşa basmışsa state'i ezmeyelim — pending timer varsa skip.
+                    // Sync with the normalized value returned from IPC
+                    // (e.g. allowedDomain trim+lowercase). If the user pressed
+                    // another key meanwhile, don't clobber state — skip if a pending timer exists.
                     if (!debounceTimers.current[key]) {
                         setConfigState(updated);
                     }
@@ -207,7 +207,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         }
     }, [flashStatus]);
 
-    // Unmount: bekleyen timer'ları temizle
+    // Unmount: clear any pending timers
     useEffect(() => {
         return () => {
             for (const t of Object.values(debounceTimers.current)) {

@@ -3,9 +3,9 @@ import Database from 'better-sqlite3';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-// `electron` import'u test ortamında yok — sadece `app.getPath` runtime'da
-// kullanılıyor (getDb içinde). runMigrations bağımsız çalışır ama modül
-// yüklenirken import resolve edilmeli.
+// The `electron` import isn't available in the test environment — `app.getPath` is
+// only used at runtime (inside getDb). runMigrations works standalone, but the import
+// must still resolve when the module loads.
 vi.mock('electron', () => ({
     app: { getPath: () => '/tmp/goworks-test', isPackaged: false },
 }));
@@ -57,7 +57,7 @@ describe('runMigrations', () => {
     });
 
     it('companyName boş ise onboardingCompletedAt set edilmez (taze kurulum)', () => {
-        // app_config tablosu var ama config satırı yok → taze kurulum
+        // app_config table exists but has no config rows → fresh install
         runMigrations(db);
 
         const completed = db
@@ -84,7 +84,7 @@ describe('runMigrations', () => {
 
         runMigrations(db);
 
-        // v2 olduğu için companyName dolu olsa bile onboardingCompletedAt set edilmez
+        // Since it's already v2, onboardingCompletedAt isn't set even when companyName is populated
         const completed = db
             .prepare("SELECT value FROM app_config WHERE key = 'onboardingCompletedAt'")
             .get();
@@ -92,9 +92,9 @@ describe('runMigrations', () => {
     });
 
     it('app_config tablosu yoksa hata atmaz (cfgExists check)', () => {
-        // Taze bir db kur, app_config tablosunu drop et
+        // Set up a fresh db, drop the app_config table
         const bareDb = new Database(':memory:');
-        // Sadece pragma var, tablolar yok
+        // Only the pragma exists, no tables
         expect(() => runMigrations(bareDb)).not.toThrow();
         expect(bareDb.pragma('user_version', { simple: true })).toBe(2);
     });

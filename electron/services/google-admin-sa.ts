@@ -3,8 +3,8 @@ import https from 'node:https';
 import { getGoogle } from '../google-lazy';
 import { getServiceAccountCredentials } from '../secrets/service-account-loader';
 
-// keepAlive: false — her request yeni TCP bağlantısı kurar.
-// Bulk işlemlerde keep-alive havuzunda zombie socket birikip job'ı kilitliyordu.
+// keepAlive: false — each request establishes a new TCP connection.
+// During bulk operations, zombie sockets piled up in the keep-alive pool and locked the job.
 const customHttpsAgent = new https.Agent({
     keepAlive: false,
     maxSockets: 10,
@@ -140,9 +140,9 @@ export async function updateUser(
 }
 
 /**
- * Tüm kullanıcıları (veya `query` ile filtrelenmiş alt kümeyi) sayfalı olarak listeler.
- * `projection: 'full'` → name/organizations/phones/orgUnitPath profili dolu döner.
- * İmza Denetimi tarama worker'ı kullanır. `query` örn. `"orgUnitPath='/Öğretmenler'"`.
+ * Lists all users (or the subset filtered by `query`) with pagination.
+ * `projection: 'full'` → returns a full name/organizations/phones/orgUnitPath profile.
+ * Used by the Signature Audit scan worker. `query` e.g. `"orgUnitPath='/Öğretmenler'"`.
  */
 export async function listUsers(adminEmail: string, query?: string): Promise<any[]> {
     ensureGoogleOptions();
@@ -170,8 +170,8 @@ export async function listUsers(adminEmail: string, query?: string): Promise<any
 }
 
 /**
- * Bir grubun üyelerini sayfalı olarak listeler ({ email, role, type, status }).
- * Tam profil için her e-posta `getUserInfo` ile ayrıca çekilmelidir.
+ * Lists a group's members with pagination ({ email, role, type, status }).
+ * For the full profile, each email must be fetched separately via `getUserInfo`.
  */
 export async function listGroupMembers(adminEmail: string, groupKey: string): Promise<any[]> {
     ensureGoogleOptions();

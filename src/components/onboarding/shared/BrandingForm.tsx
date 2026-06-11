@@ -7,7 +7,7 @@ import { initialsFrom } from '../../../utils/initials';
 import { LogoUpload } from './LogoUpload';
 
 interface BrandingFormProps {
-    /** Onboarding step "Devam et" butonu validation'a göre disable edilir. */
+    /** The onboarding step's "Devam et" button is disabled based on validation. */
     onValid?: (valid: boolean) => void;
 }
 

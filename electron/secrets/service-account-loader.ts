@@ -6,8 +6,8 @@ interface ServiceAccountKey {
     private_key?: string;
     project_id?: string;
     /**
-     * Numeric Client ID (Service Account'ın "Unique ID" alanı). DWD scope
-     * yetkilendirmesi için Admin Console'a yapıştırılır.
+     * Numeric Client ID (the Service Account's "Unique ID" field). Pasted into the
+     * Admin Console for DWD scope authorization.
      */
     client_id?: string;
 }
@@ -25,27 +25,27 @@ export interface ServiceAccountUploadResult {
 }
 
 /**
- * `GoogleAuth({ credentials })`'a doğrudan verilebilen, parse edilmiş Service
- * Account kimlik bilgileri. Decrypt edilmiş private key yalnızca bu objenin
- * belleğinde yaşar — hiçbir zaman diske düz metin olarak yazılmaz.
+ * Parsed Service Account credentials that can be passed directly to
+ * `GoogleAuth({ credentials })`. The decrypted private key lives only in this
+ * object's memory — it is never written to disk as plain text.
  */
 export interface ServiceAccountCredentials {
     client_email: string;
     private_key: string;
-    /** GoogleAuth `JWTInput` uyumlu — yoksa alan hiç eklenmez (undefined atanmaz). */
+    /** Compatible with GoogleAuth `JWTInput` — if absent, the field is omitted entirely (never assigned undefined). */
     client_id?: string;
 }
 
 /**
- * Şifreli depodan Service Account anahtarını okuyup parse edilmiş credential
- * objesini döndürür. Depo boşsa veya içerik geçersizse `null` döner.
+ * Reads the Service Account key from encrypted storage and returns the parsed
+ * credential object. Returns `null` if the store is empty or the content is invalid.
  *
- * `safeStorage` kullanılamıyorsa (depo dosyası var ama açılamıyor)
- * `serviceAccountStore.get()` hata fırlatır — bu hata bilinçli olarak yukarı
- * taşınır; çağıran (tüketici servis / IPC handler) net hata gösterir.
+ * If `safeStorage` is unavailable (the store file exists but cannot be opened),
+ * `serviceAccountStore.get()` throws — this error is deliberately propagated upward
+ * so the caller (consuming service / IPC handler) can show a clear error.
  *
- * Cache YOK: decrypt+parse ucuz, `GoogleAuth` instance'ları zaten tüketici
- * servislerde cache'leniyor — bu da stale-credential hata sınıfını eler.
+ * NO cache: decrypt+parse is cheap, and `GoogleAuth` instances are already cached in
+ * the consuming services — which also eliminates the stale-credential class of errors.
  */
 export function getServiceAccountCredentials(): ServiceAccountCredentials | null {
     const raw = serviceAccountStore.get();
@@ -73,7 +73,7 @@ export function getStatus(): ServiceAccountStatus {
         if (!creds) return { configured: false, email: null, clientId: null };
         return { configured: true, email: creds.client_email, clientId: creds.client_id ?? null };
     } catch {
-        // safeStorage kullanılamıyor — durum sorgusu sessizce "yapılandırılmamış".
+        // safeStorage unavailable — the status query silently returns "not configured".
         return { configured: false, email: null, clientId: null };
     }
 }
@@ -91,8 +91,8 @@ export function uploadFromContent(content: string): ServiceAccountUploadResult {
     if (!parsed.client_email || !parsed.private_key) {
         throw new Error('Service Account JSON gerekli alanları içermiyor (client_email, private_key)');
     }
-    // safeStorage kullanılamıyorsa burada hata fırlar — IPC handler'ın
-    // try/catch'i UI'a taşır (bkz. boot-check hard-fail politikası).
+    // If safeStorage is unavailable, this throws — the IPC handler's
+    // try/catch surfaces it to the UI (see the boot-check hard-fail policy).
     serviceAccountStore.set(content);
     return {
         configured: true,

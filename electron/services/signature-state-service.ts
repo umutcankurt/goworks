@@ -3,12 +3,12 @@ import { getDb } from '../db';
 import type { TemplateVariables } from './template-renderer';
 
 /**
- * İmza Denetimi durum kaydı.
+ * Signature Audit state record.
  *
- * `signature_state` tablosu, bir kişiye **en son basılan** imzanın parmak izini tutar.
- * `pushSignature` her başarılı push'ta buraya yazar (tek kişi / bulk / denetim — hepsi).
- * Hızlı tarama, güncel veriden hesaplanan hedef hash'i bu kayıttaki `desired_hash` ile
- * karşılaştırarak sapma (drift) tespit eder.
+ * The `signature_state` table holds the fingerprint of the **most recently pushed**
+ * signature for a person. `pushSignature` writes here on every successful push (single /
+ * bulk / audit — all of them). A Fast scan detects drift by comparing the target hash
+ * computed from the current data against `desired_hash` in this record.
  */
 
 export interface SignatureStateRow {
@@ -46,8 +46,8 @@ function toApi(row: SignatureStateDbRow): SignatureStateRow {
 }
 
 /**
- * Render edilmiş imza HTML'inin deterministik parmak izi (SHA-256).
- * Push yolu ve tarama worker'ı bu **aynı** fonksiyonu kullanmalı ki hash'ler birebir uyuşsun.
+ * Deterministic fingerprint (SHA-256) of the rendered signature HTML.
+ * The push path and the scan worker must use this **same** function so the hashes match exactly.
  */
 export function hashSignatureHtml(html: string): string {
     return createHash('sha256').update(html, 'utf8').digest('hex');
@@ -79,9 +79,9 @@ export const signatureStateService = {
     },
 
     /**
-     * Başarılı bir imza push'unun ardından durum kaydını best-effort günceller.
-     * Bir SQLite yazma hatası başarılı bir push'u başarısız saymamalı — hata yutulur.
-     * Tek kişi (`pushSignature`) ve bulk worker (`signature-push-worker`) ortak kullanır.
+     * Best-effort update of the state record after a successful signature push.
+     * A SQLite write error must not make a successful push count as failed — the error is swallowed.
+     * Shared by the single-person path (`pushSignature`) and the bulk worker (`signature-push-worker`).
      */
     recordPush(
         email: string,
@@ -111,7 +111,7 @@ export const signatureStateService = {
     getMany(emails: string[]): Map<string, SignatureStateRow> {
         const result = new Map<string, SignatureStateRow>();
         if (emails.length === 0) return result;
-        // SQLite değişken limiti (999) için parçalara böl
+        // Split into chunks for the SQLite variable limit (999)
         const CHUNK = 400;
         const db = getDb();
         for (let i = 0; i < emails.length; i += CHUNK) {

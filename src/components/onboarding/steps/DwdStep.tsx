@@ -19,9 +19,9 @@ export function DwdStep({ onTestSuccess, onSkip }: DwdStepProps) {
         serverApi.getServiceAccountStatus().then(setStatus).catch(() => setStatus(null));
     }, []);
 
-    // Test başarılı olunca sadece sinyali parent'a iletiriz (footer "İleri"
-    // aktif olur). markOnboardingComplete çağrısı son adımda (CompletionStep)
-    // kullanıcı "Uygulamaya Devam Et" butonuna bastığında yapılır.
+    // When the test succeeds we only relay the signal to the parent (the footer
+    // "İleri" becomes active). The markOnboardingComplete call happens in the
+    // last step (CompletionStep) when the user clicks the "Uygulamaya Devam Et" button.
     const handleSkip = () => {
         if (!window.confirm(t('dwd.skipConfirm'))) return;
         onSkip();

@@ -69,7 +69,7 @@ describe('AuthService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         fsMock.existsSync.mockReturnValue(false);
-        // Faz 31 default: credential yok. Lazy init için.
+        // Phase 31 default: no credentials. For lazy init.
         appConfigMock.get.mockReturnValue('');
         secureStorageMock.getClientSecret.mockReturnValue(null);
         secureStorageMock.hasClientSecret.mockReturnValue(false);

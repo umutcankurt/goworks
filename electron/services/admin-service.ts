@@ -345,13 +345,13 @@ export class AdminService {
             const google = getGoogle();
             const gmail = google.gmail({ version: 'v1', auth: this.authClient });
 
-            // 1. Yönlendirme adresini ekle
+            // 1. Add the forwarding address
             await gmail.users.settings.forwardingAddresses.create({
                 userId: userEmail,
                 requestBody: { forwardingEmail },
             });
 
-            // 2. Yönlendirmeyi etkinleştir (doğrulama gerekmez — admin yetkisiyle)
+            // 2. Enable forwarding (no verification needed — with admin privileges)
             await gmail.users.settings.updateAutoForwarding({
                 userId: userEmail,
                 requestBody: {

@@ -39,7 +39,7 @@ export function useLanguage() {
                     .ipcRenderer;
                 await electronAPI?.invoke?.('app:setLocale', next);
             } catch {
-                /* main process eski versiyonu — no-op */
+                /* older version of the main process — no-op */
             }
         },
         [i18n, language, setConfig],

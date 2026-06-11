@@ -2,13 +2,14 @@
 /**
  * i18n parity check.
  *
- * src/i18n/locales/tr/*.json ve src/i18n/locales/en/*.json arasında
- * key farkı arar. Eksik key'leri rapor eder ve fark varsa exit code 1.
+ * Looks for key differences between src/i18n/locales/tr/*.json and
+ * src/i18n/locales/en/*.json. Reports missing keys and exits with code 1
+ * if there is any difference.
  *
- * Kural: yeni bir t('xxx') eklenince aynı commit'te TR + EN
- * güncellenmeli.
+ * Rule: when a new t('xxx') is added, TR + EN must be updated in the
+ * same commit.
  *
- * Çalıştırma: npm run i18n:check
+ * Run: npm run i18n:check
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -47,13 +48,13 @@ const reports = [];
 
 for (const f of trFiles) {
     if (!enFiles.has(f)) {
-        reports.push(`✗ ${f} TR'de var, EN'de YOK`);
+        reports.push(`✗ ${f} exists in TR, MISSING in EN`);
         hasMismatch = true;
     }
 }
 for (const f of enFiles) {
     if (!trFiles.has(f)) {
-        reports.push(`✗ ${f} EN'de var, TR'de YOK`);
+        reports.push(`✗ ${f} exists in EN, MISSING in TR`);
         hasMismatch = true;
     }
 }
@@ -70,11 +71,11 @@ for (const file of sharedFiles) {
     if (onlyInTr.length || onlyInEn.length) {
         reports.push(`\n📄 ${file}`);
         if (onlyInTr.length) {
-            reports.push(`  TR'de var, EN'de yok (${onlyInTr.length}):`);
+            reports.push(`  in TR, missing in EN (${onlyInTr.length}):`);
             onlyInTr.forEach((k) => reports.push(`    - ${k}`));
         }
         if (onlyInEn.length) {
-            reports.push(`  EN'de var, TR'de yok (${onlyInEn.length}):`);
+            reports.push(`  in EN, missing in TR (${onlyInEn.length}):`);
             onlyInEn.forEach((k) => reports.push(`    - ${k}`));
         }
         hasMismatch = true;
@@ -87,5 +88,5 @@ if (hasMismatch) {
 }
 
 console.log(
-    `✓ i18n parity OK — ${sharedFiles.length} namespace, TR ve EN tutarlı.`,
+    `✓ i18n parity OK — ${sharedFiles.length} namespaces, TR and EN consistent.`,
 );

@@ -1,29 +1,28 @@
 /**
  * GoWorks boot-time config validation + .env migration.
  *
- * `app.whenReady()` sonrası ÇOK ERKEN çağrılır. İki seviye + bir tek-seferlik
- * migration adımı:
+ * Called VERY EARLY after `app.whenReady()`. Two levels + a one-time
+ * migration step:
  *
  * 0. Migration (idempotent):
- *    - .env: Proje kökündeki .env dosyasında GOOGLE_CLIENT_ID veya
- *      GOOGLE_CLIENT_SECRET varsa ve henüz app_config / safeStorage'a
- *      aktarılmadıysa, oraya kopyalanır. Production'da .env → .env.migrated
- *      rename edilir; rename başarısızsa CLIENT_* satırları satır-bazlı silinir.
- *      Development'ta .env dosyası dokunulmaz (yerel akış bozulmasın).
- *    - Service Account: Eski düz-metin `secrets/service-account.json`, şifreli
- *      `secrets/service-account.enc` deposuna taşınır; başarılı şifrelemeden
- *      sonra düz dosya silinir (düz private key diskte kalmamalı).
+ *    - .env: If the .env file at the project root has GOOGLE_CLIENT_ID or
+ *      GOOGLE_CLIENT_SECRET and they haven't been moved to app_config / safeStorage
+ *      yet, they are copied there. In production .env → .env.migrated is renamed;
+ *      if the rename fails, the CLIENT_* lines are removed line-by-line.
+ *      In development the .env file is left untouched (so the local flow isn't broken).
+ *    - Service Account: The legacy plaintext `secrets/service-account.json` is moved
+ *      to the encrypted `secrets/service-account.enc` store; after successful
+ *      encryption the plaintext file is deleted (no plaintext private key on disk).
  *
- * 1. Hard-fail: `dialog.showErrorBox` + `app.exit(1)`. Sadece:
- *    - userData klasörü yazılabilir değil
- *    OAuth credential eksikliği artık hard-fail DEĞİL — onboarding sihirbazı
- *    devreye girer.
+ * 1. Hard-fail: `dialog.showErrorBox` + `app.exit(1)`. Only:
+ *    - userData folder is not writable
+ *    A missing OAuth credential is NO LONGER a hard-fail — the onboarding wizard
+ *    takes over.
  *
- * 2. Soft-warn: logger.warn + return flag. Eksiklik:
- *    - service-account.enc yok ya da decrypt/parse edilemez
+ * 2. Soft-warn: logger.warn + return flag. Missing:
+ *    - service-account.enc is absent or cannot be decrypted/parsed
  *
- * Dev override: `GOWORKS_SKIP_BOOT_CHECK=1` env değişkeni ile tüm kontroller
- * atlanır.
+ * Dev override: the `GOWORKS_SKIP_BOOT_CHECK=1` env variable skips all checks.
  */
 import { app, dialog } from 'electron';
 import * as fs from 'node:fs';
@@ -55,16 +54,16 @@ interface FailureDetail {
 }
 
 /**
- * Native modül probe — better-sqlite3 binary'sinin platform/arch'ı host ile
- * uyuşmuyorsa veya `require()` patlıyorsa hard-fail.
+ * Native module probe — hard-fail if the better-sqlite3 binary's platform/arch
+ * doesn't match the host or if `require()` blows up.
  *
- * Önce magic byte sniff (~32 byte read, dlopen tetiklemez), sonra fiili
- * `require()` ile NODE_MODULE_VERSION mismatch'ini de yakalar. İki katmanın
- * birleşimi: sniff arch mismatch'ini yakalar, require ABI mismatch'ini yakalar.
+ * First a magic byte sniff (~32 byte read, doesn't trigger dlopen), then an actual
+ * `require()` that also catches a NODE_MODULE_VERSION mismatch. The combination of
+ * the two layers: the sniff catches arch mismatch, the require catches ABI mismatch.
  *
- * Bu kontrol `runEnvMigration()`'dan ÖNCE yapılmalı çünkü migration
- * `appConfigService.get()` → `getDb()` zincirini tetikliyor; eğer native modül
- * uyumsuzsa migration kullanışsız bir crash ile çöker.
+ * This check must run BEFORE `runEnvMigration()` because the migration triggers the
+ * `appConfigService.get()` → `getDb()` chain; if the native module is incompatible
+ * the migration fails with an unhelpful crash.
  */
 interface BinaryInfo {
     platform: string;
@@ -143,7 +142,7 @@ function validateNativeModules(): FailureDetail | null {
     const host: BinaryInfo = { platform: process.platform, arch: process.arch };
     const binaryPath = resolveBetterSqliteBinary();
 
-    // 1) Magic byte sniff (cheap, dlopen tetiklemez)
+    // 1) Magic byte sniff (cheap, doesn't trigger dlopen)
     if (binaryPath && fs.existsSync(binaryPath)) {
         try {
             const fd = fs.openSync(binaryPath, 'r');
@@ -167,12 +166,12 @@ function validateNativeModules(): FailureDetail | null {
             }
         } catch (err) {
             logger.warn('[boot-check] native binary sniff başarısız:', err);
-            // Sniff başarısızsa require probe'una düş.
+            // If the sniff fails, fall through to the require probe.
         }
     }
 
-    // 2) Probe load — sniff'in yakalayamadığı NODE_MODULE_VERSION mismatch'ini
-    // (doğru arch, yanlış Electron ABI) burada yakalarız.
+    // 2) Probe load — here we catch the NODE_MODULE_VERSION mismatch the sniff
+    // can't (correct arch, wrong Electron ABI).
     try {
         const requireFromHere = createRequire(import.meta.url);
         requireFromHere('better-sqlite3');
@@ -211,8 +210,9 @@ function validateUserDataWritable(): FailureDetail | null {
 }
 
 function checkServiceAccount(): boolean {
-    // true = eksik/geçersiz. getStatus() şifreli depodan (service-account.enc)
-    // okur; safeStorage yoksa veya içerik bozuksa configured:false döner.
+    // true = missing/invalid. getStatus() reads from the encrypted store
+    // (service-account.enc); if safeStorage is unavailable or the content is
+    // corrupt it returns configured:false.
     try {
         return !getStatus().configured;
     } catch {
@@ -221,16 +221,16 @@ function checkServiceAccount(): boolean {
 }
 
 /**
- * Eski düz-metin Service Account anahtarını (`secrets/service-account.json`)
- * şifreli depoya (`secrets/service-account.enc`) taşır.
+ * Moves the legacy plaintext Service Account key (`secrets/service-account.json`)
+ * into the encrypted store (`secrets/service-account.enc`).
  *
- * - Düz dosya yoksa atlanır.
- * - `.enc` zaten varsa: artakalan düz dosya yine de silinir (düz private key
- *   diskte kalmamalı), migration atlanır.
- * - Şifreleme başarılı olursa düz dosya silinir — `.migrated` rename EDİLMEZ,
- *   çünkü o da diskte düz bir private key bırakır.
- * - safeStorage kullanılamıyorsa düz dosya KORUNUR (tek kopya yok edilmez).
- * Tüm adımlar idempotent.
+ * - Skipped if the plaintext file doesn't exist.
+ * - If `.enc` already exists: the leftover plaintext file is still deleted (no
+ *   plaintext private key on disk) and the migration is skipped.
+ * - If encryption succeeds, the plaintext file is deleted — it is NOT renamed to
+ *   `.migrated`, because that would also leave a plaintext private key on disk.
+ * - If safeStorage is unavailable, the plaintext file is KEPT (the only copy isn't destroyed).
+ * All steps are idempotent.
  */
 function runServiceAccountMigration(): void {
     const plainPath = path.join(app.getPath('userData'), 'secrets', 'service-account.json');
@@ -254,7 +254,7 @@ function runServiceAccountMigration(): void {
         return;
     }
 
-    // Doğrulanamayan veriyi yok etme — sadece geçerli SA JSON taşınır.
+    // Don't destroy unverifiable data — only valid SA JSON is migrated.
     try {
         const json = JSON.parse(raw) as {
             type?: string;
@@ -275,7 +275,7 @@ function runServiceAccountMigration(): void {
     try {
         serviceAccountStore.set(raw);
     } catch (err) {
-        // safeStorage kullanılamıyor — düz dosyayı koru, tek kopya kaybolmasın.
+        // safeStorage unavailable — keep the plaintext file so the only copy isn't lost.
         logger.warn('[boot-check] Service Account şifreli depoya yazılamadı, düz dosya korunuyor:', err);
         return;
     }
@@ -289,12 +289,12 @@ function runServiceAccountMigration(): void {
 }
 
 /**
- * Eski `.env` tabanlı kurulumları otomatik app_config + safeStorage'a taşı.
+ * Automatically migrates legacy `.env`-based setups to app_config + safeStorage.
  *
- * - Sadece app_config'de googleClientId boşsa clientId yazılır.
- * - Sadece safeStorage'da secret yoksa secret yazılır.
- * - Production'da migration sonrası .env temizliği uygulanır.
- * - Tüm adımlar idempotent: değer zaten yerindeyse atlanır.
+ * - clientId is written only if googleClientId in app_config is empty.
+ * - secret is written only if there's no secret in safeStorage.
+ * - In production, .env cleanup is applied after migration.
+ * - All steps are idempotent: skipped if the value is already in place.
  */
 function runEnvMigration(): void {
     const envPath = path.join(process.env.APP_ROOT ?? process.cwd(), '.env');
@@ -329,17 +329,17 @@ function runEnvMigration(): void {
             logger.info('[boot-check] .env → safeStorage: clientSecret migrated.');
             migratedAnything = true;
         } catch (err) {
-            // safeStorage kullanılamıyor olabilir (Linux headless vb.). Migration
-            // başarısız olsa da uygulama açılmaya devam; kullanıcı onboarding ile
-            // yeniden girebilir.
+            // safeStorage may be unavailable (Linux headless, etc.). Even if the
+            // migration fails the app keeps starting; the user can re-enter the
+            // value via onboarding.
             logger.warn('[boot-check] clientSecret migration başarısız:', err);
         }
     }
 
     if (!migratedAnything) return;
 
-    // Production'da .env temizliği. Dev'de dokunmuyoruz ki `npm run dev` akışı
-    // bozulmasın.
+    // .env cleanup in production. We don't touch it in dev so the `npm run dev`
+    // flow isn't broken.
     if (!app.isPackaged) {
         logger.info('[boot-check] Development modu — .env dosyası korunuyor.');
         return;
@@ -357,7 +357,7 @@ function runEnvMigration(): void {
         );
     }
 
-    // Fallback: rename fail ettiyse satırları temizleyelim.
+    // Fallback: if the rename failed, clean up the lines instead.
     try {
         const cleaned = raw
             .split(/\r?\n/)
@@ -382,8 +382,8 @@ export interface BootCheckResult {
 }
 
 /**
- * Çağıran: `electron/main.ts` `app.whenReady()` sonrası. Hard-fail durumunda
- * dialog gösterir ve `app.exit(1)` çağırır.
+ * Caller: `electron/main.ts` after `app.whenReady()`. On a hard-fail it shows a
+ * dialog and calls `app.exit(1)`.
  */
 export function runBootCheck(): BootCheckResult {
     if (process.env.GOWORKS_SKIP_BOOT_CHECK === '1') {
@@ -395,8 +395,9 @@ export function runBootCheck(): BootCheckResult {
         };
     }
 
-    // Native modül probe EN ÖNCE — runEnvMigration() ve sonrası DB'yi çağırıyor;
-    // better-sqlite3 patlarsa downstream'in tamamı bilinmez bir zincire girer.
+    // Native module probe FIRST — runEnvMigration() and everything after it call
+    // the DB; if better-sqlite3 blows up, the whole downstream enters an
+    // unpredictable chain.
     const hardChecks: Array<{ name: string; fn: () => FailureDetail | null }> = [
         { name: 'native-modules', fn: validateNativeModules },
         { name: 'userdata-writable', fn: validateUserDataWritable },
@@ -412,16 +413,16 @@ export function runBootCheck(): BootCheckResult {
         }
     }
 
-    // Migration: hard-check'ler temiz geçtikten sonra; app_config dolarsa
-    // downstream tüm kontroller doğru değerleri görür.
+    // Migration: after the hard-checks pass cleanly; once app_config is populated
+    // all downstream checks see the correct values.
     try {
         runEnvMigration();
     } catch (err) {
         logger.warn('[boot-check] runEnvMigration() beklenmeyen hata:', err);
     }
 
-    // Service Account migration: checkServiceAccount()'tan ÖNCE çalışmalı ki
-    // getStatus() taze şifrelenmiş .enc dosyasını görsün.
+    // Service Account migration: must run BEFORE checkServiceAccount() so that
+    // getStatus() sees the freshly encrypted .enc file.
     try {
         runServiceAccountMigration();
     } catch (err) {
