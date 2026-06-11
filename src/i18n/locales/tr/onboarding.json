@@ -97,14 +97,18 @@
       },
       {
         "title": "API'leri etkinleştirin",
-        "body": "Sağdaki listedeki dört API'yi tek tek arayıp \"Etkinleştir\"e basın."
+        "body": "Sağdaki listedeki üç API'yi tek tek arayıp \"Etkinleştir\"e basın."
+      },
+      {
+        "title": "İzin ekranını yapılandırın",
+        "body": "API'ler ve Servisler → OAuth izin ekranı → Kullanıcı Türü Dahili (Internal) → uygulama adı ve destek e-postasını girin. Dahili uygulamalar Google doğrulaması veya test kullanıcısı gerektirmez."
       },
       {
         "title": "Bir sonraki adıma hazırsınız",
-        "body": "API'ler etkinleştikten sonra Service Account adımına geçebilirsiniz."
+        "body": "İzin ekranı ayarlandıktan sonra Service Account adımına geçebilirsiniz."
       }
     ],
-    "apisTitle": "Etkinleştirilecek API'ler (4)",
+    "apisTitle": "Etkinleştirilecek API'ler ({{count}})",
     "enableButton": "Cloud Console'da aç",
     "openConsole": "Cloud Console'u aç",
     "tip": "İpucu: Bir API'yi etkinleştirmeden önce arama kutusuna tam adını yazın; benzer isimli farklı API'ler olabilir.",
@@ -196,9 +200,10 @@
       "Firma bilgileri kaydedildi",
       "Google Cloud projesi hazır",
       "Service Account anahtarı yüklendi",
-      "Yönetici girişi yapıldı",
-      "Domain-Wide Delegation doğrulandı"
+      "Yönetici girişi yapıldı"
     ],
+    "dwdVerified": "Domain-Wide Delegation doğrulandı",
+    "dwdPending": "Domain-Wide Delegation beklemede — Ayarlar → Genel'den tamamlayın",
     "cta": "Uygulamaya Devam Et",
     "resetNote": "Sihirbazı tekrar çalıştırmak için Ayarlar → Genel'den dilediğiniz zaman erişebilirsiniz."
   },

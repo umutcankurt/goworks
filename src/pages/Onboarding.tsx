@@ -23,30 +23,30 @@ export function Onboarding() {
     const { addToast } = useToast();
     const { t } = useTranslation('onboarding');
 
-    // Kalan-yerden-devam: DB'deki step null değilse oradan başla.
-    // Sadece ilk mount'ta kullanılır; sonraki güncellemeler local state üstünden gider.
+    // Resume-from-where-left-off: if the step in the DB is not null, start from there.
+    // Only used on the first mount; subsequent updates go through local state.
     const initialStep = useMemo<OnboardingStep>(
         () => (config.onboardingStep ?? 'welcome'),
         [],
     );
     const [step, setStep] = useState<OnboardingStep>(initialStep);
 
-    // Per-step "next butonunu aktif et" sinyalleri
+    // Per-step "enable the next button" signals
     const [brandingValid, setBrandingValid] = useState(false);
     const [cloudCredentialsValid, setCloudCredentialsValid] = useState(false);
     const [serviceAccountStatus, setServiceAccountStatus] = useState<ServiceAccountStatus | null>(null);
     const [dwdVerified, setDwdVerified] = useState(false);
 
     useEffect(() => {
-        // Step değiştikçe DB'ye kalan-yerden-devam için yaz.
-        // welcome (default başlangıç) ve completion (son adım, completion burada) hariç.
+        // As the step changes, write it to the DB for resume-from-where-left-off.
+        // Except welcome (default start) and completion (final step, completion handled here).
         if (step === 'welcome' || step === 'completion') return;
         setConfig('onboardingStep', step).catch(() => {
-            // Sessiz: persist başarısız olsa bile akış devam etsin.
+            // Silent: even if persisting fails, let the flow continue.
         });
     }, [step, setConfig]);
 
-    // admin-login adımındayken kullanıcı login olduğunda DWD adımına otomatik geç.
+    // While on the admin-login step, automatically advance to the DWD step once the user logs in.
     useEffect(() => {
         if (step === 'admin-login' && isAuthenticated) {
             setStep('dwd');
@@ -106,7 +106,7 @@ export function Onboarding() {
             break;
         case 'completion':
             canGoNext = false;
-            stepNode = <CompletionStep />;
+            stepNode = <CompletionStep dwdVerified={dwdVerified} />;
             break;
     }
 

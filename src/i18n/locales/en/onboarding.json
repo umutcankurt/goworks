@@ -97,14 +97,18 @@
       },
       {
         "title": "Enable APIs",
-        "body": "Search for and enable the four APIs listed on the right one by one."
+        "body": "Search for and enable the three APIs listed on the right one by one."
+      },
+      {
+        "title": "Configure the consent screen",
+        "body": "APIs & Services → OAuth consent screen → choose User Type Internal → enter app name and support email. Internal apps need no Google verification or test users."
       },
       {
         "title": "Ready for the next step",
-        "body": "Once the APIs are enabled, you can move on to the Service Account step."
+        "body": "Once the consent screen is set, you can move on to the Service Account step."
       }
     ],
-    "apisTitle": "APIs to enable (4)",
+    "apisTitle": "APIs to enable ({{count}})",
     "enableButton": "Open in Cloud Console",
     "openConsole": "Open Cloud Console",
     "tip": "Tip: type the full API name in the search box — multiple APIs share similar prefixes.",
@@ -196,9 +200,10 @@
       "Company details saved",
       "Google Cloud project ready",
       "Service Account key uploaded",
-      "Admin sign-in completed",
-      "Domain-Wide Delegation verified"
+      "Admin sign-in completed"
     ],
+    "dwdVerified": "Domain-Wide Delegation verified",
+    "dwdPending": "Domain-Wide Delegation pending — finish from Settings → General",
     "cta": "Continue to App",
     "resetNote": "You can re-run the wizard any time from Settings → General."
   },

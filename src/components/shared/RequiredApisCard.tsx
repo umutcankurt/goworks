@@ -30,7 +30,7 @@ export function RequiredApisCard({
         return (
             <Card tone="elevated" padding="md" className={className}>
                 <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-on-surface-variant">
-                    {tOnboarding('cloud.apisTitle')}
+                    {tOnboarding('cloud.apisTitle', { count: REQUIRED_GOOGLE_APIS.length })}
                 </div>
                 <ul className="mt-3 space-y-2">
                     {REQUIRED_GOOGLE_APIS.map((api) => (

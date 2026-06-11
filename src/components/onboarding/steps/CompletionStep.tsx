@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, ArrowRight, Check } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Check, Clock } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useAppConfig } from '../../../contexts/AppConfigContext';
 
-export function CompletionStep() {
+interface CompletionStepProps {
+    dwdVerified?: boolean;
+}
+
+export function CompletionStep({ dwdVerified }: CompletionStepProps) {
     const { t } = useTranslation('onboarding');
     const { markOnboardingComplete } = useAppConfig();
     const [busy, setBusy] = useState(false);
@@ -17,7 +21,7 @@ export function CompletionStep() {
         setError(null);
         try {
             await markOnboardingComplete();
-            // OnboardingGate onboardingCompletedAt'i görünce / 'a yönlendirir.
+            // Once OnboardingGate sees onboardingCompletedAt, it redirects to /.
         } catch (err: any) {
             setError(err?.message || 'Failed');
             setBusy(false);
@@ -51,6 +55,17 @@ export function CompletionStep() {
                             <span>{item}</span>
                         </li>
                     ))}
+                    {dwdVerified ? (
+                        <li className="flex items-center gap-3 text-sm text-on-surface">
+                            <Check className="h-5 w-5 shrink-0 text-eth-secondary" />
+                            <span>{t('completion.dwdVerified')}</span>
+                        </li>
+                    ) : (
+                        <li className="flex items-center gap-3 text-sm text-on-surface-variant">
+                            <Clock className="h-5 w-5 shrink-0 text-on-surface-variant" />
+                            <span>{t('completion.dwdPending')}</span>
+                        </li>
+                    )}
                 </ul>
             </div>
 
