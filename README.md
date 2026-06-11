@@ -63,7 +63,15 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 ## Screenshots
 
-<!-- TODO: add screenshots or a short GIF of the Dashboard, Bulk Operations, and the Signature editor here -->
+<!--
+  Add screenshots to docs/screenshots/ (see docs/screenshots/README.md for the
+  expected filenames and capture guidelines), then uncomment the lines below.
+
+  ![Dashboard](docs/screenshots/dashboard.png)
+  ![Bulk Operations](docs/screenshots/bulk-operations.png)
+  ![Gmail signature editor](docs/screenshots/signature-editor.png)
+  ![Onboarding wizard](docs/screenshots/onboarding.png)
+-->
 _Screenshots coming soon._
 
 ## Tech Stack
@@ -192,9 +200,11 @@ See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference.
 - **Idle auto-logout** — the session ends after 2 hours of inactivity.
 - Never commit your `.env` or `service-account.json` — both are git-ignored by default.
 
+Found a vulnerability? Please report it privately — see [`SECURITY.md`](SECURITY.md).
+
 ## Contributing
 
-Contributions, issues, and feature requests are welcome. Before opening a pull request, please make sure the local checks pass:
+Contributions, issues, and feature requests are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development setup and conventions. Before opening a pull request, please make sure the local checks pass:
 
 ```bash
 npm run lint      # ESLint, zero warnings

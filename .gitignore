@@ -18,13 +18,9 @@ secrets/
 # electron/secrets/ altındaki TS source dosyaları kod tabanına aittir; secrets/ deseninden hariç tut.
 !electron/secrets/
 !electron/secrets/*.ts
-server/secrets/
 *.pem
 *.p12
 service-account*.json
-
-# Server build output
-server/dist/
 
 # Editor directories and files
 .vscode/*
@@ -41,11 +37,15 @@ server/dist/
 .env
 .env.local
 .env.production
-server/.env
 
 # Agent data
 .agents/
 .claude/
+
+# Internal development artifacts (not part of the public project)
+memory-bank/
+plans/
+referans-tasarimlar/
 
 # Release builds (electron-builder output)
 release/

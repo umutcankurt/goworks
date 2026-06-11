@@ -63,7 +63,16 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 ## Ekran Görüntüleri
 
-<!-- YAPILACAK: buraya Panel, Toplu İşlemler ve İmza editörünün ekran görüntüleri veya kısa bir GIF ekleyin -->
+<!--
+  Ekran görüntülerini docs/screenshots/ klasörüne ekleyin (beklenen dosya adları
+  ve yakalama kuralları için bkz. docs/screenshots/README.md), ardından aşağıdaki
+  satırların yorumunu kaldırın.
+
+  ![Panel](docs/screenshots/dashboard.png)
+  ![Toplu İşlemler](docs/screenshots/bulk-operations.png)
+  ![Gmail imza editörü](docs/screenshots/signature-editor.png)
+  ![Kurulum sihirbazı](docs/screenshots/onboarding.png)
+-->
 _Ekran görüntüleri yakında._
 
 ## Teknoloji Yığını
@@ -192,9 +201,11 @@ Daha derin bir mimari referansı için [`CLAUDE.md`](CLAUDE.md) dosyasına bakı
 - **Boşta otomatik çıkış** — oturum, 2 saat hareketsizlikten sonra sona erer.
 - `.env` veya `service-account.json` dosyalarınızı asla commit etmeyin — ikisi de varsayılan olarak git tarafından yok sayılır.
 
+Bir güvenlik açığı mı buldunuz? Lütfen özel olarak bildirin — bkz. [`SECURITY.md`](SECURITY.md).
+
 ## Katkıda Bulunma
 
-Katkılar, sorun bildirimleri ve özellik istekleri memnuniyetle karşılanır. Bir pull request açmadan önce lütfen yerel kontrollerin geçtiğinden emin olun:
+Katkılar, sorun bildirimleri ve özellik istekleri memnuniyetle karşılanır. Geliştirme kurulumu ve kurallar için [`CONTRIBUTING.md`](CONTRIBUTING.md) dosyasına bakın. Bir pull request açmadan önce lütfen yerel kontrollerin geçtiğinden emin olun:
 
 ```bash
 npm run lint      # ESLint, sıfır uyarı
