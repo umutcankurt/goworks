@@ -26,6 +26,7 @@ import {
     readSync,
     closeSync,
     copyFileSync,
+    renameSync,
     mkdirSync,
     rmSync,
     statSync,
@@ -241,7 +242,15 @@ function cmdUse(mode) {
     if (!existsSync(path.dirname(binaryPath))) {
         mkdirSync(path.dirname(binaryPath), { recursive: true });
     }
-    copyFileSync(src, binaryPath);
+    // Atomic-rename swap (NOT an in-place copyFileSync). On Apple Silicon, overwriting
+    // a code-signed .node at the same inode leaves the kernel's cached cdhash stale;
+    // the next `new Database()` page-in detects a hash mismatch and SIGKILLs the
+    // process (exit 137) — surfacing as "vitest worker exited unexpectedly". Writing
+    // to a temp file and renaming gives the path a fresh inode with no stale cache,
+    // so signature validation passes. The bytes are identical either way.
+    const tmp = `${binaryPath}.swap-${process.pid}`;
+    copyFileSync(src, tmp);
+    renameSync(tmp, binaryPath);
     console.log(`✓ [sqlite-binary] ${mode} ABI binary active (${path.relative(process.cwd(), binaryPath)})`);
 }
 
