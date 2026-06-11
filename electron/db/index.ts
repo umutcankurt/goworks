@@ -82,7 +82,6 @@ export function getDb(): Database.Database {
     db.exec(schema);
 
     dbInstance = db;
-    console.log(`[db] SQLite ready at ${dbPath}`);
     return db;
 }
 

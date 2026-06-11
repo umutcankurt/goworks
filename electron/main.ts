@@ -1480,7 +1480,6 @@ app.whenReady().then(async () => {
   const refreshDashboardCache = async () => {
     if (!authService?.isAuthenticated()) return;
     try {
-      console.log('Arka planda dashboard cache güncelleniyor...');
       const [storage, users, recent] = await Promise.all([
         ensureAdminService().getCustomerStorageUsage(),
         ensureAdminService().getCustomerUserCounts(),

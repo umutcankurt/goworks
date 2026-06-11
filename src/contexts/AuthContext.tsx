@@ -44,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         checkAuth();
 
         const handleAutoLogout = () => {
-            console.log("Auto-logout initialized by system idle / system request.");
             setUser(null);
             localStorage.removeItem('auth_user');
         };
