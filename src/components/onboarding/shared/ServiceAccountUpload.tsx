@@ -16,6 +16,7 @@ export function ServiceAccountUpload({ onStatusChange }: ServiceAccountUploadPro
     const [status, setStatus] = useState<ServiceAccountStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
 
     const refresh = useCallback(async () => {
         try {
@@ -96,8 +97,31 @@ export function ServiceAccountUpload({ onStatusChange }: ServiceAccountUploadPro
                     </Button>
                 </div>
             ) : (
-                <label className="block cursor-pointer">
-                    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-eth-primary-container/30 bg-surface-container-high px-6 py-10 text-center transition-colors hover:bg-surface-container-highest">
+                <label
+                    className="block cursor-pointer"
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        if (!busy) setDragActive(true);
+                    }}
+                    onDragLeave={(e) => {
+                        e.preventDefault();
+                        setDragActive(false);
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        setDragActive(false);
+                        if (busy) return;
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) handleFile(f);
+                    }}
+                >
+                    <div
+                        className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+                            dragActive
+                                ? 'border-eth-primary-container/60 bg-surface-container-highest'
+                                : 'border-eth-primary-container/30 bg-surface-container-high hover:bg-surface-container-highest'
+                        }`}
+                    >
                         <Upload className="h-12 w-12 text-eth-primary-container" />
                         <div>
                             <div className="font-semibold text-on-surface">
