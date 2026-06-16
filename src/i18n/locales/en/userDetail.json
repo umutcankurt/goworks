@@ -5,7 +5,8 @@
   "badges": {
     "suspended": "Suspended",
     "active": "Active",
-    "admin": "Admin"
+    "admin": "Admin",
+    "superAdmin": "Super Admin"
   },
   "tabs": {
     "overview": "Overview",

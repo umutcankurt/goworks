@@ -5,7 +5,8 @@
   "badges": {
     "suspended": "Askıya Alındı",
     "active": "Aktif Hesap",
-    "admin": "Admin"
+    "admin": "Admin",
+    "superAdmin": "Super Admin"
   },
   "tabs": {
     "overview": "Genel Bakış",

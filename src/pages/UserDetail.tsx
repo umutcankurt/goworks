@@ -630,7 +630,7 @@ export const UserDetail: React.FC = () => {
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-eth-secondary/15 text-eth-secondary">{t('badges.active')}</span>
                         )}
                         {user.isAdmin && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-eth-primary-container/15 text-eth-primary">{t('badges.admin')}</span>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-eth-primary-container/15 text-eth-primary">{t('badges.superAdmin')}</span>
                         )}
                     </h1>
                     <p className="text-on-surface-variant">{user.primaryEmail}</p>
