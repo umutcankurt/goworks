@@ -6,7 +6,8 @@
   "unexpectedError": "Giriş sırasında beklenmeyen bir hata oluştu.",
   "footer": {
     "tagline": "GoWorks · Workspace Yönetim Aracı",
-    "lastUpdate": "Son Güncelleme: 17 Nisan 2026",
+    "version": "Sürüm {{version}}",
+    "lastUpdate": "Son güncelleme: {{date}}",
     "author": "umutcankurt",
     "authorUrl": "https://github.com/umutcankurt"
   }

@@ -1,11 +1,41 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
 import dotenv from 'dotenv'
 
 // Load .env at build time (for the developer environment)
 dotenv.config()
+
+// Build-time constants surfaced to the renderer (Login footer, About tab).
+// Version tracks package.json; build date is stamped at the build moment, so
+// both update automatically on every build with no manual edits.
+const pkg = JSON.parse(
+  readFileSync(path.join(__dirname, 'package.json'), 'utf-8'),
+) as { version: string }
+const APP_VERSION = pkg.version
+const BUILD_DATE = new Date().toISOString()
+
+/**
+ * Stamps the version + build date into src/build-info.ts by replacing its
+ * literal placeholders. Runs in both dev and build so the values are always
+ * current; consumers import the resulting constants from build-info.ts.
+ */
+function buildInfoPlugin() {
+  return {
+    name: 'goworks-build-info',
+    enforce: 'pre' as const,
+    transform(code: string, id: string) {
+      if (id.replace(/\\/g, '/').endsWith('/src/build-info.ts')) {
+        return code
+          .replaceAll('__GOWORKS_APP_VERSION__', APP_VERSION)
+          .replaceAll('__GOWORKS_BUILD_DATE__', BUILD_DATE)
+      }
+      return null
+    },
+  }
+}
 
 const MAIN_EXTERNALS = [
   'googleapis',
@@ -40,6 +70,7 @@ export default defineConfig({
     ],
   },
   plugins: [
+    buildInfoPlugin(),
     react(),
     electron({
       main: {

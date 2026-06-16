@@ -7,13 +7,21 @@ import { motion } from 'framer-motion';
 import { ShieldAlert, Fingerprint, Loader2 } from 'lucide-react';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { APP_VERSION, BUILD_DATE } from '../build-info';
 
 export function Login() {
     const { login, isAuthenticated, isLoading } = useAuth();
     const { config } = useAppConfig();
     const navigate = useNavigate();
-    const { t } = useTranslation('login');
+    const { t, i18n } = useTranslation('login');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    // Version + build date are injected at build time (vite.config.ts `define`),
+    // so they update automatically on every build — no manual edits.
+    const buildDate = new Intl.DateTimeFormat(
+        i18n.language === 'tr' ? 'tr-TR' : 'en-US',
+        { year: 'numeric', month: 'long', day: 'numeric' },
+    ).format(new Date(BUILD_DATE));
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -99,7 +107,8 @@ export function Login() {
 
                     <div className="mt-8 flex flex-col items-center space-y-1 text-on-surface-variant text-xs">
                         <p>{t('footer.tagline')}</p>
-                        <p>{t('footer.lastUpdate')}</p>
+                        <p>{t('footer.version', { version: APP_VERSION })}</p>
+                        <p>{t('footer.lastUpdate', { date: buildDate })}</p>
                         <p>
                             <a
                                 href={t('footer.authorUrl')}
