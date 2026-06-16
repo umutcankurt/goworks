@@ -18,7 +18,7 @@ export function Footer({ current, canGoNext, onBack, onNext, showCounter = true 
     const isFirst = idx <= 0;
 
     return (
-        <footer className="flex items-center justify-between border-t border-white/5 bg-surface-container-low/60 px-8 py-4 backdrop-blur-md">
+        <footer className="flex shrink-0 items-center justify-between border-t border-white/5 bg-surface-container-low/60 px-8 py-4 backdrop-blur-md">
             <Button
                 variant="secondary"
                 leftIcon={<ArrowLeft className="h-4 w-4" />}

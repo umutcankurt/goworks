@@ -29,7 +29,7 @@ export function OnboardingShell({
             <div className="flex h-screen flex-col overflow-hidden md:ml-[280px]">
                 <Header />
 
-                <main className="flex-1 min-h-0 overflow-hidden px-8 py-4">{children}</main>
+                <main className="flex-1 min-h-0 overflow-y-auto px-8 py-4">{children}</main>
 
                 {showFooter && (
                     <Footer
