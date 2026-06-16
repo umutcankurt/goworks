@@ -25,6 +25,10 @@
     "signature_push": {
       "label": "İmza Gönder",
       "description": "Gmail imzasını günceller ve profili senkronize eder"
+    },
+    "add_to_group": {
+      "label": "Gruba Üye Ekle",
+      "description": "CSV'deki kişileri belirtilen gruplara ekler (rol kolonu boşsa MEMBER)"
     }
   },
   "actionSelector": {
@@ -79,7 +83,7 @@
         "icon": "info",
         "heading": "Genel Bakış",
         "paragraphs": [
-          "Toplu İşlemler, bir CSV dosyasından okunan çok sayıda kullanıcıya aynı anda işlem uygulamanızı sağlar: Gmail imzası gönderme, askıya alma veya kalıcı silme."
+          "Toplu İşlemler, bir CSV dosyasından okunan çok sayıda kullanıcıya aynı anda işlem uygulamanızı sağlar: Gmail imzası gönderme, askıya alma, kalıcı silme veya kullanıcıları gruplara ekleme."
         ]
       },
       {
@@ -87,7 +91,7 @@
         "heading": "Adım Adım",
         "paragraphs": ["Sayfa dört adımlı bir sihirbazdır:"],
         "bullets": [
-          { "term": "1. İşlem Seçimi:", "desc": "İmza Gönder, Askıya Al veya Sil seçeneklerinden birini seçin." },
+          { "term": "1. İşlem Seçimi:", "desc": "İmza Gönder, Askıya Al, Sil veya Gruba Üye Ekle seçeneklerinden birini seçin." },
           { "term": "2. CSV Yükleme:", "desc": "İşlenecek kullanıcıları içeren CSV dosyasını yükleyin." },
           { "term": "3. Analiz:", "desc": "Geçerli ve hatalı satırlar listelenir; hatalıları atlayıp devam edebilirsiniz." },
           { "term": "4. Çalıştırma:", "desc": "İşlem başlar ve ilerleme anlık olarak gösterilir." }
@@ -97,7 +101,8 @@
         "icon": "file",
         "heading": "CSV Şablonu",
         "paragraphs": [
-          "Her işlem türünün kendine özel sütunları vardır. CSV Yükleme adımındaki \"Şablon CSV İndir\" butonuyla doğru formatta boş bir dosya indirip doldurabilirsiniz."
+          "Her işlem türünün kendine özel sütunları vardır. CSV Yükleme adımındaki \"Şablon CSV İndir\" butonuyla doğru formatta boş bir dosya indirip doldurabilirsiniz.",
+          "Örneğin <b>Gruba Üye Ekle</b> için kolonlar <code>grup_email</code>, <code>email</code> ve <code>rol</code>'dür; <code>rol</code> boş bırakılırsa <code>MEMBER</code> kabul edilir. Aynı kişi farklı gruplara eklenebilir."
         ]
       },
       {

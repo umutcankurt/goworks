@@ -23,6 +23,9 @@ describe('bulkColumns', () => {
             expect(canonicalColumn('title')).toBe('unvan');
             expect(canonicalColumn('institution_name')).toBe('kurum_adi');
             expect(canonicalColumn('phone')).toBe('telefon');
+            expect(canonicalColumn('group_email')).toBe('grup_email');
+            expect(canonicalColumn('group')).toBe('grup_email');
+            expect(canonicalColumn('role')).toBe('rol');
         });
 
         it('case-insensitive: büyük/küçük harf ayırt etmez', () => {
@@ -142,6 +145,14 @@ describe('bulkColumns', () => {
                 'institution_name',
                 'phone',
             ]);
+        });
+
+        it('add_to_group: TR başlıklar grup_email/email/rol', () => {
+            expect(localeColumnsForAction('add_to_group', 'tr')).toEqual(['grup_email', 'email', 'rol']);
+        });
+
+        it('add_to_group: EN başlıklar group_email/email/role', () => {
+            expect(localeColumnsForAction('add_to_group', 'en')).toEqual(['group_email', 'email', 'role']);
         });
     });
 

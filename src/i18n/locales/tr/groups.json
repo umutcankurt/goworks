@@ -80,7 +80,8 @@
           { "term": "Üyeler:", "desc": "Üye ekleme/çıkarma ve rol (Sahip / Yönetici / Üye) atama." },
           { "term": "Erişim Ayarları:", "desc": "Kimlerin gruba mesaj gönderebileceği ve içeriği görebileceği." },
           { "term": "Alias:", "desc": "Gruba ek (takma) e-posta adresleri tanımlama." }
-        ]
+        ],
+        "callout": { "tone": "info", "text": "Çok sayıda üyeyi tek seferde eklemek için <b>Toplu İşlemler → Gruba Üye Ekle</b> akışını (CSV tabanlı) kullanın." }
       },
       {
         "icon": "info",

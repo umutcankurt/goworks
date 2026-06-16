@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { UserX, Trash2, FileSignature, ChevronRight } from 'lucide-react';
+import { UserX, Trash2, FileSignature, UserPlus, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { BulkActionType } from '../../types/admin';
 import { BULK_ACTION_CONFIGS } from '../../config/bulk-action-config';
@@ -13,6 +13,7 @@ const ICONS: Record<string, React.ElementType> = {
     UserX,
     Trash2,
     FileSignature,
+    UserPlus,
 };
 
 export const ActionSelector: React.FC<ActionSelectorProps> = ({ onSelect }) => {
@@ -37,6 +38,8 @@ export const ActionSelector: React.FC<ActionSelectorProps> = ({ onSelect }) => {
                                 ? 'bg-eth-danger/15 text-eth-danger'
                                 : config.type === 'signature_push'
                                 ? 'bg-violet-500/15 text-violet-500'
+                                : config.type === 'add_to_group'
+                                ? 'bg-sky-500/15 text-sky-500'
                                 : 'bg-amber-500/15 text-amber-500'
                         }`}>
                             <Icon size={22} />

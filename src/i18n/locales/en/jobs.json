@@ -28,6 +28,7 @@
     "BULK_SIGNATURE_PUSH": "Bulk Signature",
     "BULK_SUSPEND": "Bulk Suspend",
     "BULK_DELETE": "Bulk Delete",
+    "BULK_GROUP_ADD": "Bulk Group Add",
     "SIGNATURE_AUDIT": "Signature Audit"
   },
   "status": {
@@ -76,7 +77,7 @@
         "heading": "Overview",
         "paragraphs": [
           "Job History collects all bulk operations — both finished and currently running — executed by every administrator into a single list.",
-          "Besides bulk signature, suspend and delete operations, <b>Signature Audit</b> scans also appear here as jobs."
+          "Besides bulk signature, suspend, delete and add-to-group operations, <b>Signature Audit</b> scans also appear here as jobs."
         ]
       },
       {

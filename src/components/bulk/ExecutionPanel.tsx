@@ -71,12 +71,16 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
             suspend: 'BULK_SUSPEND',
             delete: 'BULK_DELETE',
             signature_push: 'BULK_SIGNATURE_PUSH',
+            add_to_group: 'BULK_GROUP_ADD',
         };
 
         const payload: any = {};
         if (action === 'signature_push' && validatedRows) {
             payload.rows = validatedRows;
             payload.templateId = templateId;
+        } else if (action === 'add_to_group' && validatedRows) {
+            // Worker reads grup_email + email + rol from each row's `data`.
+            payload.rows = validatedRows;
         } else {
             payload.emails = emails;
             if (action === 'signature_push' && templateId) {

@@ -181,6 +181,34 @@ export async function addMembers(
     return result;
 }
 
+/**
+ * Adds a single member, rethrowing on failure with the original error object so
+ * callers can inspect `err.code` / `err.response.status` (e.g. 409 = already a
+ * member). The batch `addMembers` above swallows errors into a string, which is
+ * why bulk jobs use this helper for idempotent duplicate detection.
+ */
+export async function addSingleMember(
+    auth: OAuth2Client,
+    groupKey: string,
+    member: MemberInput,
+): Promise<void> {
+    const dir = directory(auth);
+    await adminLimiter.schedule(() =>
+        withRetry(
+            () => dir.members.insert({
+                groupKey,
+                requestBody: {
+                    email: member.email,
+                    role: member.role,
+                    ...(member.deliverySettings ? { delivery_settings: member.deliverySettings } : {}),
+                },
+            }),
+            getLogger(),
+            `members.insert(${groupKey},${member.email})`,
+        ),
+    );
+}
+
 export async function removeMembers(
     auth: OAuth2Client,
     groupKey: string,

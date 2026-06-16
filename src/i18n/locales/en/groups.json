@@ -80,7 +80,8 @@
           { "term": "Members:", "desc": "Add/remove members and assign roles (Owner / Manager / Member)." },
           { "term": "Access Settings:", "desc": "Who can post to the group and view its content." },
           { "term": "Alias:", "desc": "Define additional (alias) email addresses for the group." }
-        ]
+        ],
+        "callout": { "tone": "info", "text": "To add many members at once, use the CSV-based <b>Bulk Operations → Add to Group</b> flow." }
       },
       {
         "icon": "info",

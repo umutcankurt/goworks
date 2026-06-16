@@ -141,7 +141,7 @@ export interface GroupSettings {
     primaryLanguage?: string;
 }
 
-export type BulkActionType = 'suspend' | 'delete' | 'signature_push';
+export type BulkActionType = 'suspend' | 'delete' | 'signature_push' | 'add_to_group';
 
 export interface BulkActionPayload {
     action: BulkActionType;

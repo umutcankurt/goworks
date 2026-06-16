@@ -22,6 +22,8 @@ export const CANONICAL_COLUMNS: Record<BulkActionType, string[]> = {
   suspend: ['email'],
   delete: ['email'],
   signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
+  // `rol` header is expected in the file; individual cells may be blank (→ MEMBER).
+  add_to_group: ['grup_email', 'email', 'rol'],
 };
 
 /** Canonical key → column header per language. The `tr` value is always the canonical key itself. */
@@ -32,6 +34,8 @@ export const COLUMN_I18N: Record<string, Record<SupportedColumnLang, string>> = 
   unvan: { tr: 'unvan', en: 'title' },
   kurum_adi: { tr: 'kurum_adi', en: 'institution_name' },
   telefon: { tr: 'telefon', en: 'phone' },
+  grup_email: { tr: 'grup_email', en: 'group_email' },
+  rol: { tr: 'rol', en: 'role' },
 };
 
 /**
@@ -43,6 +47,9 @@ export const COLUMN_ALIAS: Record<string, string> = {
   title: 'unvan',
   institution_name: 'kurum_adi',
   phone: 'telefon',
+  group_email: 'grup_email',
+  group: 'grup_email',
+  role: 'rol',
 };
 
 /** Returns the column header for the given canonical key in the active language. */

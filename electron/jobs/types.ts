@@ -1,4 +1,4 @@
-export type JobType = 'BULK_SIGNATURE_PUSH' | 'BULK_SUSPEND' | 'BULK_DELETE' | 'SIGNATURE_AUDIT';
+export type JobType = 'BULK_SIGNATURE_PUSH' | 'BULK_SUSPEND' | 'BULK_DELETE' | 'SIGNATURE_AUDIT' | 'BULK_GROUP_ADD';
 export type JobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface JobRecord {

@@ -34,7 +34,7 @@ export const JobHistory: React.FC = () => {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     const typeLabel = (type: string) => {
-        const known = ['BULK_SIGNATURE_PUSH', 'BULK_SUSPEND', 'BULK_DELETE', 'SIGNATURE_AUDIT'];
+        const known = ['BULK_SIGNATURE_PUSH', 'BULK_SUSPEND', 'BULK_DELETE', 'BULK_GROUP_ADD', 'SIGNATURE_AUDIT'];
         return known.includes(type) ? t(`types.${type}`) : type;
     };
 
@@ -91,7 +91,7 @@ export const JobHistory: React.FC = () => {
                 <select
                     value={statusFilter}
                     onChange={e => setStatusFilter(e.target.value)}
-                    className="bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="bg-surface-container-high border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
                     <option value="">{t('history.filters.allStatuses')}</option>
                     <option value="COMPLETED">{t('status.COMPLETED')}</option>
@@ -104,12 +104,13 @@ export const JobHistory: React.FC = () => {
                 <select
                     value={typeFilter}
                     onChange={e => setTypeFilter(e.target.value)}
-                    className="bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="bg-surface-container-high border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
                     <option value="">{t('history.filters.allTypes')}</option>
                     <option value="BULK_DELETE">{t('types.BULK_DELETE')}</option>
                     <option value="BULK_SUSPEND">{t('types.BULK_SUSPEND')}</option>
                     <option value="BULK_SIGNATURE_PUSH">{t('types.BULK_SIGNATURE_PUSH')}</option>
+                    <option value="BULK_GROUP_ADD">{t('types.BULK_GROUP_ADD')}</option>
                     <option value="SIGNATURE_AUDIT">{t('types.SIGNATURE_AUDIT')}</option>
                 </select>
 
@@ -118,13 +119,13 @@ export const JobHistory: React.FC = () => {
                     value={creatorInput}
                     onChange={e => setCreatorInput(e.target.value)}
                     placeholder={t('history.filters.creatorPlaceholder')}
-                    className="bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-52"
+                    className="bg-surface-container-high border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-52"
                 />
 
                 <select
                     value={pageSize}
                     onChange={e => setPageSize(Number(e.target.value))}
-                    className="bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="bg-surface-container-high border border-outline-variant/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
                     <option value={10}>{t('history.filters.perPage', { count: 10 })}</option>
                     <option value={20}>{t('history.filters.perPage', { count: 20 })}</option>

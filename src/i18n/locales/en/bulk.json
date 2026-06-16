@@ -25,6 +25,10 @@
     "signature_push": {
       "label": "Push Signature",
       "description": "Updates the Gmail signature and syncs the profile"
+    },
+    "add_to_group": {
+      "label": "Add to Group",
+      "description": "Adds the people in the CSV to the specified groups (role defaults to MEMBER when blank)"
     }
   },
   "actionSelector": {
@@ -79,7 +83,7 @@
         "icon": "info",
         "heading": "Overview",
         "paragraphs": [
-          "Bulk Operations lets you apply an action to many users at once from a CSV file: pushing Gmail signatures, suspending or permanently deleting accounts."
+          "Bulk Operations lets you apply an action to many users at once from a CSV file: pushing Gmail signatures, suspending, permanently deleting accounts, or adding users to groups."
         ]
       },
       {
@@ -87,7 +91,7 @@
         "heading": "Step by Step",
         "paragraphs": ["The page is a four-step wizard:"],
         "bullets": [
-          { "term": "1. Select Action:", "desc": "Choose Push Signature, Suspend or Delete." },
+          { "term": "1. Select Action:", "desc": "Choose Push Signature, Suspend, Delete or Add to Group." },
           { "term": "2. Upload CSV:", "desc": "Upload the CSV file containing the users to process." },
           { "term": "3. Analysis:", "desc": "Valid and invalid rows are listed; you can skip invalid rows and continue." },
           { "term": "4. Execute:", "desc": "The operation starts and progress is shown in real time." }
@@ -97,7 +101,8 @@
         "icon": "file",
         "heading": "CSV Template",
         "paragraphs": [
-          "Each action type has its own columns. Use the \"Download CSV Template\" button on the Upload step to download an empty file in the correct format and fill it in."
+          "Each action type has its own columns. Use the \"Download CSV Template\" button on the Upload step to download an empty file in the correct format and fill it in.",
+          "For example, <b>Add to Group</b> uses the columns <code>group_email</code>, <code>email</code> and <code>role</code>; a blank <code>role</code> defaults to <code>MEMBER</code>. The same person can be added to multiple groups."
         ]
       },
       {

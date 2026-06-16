@@ -1,7 +1,7 @@
 import { institutionService } from './institution-service';
 
 export interface BulkAnalyzeRequest {
-    actionType: 'suspend' | 'delete' | 'signature_push';
+    actionType: 'suspend' | 'delete' | 'signature_push' | 'add_to_group';
     rows: Record<string, string>[];
 }
 
@@ -35,10 +35,26 @@ const REQUIRED_COLUMNS: Record<string, string[]> = {
     // Canonical (TR) columns. English headers (first_name etc.) are also
     // accepted in the CSV — normalizeColumns() converts them to the canonical form.
     signature_push: ['email', 'ad', 'soyad', 'unvan', 'kurum_adi', 'telefon'],
+    // `rol` is intentionally NOT required per-row (empty defaults to MEMBER in the
+    // worker); the header is still expected via TEMPLATE_COLUMNS below.
+    add_to_group: ['grup_email', 'email'],
+};
+
+/**
+ * Columns shown in the downloaded CSV template / expected in the header for an
+ * action. Mirrors `CANONICAL_COLUMNS` in `src/utils/bulkColumns.ts`. Differs from
+ * REQUIRED_COLUMNS only when an action has an optional column whose header must
+ * still be present (e.g. `add_to_group`'s `rol`, blank cell → MEMBER).
+ */
+const TEMPLATE_COLUMNS: Record<string, string[]> = {
+    ...REQUIRED_COLUMNS,
+    add_to_group: ['grup_email', 'email', 'rol'],
 };
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const TURKISH_CHARS = /[çşğüöıİÇŞĞÜÖ]/;
+/** Accepted role cells (case-insensitive): API values + TR synonyms. */
+const VALID_ROLES = new Set(['member', 'manager', 'owner', 'üye', 'yönetici', 'yonetici', 'sahip']);
 
 /**
  * Electron main equivalent of `src/utils/bulkColumns.ts` — this process cannot
@@ -54,6 +70,9 @@ const COLUMN_ALIAS: Record<string, string> = {
     title: 'unvan',
     institution_name: 'kurum_adi',
     phone: 'telefon',
+    group_email: 'grup_email',
+    group: 'grup_email',
+    role: 'rol',
 };
 
 /** Canonical key → column header per language. */
@@ -64,6 +83,8 @@ const COLUMN_I18N: Record<string, Record<ColumnLang, string>> = {
     unvan: { tr: 'unvan', en: 'title' },
     kurum_adi: { tr: 'kurum_adi', en: 'institution_name' },
     telefon: { tr: 'telefon', en: 'phone' },
+    grup_email: { tr: 'grup_email', en: 'group_email' },
+    rol: { tr: 'rol', en: 'role' },
 };
 
 /** Column header for the active language given a canonical key (unknown → as-is). */
@@ -73,7 +94,7 @@ export function localeColumn(canonical: string, lang: ColumnLang): string {
 
 /** Localized column header list for an action per language (CSV template / UI). */
 export function localeColumnsForAction(actionType: string, lang: ColumnLang): string[] {
-    return (REQUIRED_COLUMNS[actionType] || ['email']).map(c => localeColumn(c, lang));
+    return (TEMPLATE_COLUMNS[actionType] || REQUIRED_COLUMNS[actionType] || ['email']).map(c => localeColumn(c, lang));
 }
 
 /** CSV validation error messages — Electron main cannot use `t()`, inline TR/EN. */
@@ -83,20 +104,23 @@ const MESSAGES: Record<ColumnLang, {
     turkishChars: (email: string) => string;
     duplicate: (firstRow: number) => string;
     institutionNotFound: (name: string) => string;
+    invalidRole: (value: string) => string;
 }> = {
     tr: {
         missingRequired: (field) => `'${field}' alanı zorunludur.`,
         invalidEmail: (email) => `Geçersiz e-posta formatı: '${email}'`,
         turkishChars: (email) => `E-posta adresi Türkçe karakter içeriyor: '${email}'`,
-        duplicate: (firstRow) => `Bu e-posta CSV'de tekrar ediyor (ilk görülme: satır ${firstRow}).`,
+        duplicate: (firstRow) => `Bu kayıt CSV'de tekrar ediyor (ilk görülme: satır ${firstRow}).`,
         institutionNotFound: (name) => `Kurum bulunamadı: '${name}'. Lütfen CSV'yi kontrol edin.`,
+        invalidRole: (value) => `Geçersiz rol: '${value}'. Geçerli değerler: MEMBER, MANAGER, OWNER.`,
     },
     en: {
         missingRequired: (field) => `The '${field}' field is required.`,
         invalidEmail: (email) => `Invalid email format: '${email}'`,
         turkishChars: (email) => `Email address contains Turkish characters: '${email}'`,
-        duplicate: (firstRow) => `This email is duplicated in the CSV (first seen: row ${firstRow}).`,
+        duplicate: (firstRow) => `This record is duplicated in the CSV (first seen: row ${firstRow}).`,
         institutionNotFound: (name) => `Institution not found: '${name}'. Please check the CSV.`,
+        invalidRole: (value) => `Invalid role: '${value}'. Valid values: MEMBER, MANAGER, OWNER.`,
     },
 };
 
@@ -155,15 +179,35 @@ export function analyzeBulkCsv(
             } else if (TURKISH_CHARS.test(email)) {
                 errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: msg.turkishChars(email) });
             }
-            const emailLower = email.toLowerCase();
-            if (seenEmails.has(emailLower)) {
+            // For add_to_group the same person may join several groups, so dedupe
+            // on the (group, member) pair rather than the member email alone.
+            const dedupeKey = actionType === 'add_to_group'
+                ? `${(trimmedRow.grup_email || '').toLowerCase()}|${email.toLowerCase()}`
+                : email.toLowerCase();
+            if (seenEmails.has(dedupeKey)) {
                 errors.push({
                     field: 'email',
                     errorType: 'DUPLICATE_IN_CSV',
-                    message: msg.duplicate(seenEmails.get(emailLower)!),
+                    message: msg.duplicate(seenEmails.get(dedupeKey)!),
                 });
             } else {
-                seenEmails.set(emailLower, rowNumber);
+                seenEmails.set(dedupeKey, rowNumber);
+            }
+        }
+
+        if (actionType === 'add_to_group') {
+            const groupEmail = trimmedRow.grup_email;
+            if (groupEmail) {
+                if (!EMAIL_REGEX.test(groupEmail)) {
+                    errors.push({ field: 'grup_email', errorType: 'INVALID_FORMAT', message: msg.invalidEmail(groupEmail) });
+                } else if (TURKISH_CHARS.test(groupEmail)) {
+                    errors.push({ field: 'grup_email', errorType: 'INVALID_FORMAT', message: msg.turkishChars(groupEmail) });
+                }
+            }
+            // `rol` is optional (empty → MEMBER); validate only when present.
+            const role = trimmedRow.rol;
+            if (role && !VALID_ROLES.has(role.toLowerCase())) {
+                errors.push({ field: 'rol', errorType: 'INVALID_FORMAT', message: msg.invalidRole(role) });
             }
         }
 

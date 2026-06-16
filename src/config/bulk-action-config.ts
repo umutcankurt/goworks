@@ -31,4 +31,11 @@ export const BULK_ACTION_CONFIGS: Record<BulkActionType, BulkActionConfig> = {
     requiredColumns: CANONICAL_COLUMNS.signature_push,
     icon: 'FileSignature',
   },
+  add_to_group: {
+    type: 'add_to_group',
+    label: 'Gruba Üye Ekle',
+    description: 'CSV satırlarındaki kişileri belirtilen gruplara ekler',
+    requiredColumns: CANONICAL_COLUMNS.add_to_group,
+    icon: 'UserPlus',
+  },
 };

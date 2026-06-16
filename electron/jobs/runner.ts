@@ -26,6 +26,7 @@ class JobRunner {
         ['BULK_SUSPEND', 1],
         ['BULK_DELETE', 1],
         ['SIGNATURE_AUDIT', 1],
+        ['BULK_GROUP_ADD', 1],
     ]);
     private activeByType = new Map<string, number>();
     private mainWindow: BrowserWindow | null = null;

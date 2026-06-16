@@ -28,6 +28,7 @@
     "BULK_SIGNATURE_PUSH": "Toplu İmza",
     "BULK_SUSPEND": "Toplu Askıya Alma",
     "BULK_DELETE": "Toplu Silme",
+    "BULK_GROUP_ADD": "Toplu Grup Ekleme",
     "SIGNATURE_AUDIT": "İmza Denetimi"
   },
   "status": {
@@ -76,7 +77,7 @@
         "heading": "Genel Bakış",
         "paragraphs": [
           "Görev Geçmişi, tüm yöneticiler tarafından çalıştırılmış ve çalışmakta olan toplu işlemleri tek listede toplar.",
-          "Toplu imza, askıya alma, silme işlemlerinin yanı sıra <b>İmza Denetimi</b> taramaları da burada job olarak görünür."
+          "Toplu imza, askıya alma, silme ve gruba üye ekleme işlemlerinin yanı sıra <b>İmza Denetimi</b> taramaları da burada job olarak görünür."
         ]
       },
       {

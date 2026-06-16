@@ -37,6 +37,8 @@ import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
 import { registerSignatureAuditWorker } from './jobs/signature-audit-worker';
+import { registerBulkGroupAddWorker } from './jobs/bulk-group-add-worker';
+import { setAuthClientProvider } from './services/auth-context';
 
 let win: BrowserWindow | null
 let authService: AuthService
@@ -300,9 +302,13 @@ app.whenReady().then(async () => {
   registerSignaturePushWorker();
   registerBulkActionWorker();
   registerSignatureAuditWorker();
+  registerBulkGroupAddWorker();
   jobRunner.resumeOnStartup();
 
   authService = new AuthService();
+  // Bridge the admin OAuth client to background workers (e.g. BULK_GROUP_ADD),
+  // which run group operations with the admin's token for correct audit actor.
+  setAuthClientProvider(() => authService.getClient());
   // adminService is lazy: stays null when there are no credentials; it is created
   // by ensureAdminService() after a successful auth:login or after a
   // config:setOAuthCredentials call.
@@ -1332,16 +1338,19 @@ app.whenReady().then(async () => {
       const sampleEmail = resolvedLang === 'en' ? `sample@${domain}` : `ornek@${domain}`;
       // Headers localized by language (TR: kurum_adi / EN: institution_name).
       const headers = localeColumnsForAction(actionType, resolvedLang);
+      const sampleGroup = resolvedLang === 'en' ? `group@${domain}` : `grup@${domain}`;
       const exampleByAction: Record<'tr' | 'en', Record<string, string[]>> = {
         tr: {
           suspend: [sampleEmail],
           delete: [sampleEmail],
           signature_push: [sampleEmail, 'Ali', 'Yılmaz', 'Öğretmen', 'Merkez', '05551234567'],
+          add_to_group: [sampleGroup, sampleEmail, 'MEMBER'],
         },
         en: {
           suspend: [sampleEmail],
           delete: [sampleEmail],
           signature_push: [sampleEmail, 'John', 'Doe', 'Manager', 'Head Office', '5551234567'],
+          add_to_group: [sampleGroup, sampleEmail, 'MEMBER'],
         },
       };
       const example = exampleByAction[resolvedLang][actionType] || [sampleEmail];
