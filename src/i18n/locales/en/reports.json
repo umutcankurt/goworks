@@ -1,5 +1,5 @@
 {
-  "title": "System Reports and Statistics",
+  "title": "System Statistics",
   "refresh": "Refresh Data",
   "refreshing": "Refreshing...",
   "metrics": {
@@ -24,7 +24,7 @@
         "icon": "info",
         "heading": "Overview",
         "paragraphs": [
-          "The Reports page gives you an audit and status summary of your organization; user metrics, recent login activities and suspended accounts are gathered into a single screen."
+          "The Statistics page gives you an audit and status summary of your organization; user metrics, recent login activities and suspended accounts are gathered into a single screen."
         ]
       },
       {
@@ -46,7 +46,7 @@
         "icon": "users",
         "heading": "Suspended Users & Refresh",
         "paragraphs": [
-          "Users that are currently suspended are listed in a separate section. Use the \"Refresh Data\" button to re-fetch all reports with the latest data."
+          "Users that are currently suspended are listed in a separate section. Use the \"Refresh Data\" button to re-fetch all statistics with the latest data."
         ]
       }
     ]

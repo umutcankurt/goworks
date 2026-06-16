@@ -1,5 +1,5 @@
 {
-  "title": "Sistem Raporları ve İstatistikler",
+  "title": "Sistem İstatistikleri",
   "refresh": "Verileri Yenile",
   "refreshing": "Yenileniyor...",
   "metrics": {
@@ -24,7 +24,7 @@
         "icon": "info",
         "heading": "Genel Bakış",
         "paragraphs": [
-          "Raporlar sayfası, organizasyonunuzun denetim ve durum özetini sunar; kullanıcı metrikleri, son giriş aktiviteleri ve askıya alınmış hesaplar tek ekranda toplanır."
+          "İstatistikler sayfası, organizasyonunuzun denetim ve durum özetini sunar; kullanıcı metrikleri, son giriş aktiviteleri ve askıya alınmış hesaplar tek ekranda toplanır."
         ]
       },
       {
@@ -46,7 +46,7 @@
         "icon": "users",
         "heading": "Askıya Alınan Kullanıcılar ve Yenileme",
         "paragraphs": [
-          "Hâlen askıda olan kullanıcılar ayrı bir bölümde listelenir. \"Verileri Yenile\" butonuyla tüm raporları güncel haliyle yeniden çekebilirsiniz."
+          "Hâlen askıda olan kullanıcılar ayrı bir bölümde listelenir. \"Verileri Yenile\" butonuyla tüm istatistikleri güncel haliyle yeniden çekebilirsiniz."
         ]
       }
     ]
