@@ -136,4 +136,20 @@ i18n.use(initReactI18next).init({
     returnNull: false,
 });
 
+/**
+ * Keep the document's `lang` attribute in sync with the active language. The
+ * browser uses it to apply locale-aware CSS `text-transform` — under `lang="tr"`
+ * an uppercased "i" becomes the dotted "İ" (not the dotless "I"), so headings
+ * like "Hoş geldiniz" render correctly as "HOŞ GELDİNİZ".
+ */
+function syncHtmlLang(lng: string): void {
+    try {
+        document.documentElement.lang = lng;
+    } catch {
+        /* test/SSR guard */
+    }
+}
+syncHtmlLang(i18n.language);
+i18n.on('languageChanged', syncHtmlLang);
+
 export default i18n;
