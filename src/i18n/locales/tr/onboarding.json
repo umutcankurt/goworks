@@ -175,7 +175,7 @@
     "testing": "Test ediliyor...",
     "testSuccess": "Tüm scope'lar doğrulandı ({{adminEmail}} olarak)",
     "testFail": "DWD doğrulanamadı: {{error}}",
-    "testFailHelp": "{{adminEmail}} olarak admin.directory.user okunamadı. Admin Console'da Client ID ve scope listesini kontrol edin.",
+    "testFailHelp": "{{adminEmail}} olarak admin.directory.user okunamadı. Admin Console'da Client ID ve scope listesini kontrol edin — büyük olasılıkla bir veya birden fazla scope eksik ya da yetkilendirilmemiş. Service Account'ın Client ID'sinin ve yukarıdaki tüm OAuth scope'larının eksiksiz tanımlı olduğundan emin olun.",
     "skip": "DWD'yi şimdilik atla",
     "skipConfirm": "DWD'yi yapılandırmadan devam etmek istediğinizden emin misiniz? Gmail imza push özelliği çalışmayacak — daha sonra Ayarlar'dan tamamlayabilirsiniz."
   },

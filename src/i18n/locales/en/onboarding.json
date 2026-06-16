@@ -175,7 +175,7 @@
     "testing": "Testing...",
     "testSuccess": "All scopes verified (as {{adminEmail}})",
     "testFail": "DWD verification failed: {{error}}",
-    "testFailHelp": "Could not read admin.directory.user as {{adminEmail}}. Re-check the Client ID and scope list in Admin Console.",
+    "testFailHelp": "Could not read admin.directory.user as {{adminEmail}}. Re-check the Client ID and scope list in Admin Console — most likely one or more scopes are missing or unauthorized. Make sure the Service Account's Client ID and all OAuth scopes above are fully authorized.",
     "skip": "Skip DWD for now",
     "skipConfirm": "Continue without configuring DWD? Gmail signature push won't work — you can finish setup later from Settings."
   },
