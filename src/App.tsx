@@ -7,7 +7,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ConfigWarningBanner } from './components/ConfigWarningBanner';
 
 import { Offboard } from './pages/Offboard';
 import { Reports } from './pages/Reports';
@@ -57,7 +56,6 @@ function App() {
         <AuthProvider>
           <ToastProvider>
             <Router>
-              <ConfigWarningBanner />
               <OnboardingGate>
                 <Routes>
                   <Route path="/onboarding" element={<Onboarding />} />

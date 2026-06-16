@@ -1053,6 +1053,9 @@ app.whenReady().then(async () => {
       clearAuthCache();
       clearGmailAuthCache();
       clearEmailNotificationCache();
+      // Keep the boot-time soft-warn flag in sync so the renderer's
+      // ConfigWarningBanner clears immediately, without an app restart.
+      bootStatus.soft.serviceAccountMissing = false;
       return { success: true, data: result };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1069,6 +1072,9 @@ app.whenReady().then(async () => {
       clearAuthCache();
       clearGmailAuthCache();
       clearEmailNotificationCache();
+      // The Service Account is gone — re-raise the boot-time soft-warn flag so the
+      // ConfigWarningBanner reappears without an app restart.
+      bootStatus.soft.serviceAccountMissing = true;
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };

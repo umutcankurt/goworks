@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { Header } from '../components/Header';
+import { ConfigWarningBanner } from '../components/ConfigWarningBanner';
 import { SessionWarningModal } from '../components/SessionWarningModal';
 import { SessionProvider } from '../contexts/SessionContext';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -14,6 +15,7 @@ export function AppLayout() {
                 <Sidebar />
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <Header />
+                    <ConfigWarningBanner />
                     <main className="flex-1 overflow-x-hidden overflow-y-auto p-8 relative">
                         <AnimatePresence mode="wait">
                             <motion.div
