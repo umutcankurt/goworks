@@ -46,7 +46,7 @@ function UpdatedAtLabel({ timestamp }: { timestamp: number | null }) {
 
 function SkeletonCard() {
     return (
-        <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+        <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
             <Skeleton variant="text" width="w-1/2" className="mb-4" />
             <Skeleton variant="box" height="h-40" />
         </div>
@@ -61,7 +61,7 @@ function ErrorCard({ title, message }: { title: string; message: string }) {
         message.includes('Yetkisiz') ||
         message.includes('permission');
     return (
-        <div className="eth-glass border border-eth-danger/40 rounded-xl p-6">
+        <div className="bg-surface-container border border-eth-danger/40 shadow-sm rounded-xl p-6">
             <h3 className="text-lg font-semibold text-on-surface mb-3">{title}</h3>
             <div className="text-sm text-eth-danger">
                 {isAuthError ? (
@@ -104,7 +104,7 @@ function StorageWidget() {
 
     if (isUnlimited) {
         return (
-            <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+            <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-on-surface mb-4">{t('storage.title')}</h3>
                 <div className="flex flex-col items-center justify-center py-4">
                     <p className="text-3xl font-bold text-eth-primary">{formatStorage(data.usedStorageMb)}</p>
@@ -125,7 +125,7 @@ function StorageWidget() {
     const COLORS = [CHART_PRIMARY, CHART_NEUTRAL_TRACK];
 
     return (
-        <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+        <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
             <h3 className="text-lg font-semibold text-on-surface mb-4">{t('storage.title')}</h3>
             <div className="flex items-center gap-4">
                 <div className="w-36 h-36 flex-shrink-0">
@@ -194,7 +194,7 @@ function RecentUsersWidget() {
 
     if (users.length === 0) {
         return (
-            <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+            <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-on-surface mb-4">{t('recentUsers.title')}</h3>
                 <p className="text-sm text-on-surface-variant text-center py-6">{t('recentUsers.empty')}</p>
                 <UpdatedAtLabel timestamp={updatedAt} />
@@ -203,7 +203,7 @@ function RecentUsersWidget() {
     }
 
     return (
-        <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+        <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
             <h3 className="text-lg font-semibold text-on-surface mb-4">{t('recentUsers.title')}</h3>
             <ul className="divide-y divide-outline-variant/30">
                 {users.map((u) => (
@@ -260,7 +260,7 @@ function UserCountsWidget() {
     const COLORS = [CHART_SUCCESS, CHART_DANGER];
 
     return (
-        <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+        <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
             <h3 className="text-lg font-semibold text-on-surface mb-4">{t('userCounts.title')}</h3>
             <div className="flex items-center gap-4">
                 <div className="w-36 h-36 relative flex-shrink-0">
@@ -342,7 +342,7 @@ function ActiveJobsWidget() {
     };
 
     return (
-        <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6 col-span-full">
+        <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6 col-span-full">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-on-surface">{t('activeJobs.title')}</h3>
                 <button

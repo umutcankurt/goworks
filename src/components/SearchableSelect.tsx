@@ -104,7 +104,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                     aria-haspopup="listbox"
                     aria-expanded={isOpen}
                     className={`w-full p-2 border border-outline-variant/30 rounded-lg flex items-center justify-between cursor-pointer ${
-                        disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container hover:border-outline-variant/40'
+                        disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container-high hover:border-outline-variant/40'
                     }`}
                     onClick={() => {
                         if (!disabled) {
@@ -142,7 +142,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                     role="presentation"
                     className={`w-full flex items-center border rounded-lg ${
                         isOpen ? 'border-eth-primary-container/40 ring-2 ring-blue-500' : 'border-outline-variant/30'
-                    } ${disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container'}`}
+                    } ${disabled ? 'opacity-50 bg-surface-container-high' : 'bg-surface-container-high'}`}
                     onClick={() => {
                         if (!disabled) {
                             setIsOpen(true);

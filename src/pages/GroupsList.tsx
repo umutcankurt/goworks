@@ -106,7 +106,7 @@ export const GroupsList: React.FC = () => {
                             placeholder={t('list.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="px-4 py-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 w-64"
+                            className="bg-surface-container-high px-4 py-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 w-64"
                         />
                         <button
                             type="submit"

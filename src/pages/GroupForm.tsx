@@ -378,7 +378,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                     value={groupName}
                                     onChange={(e) => setGroupName(e.target.value)}
                                     disabled={submitting}
-                                    className={`w-full p-2 border rounded-lg focus:ring-2 ${validationErrors.groupName ? 'border-eth-danger/30 focus:ring-eth-danger/30' : 'border-outline-variant/30 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40'}`}
+                                    className={`w-full bg-surface-container-high p-2 border rounded-lg focus:ring-2 ${validationErrors.groupName ? 'border-eth-danger/30 focus:ring-eth-danger/30' : 'border-outline-variant/30 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40'}`}
                                     placeholder={t('general.groupNamePlaceholder')}
                                 />
                                 {validationErrors.groupName && (
@@ -395,14 +395,14 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                         onChange={(e) => setLocalPart(e.target.value)}
                                         disabled={submitting}
                                         placeholder={t('general.groupEmailPlaceholder')}
-                                        className={`flex-1 p-2 border rounded-lg focus:ring-2 ${validationErrors.localPart ? 'border-eth-danger/30 focus:ring-eth-danger/30' : 'border-outline-variant/30 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40'}`}
+                                        className={`flex-1 bg-surface-container-high p-2 border rounded-lg focus:ring-2 ${validationErrors.localPart ? 'border-eth-danger/30 focus:ring-eth-danger/30' : 'border-outline-variant/30 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40'}`}
                                     />
                                     <span className="text-on-surface-variant font-medium px-1">@</span>
                                     <select
                                         value={domain}
                                         onChange={(e) => setDomain(e.target.value)}
                                         disabled={submitting}
-                                        className="p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                     >
                                         {domains.map((d) => (
                                             <option key={d.domainName} value={d.domainName}>
@@ -425,7 +425,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                     onChange={(e) => setDescription(e.target.value)}
                                     disabled={submitting}
                                     rows={3}
-                                    className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                    className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                     placeholder={t('general.descriptionPlaceholder')}
                                 />
                             </div>
@@ -483,7 +483,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                                                 value={m.role}
                                                                 onChange={(e) => handleChangeExistingRole(m.email, e.target.value as GroupRole)}
                                                                 disabled={busy}
-                                                                className="w-[110px] bg-surface-container border border-outline-variant/30 rounded text-xs px-2 py-1"
+                                                                className="w-[110px] bg-surface-container-high border border-outline-variant/30 rounded text-xs px-2 py-1"
                                                             >
                                                                 <option value="MEMBER">{tGroups('roles.MEMBER')}</option>
                                                                 <option value="MANAGER">{tGroups('roles.MANAGER')}</option>
@@ -493,7 +493,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                                                 value={m.deliverySettings}
                                                                 onChange={(e) => handleChangeExistingDelivery(m.email, e.target.value as DeliverySetting)}
                                                                 disabled={busy}
-                                                                className="w-[140px] bg-surface-container border border-outline-variant/30 rounded text-xs px-2 py-1"
+                                                                className="w-[140px] bg-surface-container-high border border-outline-variant/30 rounded text-xs px-2 py-1"
                                                                 title={tGroups('delivery.label')}
                                                             >
                                                                 <option value="ALL_MAIL">{tGroups('delivery.ALL_MAIL')}</option>
@@ -726,14 +726,14 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
                                         onChange={(e) => setAliasLocal(e.target.value)}
                                         disabled={aliasSubmitting}
                                         placeholder={t('aliases.aliasPlaceholder')}
-                                        className="flex-1 p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="flex-1 bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                     />
                                     <span className="text-on-surface-variant font-medium px-1">@</span>
                                     <select
                                         value={aliasDomain || domain}
                                         onChange={(e) => setAliasDomain(e.target.value)}
                                         disabled={aliasSubmitting}
-                                        className="p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                     >
                                         {domains.map((d) => (
                                             <option key={d.domainName} value={d.domainName}>
@@ -779,7 +779,7 @@ const SettingsSelect: React.FC<SettingsSelectProps> = ({ label, value, onChange,
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 disabled:opacity-50"
+            className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 disabled:opacity-50"
         >
             <option value="">{placeholder}</option>
             {options.map((o) => (

@@ -221,7 +221,7 @@ export function SignatureEditor({ value, onChange, showTags = true }: SignatureE
                         value={widthValue}
                         onChange={e => setWidthValue(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') handleWidthApply(); }}
-                        className="w-full px-2 py-1.5 pr-8 text-sm border border-outline-variant/30 rounded focus:ring-1 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                        className="w-full bg-surface-container-high px-2 py-1.5 pr-8 text-sm border border-outline-variant/30 rounded focus:ring-1 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                         placeholder="350"
                         min="50"
                         max="1000"
@@ -256,7 +256,7 @@ export function SignatureEditor({ value, onChange, showTags = true }: SignatureE
         ref={textareaRef}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-64 px-3 py-2 border border-outline-variant/30 rounded-lg text-sm font-mono focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 resize-y"
+        className="w-full bg-surface-container-high h-64 px-3 py-2 border border-outline-variant/30 rounded-lg text-sm font-mono focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40 resize-y"
         placeholder="<table>&#10;  <tr>&#10;    <td>{{ad_soyad}}</td>&#10;  </tr>&#10;</table>"
         spellCheck={false}
       />

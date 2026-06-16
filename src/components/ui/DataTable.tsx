@@ -97,7 +97,7 @@ export function DataTable<Row>({
 
     if (!loading && rows.length === 0) {
         return (
-            <div className={clsx('eth-glass eth-border-ghost rounded-xl', className)}>
+            <div className={clsx('bg-surface-container border border-outline-variant/30 rounded-xl', className)}>
                 <EmptyState
                     icon={emptyIcon}
                     title={emptyTitle ?? 'No data'}
@@ -108,7 +108,7 @@ export function DataTable<Row>({
     }
 
     return (
-        <div className={clsx('eth-glass eth-glow-cyan-ambient rounded-xl overflow-hidden', className)}>
+        <div className={clsx('bg-surface-container border border-outline-variant/30 shadow-sm rounded-xl overflow-hidden', className)}>
             <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                     <thead className="bg-surface-container-high/60">

@@ -200,7 +200,7 @@ export function SignatureTemplates() {
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder={t('list.templateNamePlaceholder')}
-            className="w-full px-3 py-2 border border-outline-variant/30 rounded-lg text-sm font-medium focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+            className="w-full px-3 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm font-medium focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
           />
 
           <SignatureEditor value={htmlContent} onChange={setHtmlContent} />

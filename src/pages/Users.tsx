@@ -147,7 +147,7 @@ export const UsersPage: React.FC = () => {
                 </div>
             )}
 
-            <div className="eth-glass eth-glow-cyan-ambient rounded-xl p-6">
+            <div className="bg-surface-container border border-outline-variant/30 shadow-sm eth-glow-cyan-ambient rounded-xl p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-lg font-semibold text-on-surface">
                         {t('resultsTitle')}

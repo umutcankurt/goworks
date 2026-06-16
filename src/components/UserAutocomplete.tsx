@@ -127,7 +127,7 @@ export const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
                 placeholder={effectivePlaceholder}
-                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 disabled:opacity-50 disabled:bg-surface-container-high"
+                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 disabled:opacity-50 disabled:bg-surface-container-high"
             />
 
             {isOpen && (loading || results.length > 0 || (allowFreeForm && query.trim())) && (

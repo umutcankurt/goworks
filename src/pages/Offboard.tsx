@@ -224,7 +224,7 @@ export const Offboard: React.FC = () => {
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                         <input
                             type="text"
-                            className="w-full pl-10 pr-4 py-2.5 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 transition-colors"
+                            className="w-full bg-surface-container-high pl-10 pr-4 py-2.5 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 transition-colors"
                             placeholder={t('search.placeholder', { domain: config.allowedDomain || 'example.com' })}
                             value={searchEmail}
                             onChange={e => setSearchEmail(e.target.value)}
@@ -412,7 +412,7 @@ export const Offboard: React.FC = () => {
                                                         </label>
                                                         <input
                                                             type="email"
-                                                            className="w-full max-w-sm px-3 py-2 text-sm border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 transition-colors"
+                                                            className="w-full bg-surface-container-high max-w-sm px-3 py-2 text-sm border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 transition-colors"
                                                             placeholder={t('forwardingPlaceholder', { domain: config.allowedDomain || 'example.com' })}
                                                             value={forwardingEmail}
                                                             onChange={e => setForwardingEmail(e.target.value)}

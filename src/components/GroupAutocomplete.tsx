@@ -116,7 +116,7 @@ export const GroupAutocomplete: React.FC<GroupAutocompleteProps> = ({
                                     handleRoleChange(sg.group.id, e.target.value as GroupRole)
                                 }
                                 disabled={disabled}
-                                className="bg-surface-container border border-outline-variant/30 rounded text-xs px-1 py-0.5"
+                                className="bg-surface-container-high border border-outline-variant/30 rounded text-xs px-1 py-0.5"
                             >
                                 <option value="MEMBER">MEMBER</option>
                                 <option value="MANAGER">MANAGER</option>
@@ -148,7 +148,7 @@ export const GroupAutocomplete: React.FC<GroupAutocompleteProps> = ({
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
                 placeholder={t('groupPicker.searchPlaceholder')}
-                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 disabled:opacity-50 disabled:bg-surface-container-high"
+                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40 disabled:opacity-50 disabled:bg-surface-container-high"
             />
 
             {/* Dropdown */}

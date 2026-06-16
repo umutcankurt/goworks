@@ -699,7 +699,7 @@ export const UserDetail: React.FC = () => {
                                         <div className="flex items-center gap-1">
                                             <input
                                                 type="text"
-                                                className={`flex-1 p-2 border rounded focus:ring-2 ${emailInputBorderClass}`}
+                                                className={`flex-1 bg-surface-container-high p-2 border rounded focus:ring-2 ${emailInputBorderClass}`}
                                                 value={editForm.username}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -717,7 +717,7 @@ export const UserDetail: React.FC = () => {
                                                     checkEmailAvailability(editForm.username, newDomain);
                                                 }}
                                                 disabled={saving}
-                                                className="p-2 border eth-border-ghost rounded focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                                className="bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                             >
                                                 {domains.map((d) => (
                                                     <option key={d.domainName} value={d.domainName}>{d.domainName}</option>
@@ -776,7 +776,7 @@ export const UserDetail: React.FC = () => {
                                         <div className="flex items-center gap-1">
                                             <input
                                                 type="text"
-                                                className="flex-1 p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                                className="flex-1 bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                                 value={newAliasUsername}
                                                 onChange={(e) => setNewAliasUsername(e.target.value.toLowerCase())}
                                                 placeholder={t('overview.fields.aliasPlaceholder')}
@@ -787,7 +787,7 @@ export const UserDetail: React.FC = () => {
                                                 value={newAliasDomain}
                                                 onChange={(e) => setNewAliasDomain(e.target.value)}
                                                 disabled={aliasLoading}
-                                                className="p-2 border eth-border-ghost rounded focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                                className="bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                             >
                                                 {domains.map((d) => (
                                                     <option key={d.domainName} value={d.domainName}>{d.domainName}</option>
@@ -827,7 +827,7 @@ export const UserDetail: React.FC = () => {
                                 {isEditing ? (
                                     <input
                                         type="text"
-                                        className="w-full p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="w-full bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                         value={editForm.givenName}
                                         onChange={(e) => setEditForm({ ...editForm, givenName: capitalizeWords(e.target.value) })}
                                         disabled={saving}
@@ -842,7 +842,7 @@ export const UserDetail: React.FC = () => {
                                 {isEditing ? (
                                     <input
                                         type="text"
-                                        className="w-full p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="w-full bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                         value={editForm.familyName}
                                         onChange={(e) => setEditForm({ ...editForm, familyName: toUpperCaseTr(e.target.value) })}
                                         disabled={saving}
@@ -875,7 +875,7 @@ export const UserDetail: React.FC = () => {
                                 {isEditing ? (
                                     <input
                                         type="text"
-                                        className="w-full p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="w-full bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                         value={editForm.phone}
                                         onChange={(e) => setEditForm({ ...editForm, phone: formatPhoneNumber(e.target.value) })}
                                         onPaste={(e) => {
@@ -898,7 +898,7 @@ export const UserDetail: React.FC = () => {
                                 <label className="block text-sm font-medium text-on-surface mb-1">{t('overview.fields.orgUnit')}</label>
                                 {isEditing ? (
                                     <select
-                                        className="w-full p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="w-full bg-surface-container-high p-2 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                         value={editForm.orgUnitPath}
                                         onChange={(e) => setEditForm({ ...editForm, orgUnitPath: e.target.value })}
                                         disabled={saving}
@@ -1037,7 +1037,7 @@ export const UserDetail: React.FC = () => {
                                                             const id = Number(e.target.value);
                                                             if (id) handleTemplateSelect(id);
                                                         }}
-                                                        className="w-full p-2 border eth-border-ghost rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
+                                                        className="w-full bg-surface-container-high p-2 border eth-border-ghost rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                                                     >
                                                         <option value="" disabled>{t('signature.templateSelect')}</option>
                                                         {templates.map((tpl: any) => (
@@ -1182,7 +1182,7 @@ export const UserDetail: React.FC = () => {
                                         placeholder={t('security.newPasswordPlaceholder')}
                                         value={passwordInput}
                                         onChange={(e) => setPasswordInput(e.target.value)}
-                                        className="w-full p-2 pr-10 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
+                                        className="w-full bg-surface-container-high p-2 pr-10 border eth-border-ghost rounded focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
                                     />
                                     <button
                                         type="button"

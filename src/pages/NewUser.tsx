@@ -430,7 +430,7 @@ export const NewUser: React.FC = () => {
                                 value={givenName}
                                 onChange={handleGivenNameChange}
                                 disabled={submitting}
-                                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                 placeholder={t('fields.firstNamePlaceholder')}
                             />
                             {validationErrors.givenName && (
@@ -446,7 +446,7 @@ export const NewUser: React.FC = () => {
                                 value={familyName}
                                 onChange={handleFamilyNameChange}
                                 disabled={submitting}
-                                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                 placeholder={t('fields.lastNamePlaceholder')}
                             />
                             {validationErrors.familyName && (
@@ -469,7 +469,7 @@ export const NewUser: React.FC = () => {
                                     value={username}
                                     onChange={handleUsernameChange}
                                     disabled={submitting}
-                                    className={`flex-1 p-2 border rounded-lg focus:ring-2 ${usernameInputBorderClass}`}
+                                    className={`flex-1 bg-surface-container-high p-2 border rounded-lg focus:ring-2 ${usernameInputBorderClass}`}
                                     placeholder={t('fields.emailPlaceholder')}
                                 />
                                 <span className="text-on-surface-variant font-medium px-1">@</span>
@@ -477,7 +477,7 @@ export const NewUser: React.FC = () => {
                                     value={domain}
                                     onChange={handleDomainChange}
                                     disabled={submitting}
-                                    className="p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                    className="bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                 >
                                     {domains.map((d) => (
                                         <option key={d.domainName} value={d.domainName}>{d.domainName}</option>
@@ -520,7 +520,7 @@ export const NewUser: React.FC = () => {
                                         if (validationErrors.password) setValidationErrors((v) => ({ ...v, password: undefined }));
                                     }}
                                     disabled={submitting}
-                                    className="w-full p-2 pr-10 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                    className="w-full bg-surface-container-high p-2 pr-10 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                     placeholder={t('fields.passwordPlaceholder')}
                                 />
                                 <button
@@ -559,7 +559,7 @@ export const NewUser: React.FC = () => {
                                 value={orgUnitPath}
                                 onChange={(e) => setOrgUnitPath(e.target.value)}
                                 disabled={submitting}
-                                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                             >
                                 <option value="/">{t('fields.rootOrg')}</option>
                                 {orgUnits.map((ou) => (
@@ -588,7 +588,7 @@ export const NewUser: React.FC = () => {
                                 onPaste={handlePhonePaste}
                                 disabled={submitting}
                                 maxLength={16}
-                                className="w-full p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                className="w-full bg-surface-container-high p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                 placeholder={t('fields.phonePlaceholder')}
                             />
                             {validationErrors.phone && (
@@ -668,7 +668,7 @@ export const NewUser: React.FC = () => {
                                     value={selectedTemplateId}
                                     onChange={(e) => setSelectedTemplateId(e.target.value)}
                                     disabled={submitting}
-                                    className="w-full md:w-1/2 p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
+                                    className="w-full bg-surface-container-high md:w-1/2 p-2 border border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-eth-primary-container/40"
                                 >
                                     {templates.map(tpl => (
                                         <option key={tpl.id} value={tpl.id}>{tpl.name} {tpl.isDefault ? t('signatureSection.defaultSuffix') : ''}</option>
