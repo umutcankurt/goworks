@@ -3,7 +3,27 @@
   "tabs": {
     "general": "Genel",
     "titles": "Ünvanlar",
-    "institutions": "Kurumlar"
+    "institutions": "Kurumlar",
+    "googleWorkspace": "Google Workspace Ayarları",
+    "about": "Hakkında"
+  },
+  "about": {
+    "version": "Sürüm {{version}}",
+    "repoLink": "GitHub deposu / Geliştirici",
+    "license": {
+      "heading": "Lisans",
+      "body": "Bu uygulama Apache License 2.0 altında lisanslanmıştır. Tam lisans metni için uygulamanın kök dizinindeki LICENSE dosyasına bakın."
+    },
+    "trademarks": {
+      "heading": "Ticari Marka Bildirimleri",
+      "intro": "GoWorks bağımsız bir açık kaynak projesidir; Google LLC tarafından desteklenmemekte ve bu şirketle bağlantılı değildir.",
+      "google": "\"Google Workspace\", \"Google\" ve \"Gmail\", Google LLC'nin ticari markalarıdır.",
+      "others": "Diğer tüm ürün adları ve markalar, ilgili sahiplerinin mülkiyetindedir."
+    },
+    "libraries": {
+      "heading": "Açık Kaynak Kütüphaneler",
+      "intro": "GoWorks aşağıdaki açık kaynak kütüphaneleri kullanır. Her kütüphanenin lisansı kendi proje deposunda yer alır."
+    }
   },
   "serverRequired": "Sunucu bağlantısı gerekli.",
   "general": {
@@ -108,7 +128,7 @@
     "newPlaceholder": "Yeni ünvan adı...",
     "tableHeader": "Ünvan",
     "searchPlaceholder": "Ünvanlarda ara...",
-    "csvFormat": "CSV formatı: <code>name</code> veya <code>unvan</code> sütunu",
+    "csvFormat": "İlk satır başlık olmalı (<code>name</code> veya <code>unvan</code>), sonraki her satıra bir ünvan yazın.",
     "csvPlaceholder": "name\nMüdür\nÖğretmen\nMemur",
     "noMatches": "Eşleşen ünvan bulunamadı",
     "empty": "Henüz ünvan eklenmemiş",
@@ -120,8 +140,8 @@
     "namePlaceholder": "Kurum adı",
     "addressPlaceholder": "Adres (opsiyonel)",
     "phonePlaceholder": "Telefon (opsiyonel)",
-    "csvFormat": "CSV formatı: <code>name/kurum</code>, <code>address/adres</code>, <code>phone/telefon</code> sütunları",
-    "csvPlaceholder": "name,address,phone\nMerkez Kurum,İstanbul,02121234567",
+    "csvFormat": "Sütunlar (sırayla): kurum adı, adres, telefon — virgülle ayrılır. İlk satır başlık olmalı (<code>name,address,phone</code>). Adres ve telefon opsiyoneldir.",
+    "csvPlaceholder": "name,address,phone\nMerkez Kurum,İstanbul,0212 123 45 67\nŞube,Ankara,0312 765 43 21",
     "headers": {
       "name": "Kurum",
       "address": "Adres",
@@ -139,14 +159,14 @@
         "icon": "info",
         "heading": "Genel Bakış",
         "paragraphs": [
-          "Ayarlar sayfası üç sekmeden oluşur: <b>Genel</b>, <b>Ünvanlar</b> ve <b>Kurumlar</b>. Bu sekmelerden uygulamanın markasını ve Yeni Kullanıcı / imza akışında kullanılan referans verileri yönetirsiniz."
+          "Ayarlar sayfası beş sekmeden oluşur: <b>Genel</b>, <b>Ünvanlar</b>, <b>Kurumlar</b>, <b>Google Workspace Ayarları</b> ve <b>Hakkında</b>. Bu sekmelerden uygulamanın markasını, Google Workspace bağlantı ayarlarını ve Yeni Kullanıcı / imza akışında kullanılan referans verileri yönetirsiniz."
         ]
       },
       {
         "icon": "settings",
         "heading": "Genel Sekmesi",
         "paragraphs": [
-          "Firma adı, sidebar kısaltması, logo, e-posta bildirim gönderici adı, izin verilen giriş domaini ve uygulama dili buradan ayarlanır. Ayrıca Google Service Account ve Domain-Wide Delegation yapılandırması da bu sekmededir."
+          "Firma adı, sidebar kısaltması, logo, e-posta bildirim gönderici adı, izin verilen giriş domaini ve uygulama dili buradan ayarlanır."
         ],
         "callout": { "tone": "info", "text": "Marka bilgileri değiştirildiğinde sidebar ve header <b>anında</b> güncellenir; aynı uygulama farklı kurumlara bu sekmeden uyarlanır." }
       },
@@ -154,16 +174,30 @@
         "icon": "tag",
         "heading": "Ünvanlar Sekmesi",
         "paragraphs": [
-          "Kullanıcılara atanabilecek unvan listesini (Müdür, Öğretmen vb.) buradan yönetir, CSV ile toplu içe aktarabilirsiniz. Tanımlı unvanlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{unvan}}</code> değişkeni olarak kullanılır."
+          "Kullanıcılara atanabilecek unvan listesini (Müdür, Öğretmen vb.) buradan yönetir, <b>Toplu Ekle</b> butonuyla birden çok unvanı tek seferde ekleyebilirsiniz. Tanımlı unvanlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{unvan}}</code> değişkeni olarak kullanılır."
         ]
       },
       {
         "icon": "building",
         "heading": "Kurumlar Sekmesi",
         "paragraphs": [
-          "Her kurumun adı, adresi ve telefonu burada tanımlanır. Tanımlanan kurumlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code>, <code>{{kurum_telefon}}</code> değişkenleri olarak görünür. CSV ile toplu içe aktarma desteklenir."
+          "Her kurumun adı, adresi ve telefonu burada tanımlanır. Tanımlanan kurumlar Yeni Kullanıcı sayfasında seçilir ve imza şablonunda <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code>, <code>{{kurum_telefon}}</code> değişkenleri olarak görünür. <b>Toplu Ekle</b> ile birden çok kurumu tek seferde ekleyebilirsiniz."
         ],
         "callout": { "tone": "info", "text": "<b>Kurumlar özelliği, birden çok şubesi veya kampüsü olan yapılar içindir.</b> Her şube/lokasyon ayrı bir kurum olarak tanımlanır; böylece her kullanıcının imzası kendi şubesinin bilgilerini taşır. Tek lokasyonlu firmalar tek bir kurum tanımlayabilir." }
+      },
+      {
+        "icon": "settings",
+        "heading": "Google Workspace Ayarları Sekmesi",
+        "paragraphs": [
+          "Google Cloud OAuth bilgileri, gerekli API'ler, Service Account ve Domain-Wide Delegation yapılandırması ile kurulum sihirbazını sıfırlama bu sekmede yer alır. İmza yönetimi için Service Account ve DWD zorunludur."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "Hakkında Sekmesi",
+        "paragraphs": [
+          "Uygulama sürümü, lisans (Apache 2.0), ticari marka bildirimleri ve kullanılan açık kaynak kütüphaneler burada listelenir."
+        ]
       }
     ]
   }

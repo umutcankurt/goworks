@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Upload, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, Upload, ClipboardList, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink, Info, FileText, Copyright, Boxes } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
@@ -13,8 +13,9 @@ import { LANGUAGES } from '../i18n/types';
 import { HelpGuide } from '../components/HelpGuide';
 import { OAuthCredentialsForm } from '../components/onboarding/shared/OAuthCredentialsForm';
 import { RequiredApisCard } from '../components/shared/RequiredApisCard';
+import { APP_VERSION } from '../build-info';
 
-type Tab = 'general' | 'titles' | 'institutions';
+type Tab = 'general' | 'titles' | 'institutions' | 'googleWorkspace' | 'about';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('general');
@@ -24,6 +25,8 @@ export function Settings() {
     { key: 'general', labelKey: 'tabs.general' },
     { key: 'titles', labelKey: 'tabs.titles' },
     { key: 'institutions', labelKey: 'tabs.institutions' },
+    { key: 'googleWorkspace', labelKey: 'tabs.googleWorkspace' },
+    { key: 'about', labelKey: 'tabs.about' },
   ];
 
   return (
@@ -59,6 +62,8 @@ export function Settings() {
           {activeTab === 'general' && <GeneralTab />}
           {activeTab === 'titles' && <TitlesTab disabled={false} />}
           {activeTab === 'institutions' && <InstitutionsTab disabled={false} />}
+          {activeTab === 'googleWorkspace' && <GoogleWorkspaceTab />}
+          {activeTab === 'about' && <AboutTab />}
         </div>
       </div>
     </motion.div>
@@ -157,13 +162,13 @@ function TitlesTab({ disabled }: { disabled: boolean }) {
           onChange={e => setNewTitle(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
           placeholder={t('titles.newPlaceholder')}
-          className="flex-1 px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
         <button onClick={handleAdd} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 flex items-center gap-1">
           <Plus size={16} /> {tCommon('add')}
         </button>
         <button onClick={() => setShowCsvImport(!showCsvImport)} className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-sm hover:bg-surface-container-highest flex items-center gap-1">
-          <Upload size={16} /> {tCommon('csv')}
+          <ClipboardList size={16} /> {tCommon('bulkAdd')}
         </button>
       </div>
 
@@ -174,7 +179,7 @@ function TitlesTab({ disabled }: { disabled: boolean }) {
             value={csvText}
             onChange={e => setCsvText(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg text-sm font-mono"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm font-mono"
             placeholder={t('titles.csvPlaceholder')}
           />
           <button onClick={handleCsvImport} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700">{tCommon('import')}</button>
@@ -190,7 +195,7 @@ function TitlesTab({ disabled }: { disabled: boolean }) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('titles.searchPlaceholder')}
-              className="w-full pl-9 pr-8 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full bg-surface-container-high pl-9 pr-8 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface-variant">
@@ -232,7 +237,7 @@ function TitlesTab({ disabled }: { disabled: boolean }) {
                           if (e.key === 'Escape') setEditingId(null);
                         }}
                         autoFocus
-                        className="w-full px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full bg-surface-container-high px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       />
                     </td>
                     <td className="px-4 py-2 flex items-center gap-1">
@@ -359,16 +364,16 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-2">
-        <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('institutions.namePlaceholder')} className="px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-        <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder={t('institutions.addressPlaceholder')} className="px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-        <input type="text" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder={t('institutions.phonePlaceholder')} className="px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+        <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('institutions.namePlaceholder')} className="bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+        <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder={t('institutions.addressPlaceholder')} className="bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+        <input type="text" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder={t('institutions.phonePlaceholder')} className="bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
       </div>
       <div className="flex gap-2">
         <button onClick={handleAdd} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 flex items-center gap-1">
           <Plus size={16} /> {tCommon('add')}
         </button>
         <button onClick={() => setShowCsvImport(!showCsvImport)} className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-sm hover:bg-surface-container-highest flex items-center gap-1">
-          <Upload size={16} /> {tCommon('csv')}
+          <ClipboardList size={16} /> {tCommon('bulkAdd')}
         </button>
       </div>
 
@@ -379,7 +384,7 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
             value={csvText}
             onChange={e => setCsvText(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg text-sm font-mono"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg text-sm font-mono"
             placeholder={t('institutions.csvPlaceholder')}
           />
           <button onClick={handleCsvImport} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700">{tCommon('import')}</button>
@@ -395,7 +400,7 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('institutions.searchPlaceholder')}
-              className="w-full pl-9 pr-8 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full bg-surface-container-high pl-9 pr-8 py-2 border eth-border-ghost rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface-variant">
@@ -439,7 +444,7 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
                           if (e.key === 'Escape') setEditingId(null);
                         }}
                         autoFocus
-                        className="w-full px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full bg-surface-container-high px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       />
                     </td>
                     <td className="px-4 py-2">
@@ -452,7 +457,7 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
                           if (e.key === 'Escape') setEditingId(null);
                         }}
                         placeholder={t('institutions.headers.address')}
-                        className="w-full px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full bg-surface-container-high px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       />
                     </td>
                     <td className="px-4 py-2">
@@ -465,7 +470,7 @@ function InstitutionsTab({ disabled }: { disabled: boolean }) {
                           if (e.key === 'Escape') setEditingId(null);
                         }}
                         placeholder={t('institutions.headers.phone')}
-                        className="w-full px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        className="w-full bg-surface-container-high px-2 py-1 border border-primary-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       />
                     </td>
                     <td className="px-4 py-2 flex items-center gap-1">
@@ -617,7 +622,7 @@ function GeneralTab() {
             onChange={(e) => handleLiveChange('companyName', e.target.value)}
             maxLength={80}
             placeholder={t('general.companyName.placeholder')}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <p className="text-xs text-on-surface-variant mt-1">
             {config.companyName ? (
@@ -648,7 +653,7 @@ function GeneralTab() {
             onBlur={handleSidebarAbbrBlur}
             maxLength={5}
             placeholder={initialsFrom(config.companyName) || 'GW'}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <p className="text-xs text-on-surface-variant mt-1">
             {t('general.sidebarAbbr.helper')}
@@ -668,7 +673,7 @@ function GeneralTab() {
             onChange={(e) => setDraftAllowedDomain(e.target.value)}
             onBlur={handleAllowedDomainBlur}
             placeholder={t('general.allowedDomain.placeholder')}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <p className="text-xs text-on-surface-variant mt-1">
             {config.allowedDomain ? t('general.allowedDomain.helperWith') : t('general.allowedDomain.helperEmpty')}
@@ -686,7 +691,7 @@ function GeneralTab() {
             onChange={(e) => handleLiveChange('emailSenderName', e.target.value)}
             maxLength={80}
             placeholder={t('general.emailSenderName.placeholder')}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-surface-container-high px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <p className="text-xs text-on-surface-variant mt-1">
             {t('general.emailSenderName.helper', { name: config.emailSenderName })}
@@ -707,7 +712,7 @@ function GeneralTab() {
           <select
             value={language}
             onChange={(e) => { void setLanguage(e.target.value as 'tr' | 'en'); }}
-            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-surface-container"
+            className="w-full px-3 py-2 border eth-border-ghost rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-surface-container-high"
           >
             {LANGUAGES.map((lng) => (
               <option key={lng.code} value={lng.code}>
@@ -765,11 +770,126 @@ function GeneralTab() {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+/* ============================================================
+ * Google Workspace Settings tab — connection-related configuration
+ * (OAuth credentials, required APIs, service account, DWD, reset).
+ * Brand/identity fields stay on the General tab.
+ * ============================================================ */
+function GoogleWorkspaceTab() {
+  return (
+    <div className="space-y-6 max-w-2xl">
       <GoogleCloudSection />
       <RequiredApisCard variant="expanded" />
       <ServiceAccountSection />
       <DwdSection />
       <ResetWizardSection />
+    </div>
+  );
+}
+
+/* ============================================================
+ * About tab — version, license, trademark notices, OSS attributions.
+ * Library names + license codes are literal (not translated, not versioned —
+ * exposing exact dependency versions would be a needless fingerprinting risk).
+ * ============================================================ */
+const ABOUT_LIBRARIES: { name: string; license: string }[] = [
+  { name: 'React', license: 'MIT' },
+  { name: 'React Router', license: 'MIT' },
+  { name: 'i18next / react-i18next', license: 'MIT' },
+  { name: 'framer-motion', license: 'MIT' },
+  { name: 'lucide-react', license: 'ISC' },
+  { name: 'recharts', license: 'MIT' },
+  { name: 'tailwindcss', license: 'MIT' },
+  { name: 'vite', license: 'MIT' },
+  { name: 'electron', license: 'MIT' },
+  { name: 'better-sqlite3', license: 'MIT' },
+  { name: 'papaparse', license: 'MIT' },
+  { name: 'sanitize-html', license: 'MIT' },
+  { name: 'bottleneck', license: 'MIT' },
+  { name: 'react-dropzone', license: 'MIT' },
+  { name: 'dotenv', license: 'BSD-2-Clause' },
+  { name: 'googleapis', license: 'Apache-2.0' },
+  { name: 'google-auth-library', license: 'Apache-2.0' },
+];
+
+const REPO_URL = 'https://github.com/umutcankurt';
+
+function AboutTab() {
+  const { t } = useTranslation('settings');
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* App + version + repo */}
+      <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+        <div className="flex items-start gap-3">
+          <Info size={24} className="text-on-surface-variant mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-on-surface">GoWorks</h2>
+            <p className="text-sm text-on-surface-variant mt-0.5">
+              {t('about.version', { version: APP_VERSION })}
+            </p>
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-2 text-sm text-eth-primary hover:underline underline-offset-2"
+            >
+              <ExternalLink size={14} />
+              {t('about.repoLink')}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* License */}
+      <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+        <div className="flex items-start gap-3">
+          <FileText size={24} className="text-on-surface-variant mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-on-surface mb-1">{t('about.license.heading')}</h2>
+            <p className="text-sm text-on-surface-variant">{t('about.license.body')}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Trademark notices */}
+      <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+        <div className="flex items-start gap-3">
+          <Copyright size={24} className="text-on-surface-variant mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-on-surface mb-1">{t('about.trademarks.heading')}</h2>
+            <p className="text-sm text-on-surface-variant mb-3">{t('about.trademarks.intro')}</p>
+            <ul className="space-y-1.5 text-sm text-on-surface-variant list-disc list-inside">
+              <li>{t('about.trademarks.google')}</li>
+              <li>{t('about.trademarks.others')}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Open-source libraries */}
+      <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+        <div className="flex items-start gap-3">
+          <Boxes size={24} className="text-on-surface-variant mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-on-surface mb-1">{t('about.libraries.heading')}</h2>
+            <p className="text-sm text-on-surface-variant mb-4">{t('about.libraries.intro')}</p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              {ABOUT_LIBRARIES.map((lib) => (
+                <li key={lib.name} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-on-surface">{lib.name}</span>
+                  <span className="font-mono text-xs text-on-surface-variant bg-surface-container-high rounded px-1.5 py-0.5">
+                    {lib.license}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

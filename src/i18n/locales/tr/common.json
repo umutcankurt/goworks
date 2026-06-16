@@ -25,6 +25,7 @@
   "confirmDelete": "Silmek istediğinize emin misiniz?",
   "actions": "İşlemler",
   "csv": "CSV",
+  "bulkAdd": "Toplu Ekle",
   "emptyState": "Henüz veri yok",
   "refresh": "Yenile",
   "copy": "Kopyala",

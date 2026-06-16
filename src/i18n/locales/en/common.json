@@ -25,6 +25,7 @@
   "confirmDelete": "Are you sure you want to delete?",
   "actions": "Actions",
   "csv": "CSV",
+  "bulkAdd": "Bulk add",
   "emptyState": "No data yet",
   "refresh": "Refresh",
   "copy": "Copy",

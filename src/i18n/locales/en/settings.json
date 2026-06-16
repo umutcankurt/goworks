@@ -3,7 +3,27 @@
   "tabs": {
     "general": "General",
     "titles": "Titles",
-    "institutions": "Institutions"
+    "institutions": "Institutions",
+    "googleWorkspace": "Google Workspace Settings",
+    "about": "About"
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "repoLink": "GitHub repository / Author",
+    "license": {
+      "heading": "License",
+      "body": "This application is licensed under the Apache License 2.0. See the LICENSE file in the application root for the full license text."
+    },
+    "trademarks": {
+      "heading": "Trademark Notices",
+      "intro": "GoWorks is an independent open-source project and is not affiliated with, endorsed by, or sponsored by Google LLC.",
+      "google": "\"Google Workspace\", \"Google\", and \"Gmail\" are trademarks of Google LLC.",
+      "others": "All other product names and trademarks are the property of their respective owners."
+    },
+    "libraries": {
+      "heading": "Open-Source Libraries",
+      "intro": "GoWorks uses the following open-source libraries. Each library's license is available in its own project repository."
+    }
   },
   "serverRequired": "Server connection required.",
   "general": {
@@ -108,7 +128,7 @@
     "newPlaceholder": "New title name...",
     "tableHeader": "Title",
     "searchPlaceholder": "Search titles...",
-    "csvFormat": "CSV format: <code>name</code> or <code>unvan</code> column",
+    "csvFormat": "The first row must be a header (<code>name</code> or <code>unvan</code>); enter one title per line below.",
     "csvPlaceholder": "name\nManager\nTeacher\nClerk",
     "noMatches": "No matching title found",
     "empty": "No titles added yet",
@@ -120,8 +140,8 @@
     "namePlaceholder": "Institution name",
     "addressPlaceholder": "Address (optional)",
     "phonePlaceholder": "Phone (optional)",
-    "csvFormat": "CSV format: <code>name/kurum</code>, <code>address/adres</code>, <code>phone/telefon</code> columns",
-    "csvPlaceholder": "name,address,phone\nMain Office,Istanbul,02121234567",
+    "csvFormat": "Columns (in order): name, address, phone — comma-separated. The first row must be a header (<code>name,address,phone</code>). Address and phone are optional.",
+    "csvPlaceholder": "name,address,phone\nMain Office,Istanbul,0212 123 45 67\nBranch,Ankara,0312 765 43 21",
     "headers": {
       "name": "Institution",
       "address": "Address",
@@ -139,14 +159,14 @@
         "icon": "info",
         "heading": "Overview",
         "paragraphs": [
-          "The Settings page consists of three tabs: <b>General</b>, <b>Titles</b> and <b>Institutions</b>. From these tabs you manage the app's branding and the reference data used in the New User / signature flow."
+          "The Settings page consists of five tabs: <b>General</b>, <b>Titles</b>, <b>Institutions</b>, <b>Google Workspace Settings</b> and <b>About</b>. From these tabs you manage the app's branding, the Google Workspace connection settings, and the reference data used in the New User / signature flow."
         ]
       },
       {
         "icon": "settings",
         "heading": "General Tab",
         "paragraphs": [
-          "Company name, sidebar abbreviation, logo, email notification sender name, allowed sign-in domain and the app language are set here. The Google Service Account and Domain-Wide Delegation configuration is also on this tab."
+          "Company name, sidebar abbreviation, logo, email notification sender name, allowed sign-in domain and the app language are set here."
         ],
         "callout": { "tone": "info", "text": "When branding info is changed, the sidebar and header update <b>instantly</b>; the same app is adapted to different organizations from this tab." }
       },
@@ -154,16 +174,30 @@
         "icon": "tag",
         "heading": "Titles Tab",
         "paragraphs": [
-          "Manage the list of titles that can be assigned to users (Manager, Teacher, etc.) here, and bulk-import them via CSV. Defined titles are selected on the New User page and used in the signature template as the <code>{{unvan}}</code> variable."
+          "Manage the list of titles that can be assigned to users (Manager, Teacher, etc.) here, and add several at once with the <b>Bulk add</b> button. Defined titles are selected on the New User page and used in the signature template as the <code>{{unvan}}</code> variable."
         ]
       },
       {
         "icon": "building",
         "heading": "Institutions Tab",
         "paragraphs": [
-          "Each institution's name, address and phone are defined here. Defined institutions are selected on the New User page and appear in the signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables. Bulk import via CSV is supported."
+          "Each institution's name, address and phone are defined here. Defined institutions are selected on the New User page and appear in the signature template as the <code>{{kurum_adi}}</code>, <code>{{kurum_adres}}</code> and <code>{{kurum_telefon}}</code> variables. You can add several at once with the <b>Bulk add</b> button."
         ],
         "callout": { "tone": "info", "text": "<b>The Institutions feature is meant for organizations with multiple branches or locations.</b> Each branch/location is defined as a separate institution, so every user's signature carries their own branch details. Single-location companies can define just one institution." }
+      },
+      {
+        "icon": "settings",
+        "heading": "Google Workspace Settings Tab",
+        "paragraphs": [
+          "Google Cloud OAuth credentials, required APIs, the Service Account and Domain-Wide Delegation configuration, and the onboarding reset live on this tab. The Service Account and DWD are required for signature management."
+        ]
+      },
+      {
+        "icon": "info",
+        "heading": "About Tab",
+        "paragraphs": [
+          "The application version, license (Apache 2.0), trademark notices, and the open-source libraries used are listed here."
+        ]
       }
     ]
   }
