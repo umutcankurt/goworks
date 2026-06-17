@@ -21,6 +21,7 @@ export interface MediaRow {
     mimeType: string;
     templateId: number;
     createdBy: string | null;
+    token: string | null;
     createdAt: string;
 }
 
@@ -43,6 +44,7 @@ interface MediaDbRow {
     mime_type: string;
     template_id: number;
     created_by: string | null;
+    token: string | null;
     created_at: string;
 }
 
@@ -68,6 +70,7 @@ function mediaToApi(row: MediaDbRow): MediaRow {
         mimeType: row.mime_type,
         templateId: row.template_id,
         createdBy: row.created_by,
+        token: row.token,
         createdAt: row.created_at,
     };
 }

@@ -13,11 +13,19 @@
   },
   "media": {
     "heading": "Medya Yönetimi",
-    "publicWarning": "Dosyanın herkese açık paylaşıma sahip olduğundan emin olun.",
+    "publicWarning": "Görseller Drive'a yüklenir ve herkese açık (bağlantısı olan görüntüleyebilir) yapılır; e-postalarda görünmesi için bu gereklidir.",
     "namePlaceholder": "Medya adı",
     "drivePlaceholder": "Google Drive URL",
     "copyUrl": "URL Kopyala",
-    "delete": "Sil"
+    "delete": "Sil",
+    "addImage": "Görsel Ekle",
+    "uploading": "Yükleniyor...",
+    "insertToken": "Editöre ekle",
+    "copyToken": "Token'ı kopyala",
+    "tokenCopied": "Token kopyalandı",
+    "inserted": "Görsel editöre eklendi",
+    "advancedUrl": "Gelişmiş: URL ile ekle",
+    "tokenNote": "Token kalıcıdır — görsel silinse de numarası tekrar kullanılmaz."
   },
   "editor": {
     "bold": "Kalın",

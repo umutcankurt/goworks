@@ -28,10 +28,10 @@ describe('runMigrations', () => {
         db = freshDb();
     });
 
-    it('v0 → v2: user_version pragma\'yı 2\'ye yükseltir', () => {
+    it('v0 → v3: user_version pragma\'yı 3\'e yükseltir', () => {
         expect(db.pragma('user_version', { simple: true })).toBe(0);
         runMigrations(db);
-        expect(db.pragma('user_version', { simple: true })).toBe(2);
+        expect(db.pragma('user_version', { simple: true })).toBe(3);
     });
 
     it('idempotent: aynı DB üzerinde 2. çağrı yan etki yapmaz', () => {
@@ -40,7 +40,7 @@ describe('runMigrations', () => {
         runMigrations(db);
         const versionAfterSecond = db.pragma('user_version', { simple: true });
         expect(versionAfterFirst).toBe(versionAfterSecond);
-        expect(versionAfterSecond).toBe(2);
+        expect(versionAfterSecond).toBe(3);
     });
 
     it('companyName + allowedDomain dolu ise onboardingCompletedAt set edilir', () => {
@@ -96,6 +96,47 @@ describe('runMigrations', () => {
         const bareDb = new Database(':memory:');
         // Only the pragma exists, no tables
         expect(() => runMigrations(bareDb)).not.toThrow();
-        expect(bareDb.pragma('user_version', { simple: true })).toBe(2);
+        expect(bareDb.pragma('user_version', { simple: true })).toBe(3);
+    });
+
+    it('v2 → v3: media_assets.token kolonunu ekler ve mevcut satırları image_N ile backfill eder', () => {
+        // Simulate a pre-v3 install: media_assets WITHOUT a token column, user_version = 2.
+        const legacy = new Database(':memory:');
+        legacy.exec(`
+            CREATE TABLE signature_templates (id INTEGER PRIMARY KEY);
+            CREATE TABLE media_assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT, drive_file_id TEXT, public_url TEXT, mime_type TEXT,
+                template_id INTEGER, created_by TEXT,
+                created_at TEXT
+            );
+        `);
+        legacy.pragma('user_version = 2');
+        const ins = legacy.prepare(
+            "INSERT INTO media_assets (name, drive_file_id, public_url, mime_type, template_id, created_at) VALUES (?, ?, ?, 'image/png', ?, ?)",
+        );
+        ins.run('a', 'f1', 'u1', 1, '2024-01-01');
+        ins.run('b', 'f2', 'u2', 1, '2024-01-02');
+        ins.run('c', 'f3', 'u3', 2, '2024-01-01');
+
+        runMigrations(legacy);
+
+        const cols = legacy.prepare('PRAGMA table_info(media_assets)').all() as { name: string }[];
+        expect(cols.some(c => c.name === 'token')).toBe(true);
+
+        const byName = Object.fromEntries(
+            (legacy.prepare('SELECT name, token FROM media_assets').all() as { name: string; token: string }[])
+                .map(r => [r.name, r.token]),
+        );
+        // template 1: a (earlier) → image_1, b → image_2; template 2: c → image_1
+        expect(byName.a).toBe('image_1');
+        expect(byName.b).toBe('image_2');
+        expect(byName.c).toBe('image_1');
+        expect(legacy.pragma('user_version', { simple: true })).toBe(3);
+
+        // Idempotent: a second run must not add the column twice or change tokens.
+        expect(() => runMigrations(legacy)).not.toThrow();
+        const recheck = legacy.prepare("SELECT token FROM media_assets WHERE name = 'b'").get() as { token: string };
+        expect(recheck.token).toBe('image_2');
     });
 });

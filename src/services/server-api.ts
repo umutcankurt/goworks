@@ -126,11 +126,13 @@ export const templatesApi = {
   setDefault: (id: number) => ipcInvoke('templates:setDefault', { id }),
 };
 
-// Media — Electron IPC (local SQLite + Drive URL parsing)
+// Media — Electron IPC (local SQLite + Drive upload/URL parsing)
 export const mediaApi = {
   getAll: (templateId?: number) => ipcInvoke<any[]>('media:getAll', { templateId }),
   create: (data: { name: string; driveUrl: string; mimeType?: string; templateId: number }) =>
     ipcInvoke('media:create', data),
+  upload: (data: { name: string; data: ArrayBuffer; mimeType: string; templateId: number }) =>
+    ipcInvoke('media:upload', data),
   delete: (id: number) => ipcInvoke('media:delete', { id }),
 };
 

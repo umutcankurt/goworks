@@ -24,6 +24,7 @@ export function SignatureTemplates() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
+  const [media, setMedia] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -47,6 +48,20 @@ export function SignatureTemplates() {
     };
   }, [t, i18n.language, config.allowedDomain]);
 
+  // Sample vars + media tokens ({{image_1}} → public CDN url) so the preview
+  // resolves uploaded images the same way the push worker does.
+  const previewVariables = useMemo<Record<string, string>>(() => {
+    const imageVars: Record<string, string> = {};
+    for (const m of media) {
+      if (m.token) imageVars[m.token] = m.publicUrl;
+    }
+    return { ...SAMPLE_VARIABLES, ...imageVars };
+  }, [SAMPLE_VARIABLES, media]);
+
+  const handleInsertToken = (snippet: string) => {
+    setHtmlContent(prev => (prev ? `${prev}\n${snippet}` : snippet));
+  };
+
   const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true);
@@ -68,6 +83,7 @@ export function SignatureTemplates() {
     setHtmlContent(tmpl.htmlContent);
     setOriginalName(tmpl.name);
     setOriginalHtml(tmpl.htmlContent);
+    setMedia([]); // MediaManager re-fetches for the new template and reports back
   };
 
   const handleNew = () => {
@@ -77,6 +93,7 @@ export function SignatureTemplates() {
     setHtmlContent('');
     setOriginalName('');
     setOriginalHtml('');
+    setMedia([]);
   };
 
   const handleSave = async () => {
@@ -117,6 +134,7 @@ export function SignatureTemplates() {
         setHtmlContent('');
         setOriginalName('');
         setOriginalHtml('');
+        setMedia([]);
       }
       fetchTemplates();
     } catch (err: any) {
@@ -232,7 +250,7 @@ export function SignatureTemplates() {
 
           {selectedId && (
             <div className="border-t border-outline-variant/30 pt-4">
-              <MediaManager templateId={selectedId} />
+              <MediaManager templateId={selectedId} onMediaChange={setMedia} onInsertToken={handleInsertToken} />
             </div>
           )}
           {!selectedId && (
@@ -243,7 +261,7 @@ export function SignatureTemplates() {
         </div>
 
         <div className="col-span-4">
-          <SignaturePreview html={htmlContent} variables={SAMPLE_VARIABLES} />
+          <SignaturePreview html={htmlContent} variables={previewVariables} />
         </div>
       </div>
     </motion.div>

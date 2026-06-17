@@ -13,11 +13,19 @@
   },
   "media": {
     "heading": "Media Management",
-    "publicWarning": "Make sure the file is publicly shared.",
+    "publicWarning": "Images are uploaded to Drive and made public (anyone with the link can view); this is required for them to show in emails.",
     "namePlaceholder": "Media name",
     "drivePlaceholder": "Google Drive URL",
     "copyUrl": "Copy URL",
-    "delete": "Delete"
+    "delete": "Delete",
+    "addImage": "Add image",
+    "uploading": "Uploading...",
+    "insertToken": "Insert into editor",
+    "copyToken": "Copy token",
+    "tokenCopied": "Token copied",
+    "inserted": "Image inserted into editor",
+    "advancedUrl": "Advanced: add by URL",
+    "tokenNote": "Tokens are permanent — a deleted image's number is not reused."
   },
   "editor": {
     "bold": "Bold",

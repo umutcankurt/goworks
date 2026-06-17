@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS media_assets (
   mime_type TEXT NOT NULL,
   template_id INTEGER NOT NULL,
   created_by TEXT,
+  -- Stable template-local token (e.g. "image_1"); referenced as {{image_1}} in HTML.
+  -- Never recomputed — deletion leaves a gap rather than renumbering (keeps signatures intact).
+  token TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   FOREIGN KEY (template_id) REFERENCES signature_templates(id) ON DELETE CASCADE
 );

@@ -19,6 +19,9 @@ const SCOPES = [
     'https://www.googleapis.com/auth/admin.directory.domain.readonly',
     'https://www.googleapis.com/auth/admin.reports.usage.readonly',
     'https://www.googleapis.com/auth/apps.groups.settings',
+    // Signature media: upload images to Drive + authorize files picked via Google Picker.
+    // Narrowest scope — only files the app creates or the user explicitly picks.
+    'https://www.googleapis.com/auth/drive.file',
 ];
 
 export class MissingOAuthCredentialsError extends Error {

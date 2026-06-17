@@ -58,6 +58,41 @@ describe('renderTemplate — İngilizce token aliasing (dile duyarlı editör)',
     });
 });
 
+describe('renderTemplate — image tokens (signature media)', () => {
+    it('resolves {{image_N}} inside an img src to the CDN url', () => {
+        const html = renderTemplate(
+            '<img src="{{image_1}}" width="90" height="90" />',
+            { image_1: 'https://lh3.googleusercontent.com/d/ABC123' },
+        );
+        expect(html).toContain('src="https://lh3.googleusercontent.com/d/ABC123"');
+    });
+
+    it('keeps the lh3 url intact — no query string means no &amp; corruption', () => {
+        const url = 'https://lh3.googleusercontent.com/d/ABC123';
+        const html = renderTemplate('<img src="{{image_1}}" />', { image_1: url });
+        expect(html).toContain(url);
+        expect(html).not.toContain('&amp;');
+    });
+
+    it('still renders legacy uc?export=view urls (backward compatible)', () => {
+        const html = renderTemplate(
+            '<img src="{{image_1}}" />',
+            { image_1: 'https://drive.google.com/uc?export=view&id=ABC123' },
+        );
+        expect(html).toContain('uc?export=view');
+        expect(html).toContain('id=ABC123');
+    });
+
+    it('supports multiple distinct image tokens', () => {
+        const html = renderTemplate(
+            '<img src="{{image_1}}" /><img src="{{image_2}}" />',
+            { image_1: 'https://lh3.googleusercontent.com/d/AAA', image_2: 'https://lh3.googleusercontent.com/d/BBB' },
+        );
+        expect(html).toContain('https://lh3.googleusercontent.com/d/AAA');
+        expect(html).toContain('https://lh3.googleusercontent.com/d/BBB');
+    });
+});
+
 describe('processConditionalBlocks — İngilizce token alias farkındalığı', () => {
     it('removes element when English condition token resolves to an empty value', () => {
         const out = processConditionalBlocks('<span data-condition="phone">x</span>', { telefon: '' });

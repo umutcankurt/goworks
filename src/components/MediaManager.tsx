@@ -1,18 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Copy, Loader, Image, ImageOff, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Trash2, Copy, Loader, Image, ImageOff, AlertTriangle, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { mediaApi } from '../services/server-api';
 import { useToast } from '../contexts/ToastContext';
 
 interface MediaManagerProps {
   templateId: number;
+  /** Insert a snippet (full <img> block) into the editor at the caret. */
+  onInsertToken?: (snippet: string) => void;
+  /** Notify the parent when the media list changes (drives the live preview). */
+  onMediaChange?: (media: any[]) => void;
 }
 
-export function MediaManager({ templateId }: MediaManagerProps) {
+export function MediaManager({ templateId, onInsertToken, onMediaChange }: MediaManagerProps) {
   const [media, setMedia] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ name: '', driveUrl: '' });
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
   const { t } = useTranslation('signatures');
   const { t: tCommon } = useTranslation('common');
@@ -33,11 +39,36 @@ export function MediaManager({ templateId }: MediaManagerProps) {
 
   useEffect(() => { fetchMedia(); }, [fetchMedia]);
 
-  const handleAdd = async () => {
+  // Keep the parent (and thus the live preview) in sync with the media list.
+  useEffect(() => { onMediaChange?.(media); }, [media]);
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    setUploading(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const created = await mediaApi.upload({
+        name: file.name,
+        data: buffer,
+        mimeType: file.type || 'image/png',
+        templateId,
+      });
+      setMedia(prev => [created, ...prev]);
+      addToast(tToast('media.added'), 'success');
+    } catch (err: any) {
+      addToast(err.message, 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAddByUrl = async () => {
     if (!form.name.trim() || !form.driveUrl.trim()) return;
     try {
       const created = await mediaApi.create({ name: form.name.trim(), driveUrl: form.driveUrl.trim(), templateId });
-      setMedia(prev => [...prev, created]);
+      setMedia(prev => [created, ...prev]);
       setForm({ name: '', driveUrl: '' });
       addToast(tToast('media.added'), 'success');
     } catch (err: any) {
@@ -57,9 +88,16 @@ export function MediaManager({ templateId }: MediaManagerProps) {
     }
   };
 
-  const copyUrl = (url: string) => {
-    navigator.clipboard.writeText(url);
-    addToast(tToast('media.urlCopied'), 'info');
+  const handleInsert = (m: any) => {
+    if (!m.token || !onInsertToken) return;
+    const alt = (m.name || '').replace(/"/g, '');
+    onInsertToken(`<img src="{{${m.token}}}" width="90" height="90" alt="${alt}" style="display:block" />`);
+    addToast(t('media.inserted'), 'info');
+  };
+
+  const copyToken = (token: string) => {
+    navigator.clipboard.writeText(`{{${token}}}`);
+    addToast(t('media.tokenCopied'), 'info');
   };
 
   if (loading) return <div className="flex items-center gap-2 text-on-surface-variant"><Loader className="animate-spin" size={18} /> {tCommon('loading')}</div>;
@@ -71,45 +109,81 @@ export function MediaManager({ templateId }: MediaManagerProps) {
         <h3 className="font-medium text-on-surface text-sm">{t('media.heading')}</h3>
       </div>
 
-      <p className="text-xs text-on-surface-variant flex items-center gap-1">
-        <AlertTriangle size={12} />
+      <p className="text-xs text-on-surface-variant flex items-start gap-1">
+        <AlertTriangle size={12} className="mt-0.5 shrink-0" />
         {t('media.publicWarning')}
       </p>
 
-      <div className="flex gap-2">
-        <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('media.namePlaceholder')} className="flex-1 px-3 py-2 border border-outline-variant/30 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-        <input type="text" value={form.driveUrl} onChange={e => setForm(f => ({ ...f, driveUrl: e.target.value }))} placeholder={t('media.drivePlaceholder')} className="flex-2 px-3 py-2 border border-outline-variant/30 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-        <button onClick={handleAdd} className="px-3 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 flex items-center gap-1">
-          <Plus size={16} /> {tCommon('add')}
-        </button>
-      </div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        type="button"
+        className="inline-flex items-center gap-1.5 px-3 py-2 text-sm bg-eth-primary-container text-on-eth-primary-container rounded-lg hover:brightness-110 transition-colors disabled:opacity-50"
+      >
+        {uploading ? <Loader className="animate-spin" size={16} /> : <Upload size={16} />}
+        {uploading ? t('media.uploading') : t('media.addImage')}
+      </button>
 
       {media.length > 0 && (
-        <div className="grid grid-cols-2 gap-3">
-          {media.map(m => (
-            <div key={m.id} className="border border-outline-variant/30 rounded-lg p-3 flex items-center gap-3 hover:bg-surface-container-low">
-              {brokenImages.has(m.id) ? (
-                <div className="w-12 h-12 flex items-center justify-center rounded border border-outline-variant/30 bg-surface-container-low">
-                  <ImageOff size={20} className="text-on-surface-variant" />
-                </div>
-              ) : (
-                <img
-                  src={m.publicUrl}
-                  alt={m.name}
-                  className="w-12 h-12 object-cover rounded border"
-                  onError={() => setBrokenImages(prev => new Set(prev).add(m.id))}
-                />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-on-surface truncate">{m.name}</p>
-                <p className="text-xs text-on-surface-variant truncate">{m.publicUrl}</p>
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            {media.map(m => (
+              <div key={m.id} className="relative group flex flex-col items-center gap-1.5 border border-outline-variant/30 rounded-lg p-2 hover:bg-surface-container-low">
+                <button
+                  onClick={() => handleInsert(m)}
+                  type="button"
+                  title={t('media.insertToken')}
+                  className="block rounded overflow-hidden focus:outline-none focus:ring-2 focus:ring-eth-primary-container/40"
+                >
+                  {brokenImages.has(m.id) ? (
+                    <div className="w-[90px] h-[90px] flex items-center justify-center rounded border border-outline-variant/30 bg-surface-container-low">
+                      <ImageOff size={24} className="text-on-surface-variant" />
+                    </div>
+                  ) : (
+                    <img
+                      src={m.publicUrl}
+                      alt={m.name}
+                      className="w-[90px] h-[90px] object-contain rounded border border-outline-variant/30 bg-surface"
+                      onError={() => setBrokenImages(prev => new Set(prev).add(m.id))}
+                    />
+                  )}
+                </button>
+                {m.token && (
+                  <button
+                    onClick={() => copyToken(m.token)}
+                    type="button"
+                    title={t('media.copyToken')}
+                    className="inline-flex items-center gap-1 text-xs font-mono text-eth-primary hover:underline max-w-full truncate"
+                  >
+                    <Copy size={11} className="shrink-0" /> {`{{${m.token}}}`}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  type="button"
+                  title={t('media.delete')}
+                  className="absolute top-1 right-1 p-1 rounded bg-surface-container/80 text-eth-danger opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
-              <button onClick={() => copyUrl(m.publicUrl)} className="text-on-surface-variant hover:text-on-surface-variant" title={t('media.copyUrl')}><Copy size={14} /></button>
-              <button onClick={() => handleDelete(m.id)} className="text-eth-danger hover:text-eth-danger" title={t('media.delete')}><Trash2 size={14} /></button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <p className="text-xs text-on-surface-variant">{t('media.tokenNote')}</p>
+        </>
       )}
+
+      <details className="text-sm">
+        <summary className="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface">{t('media.advancedUrl')}</summary>
+        <div className="flex gap-2 mt-2">
+          <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('media.namePlaceholder')} className="flex-1 px-3 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40" />
+          <input type="text" value={form.driveUrl} onChange={e => setForm(f => ({ ...f, driveUrl: e.target.value }))} placeholder={t('media.drivePlaceholder')} className="flex-[2] px-3 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40" />
+          <button onClick={handleAddByUrl} type="button" className="px-3 py-2 bg-surface-container-high text-on-surface border border-outline-variant/30 rounded-lg text-sm hover:bg-surface-container-highest transition-colors">
+            {tCommon('add')}
+          </button>
+        </div>
+      </details>
     </div>
   );
 }

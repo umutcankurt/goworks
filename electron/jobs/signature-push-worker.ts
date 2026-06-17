@@ -34,6 +34,12 @@ async function processJob(
     const template = templateService.get(payload.templateId);
     if (!template) throw new Error(`Şablon bulunamadı: ${payload.templateId}`);
 
+    // Media tokens ({{image_1}} → public CDN url) — same for every recipient.
+    const mediaTokens: Record<string, string> = {};
+    for (const m of template.media ?? []) {
+        if (m.token) mediaTokens[m.token] = m.publicUrl;
+    }
+
     const startedAt = Date.now();
     let succeeded = job.succeeded || 0;
     let failed = job.failed || 0;
@@ -98,6 +104,7 @@ async function processJob(
                 }
 
                 const variables = {
+                    ...mediaTokens,
                     ad_soyad: `${v.data.ad || ''} ${v.data.soyad || ''}`.trim(),
                     unvan: v.data.unvan || '',
                     kurum_adi: institutionName,
@@ -137,6 +144,7 @@ async function processJob(
                 }
 
                 const variables = {
+                    ...mediaTokens,
                     ad_soyad: `${userInfo.name?.givenName || ''} ${userInfo.name?.familyName || ''}`.trim(),
                     unvan: org.title || '',
                     kurum_adi: org.department || '',

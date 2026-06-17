@@ -28,6 +28,8 @@ function getSchemaPath(): string {
  *
  * v1 → v2: Onboarding state. In existing installs, if companyName + allowedDomain
  *          are populated, `onboardingCompletedAt` is set so the wizard is skipped.
+ * v2 → v3: media_assets.token — stable {{image_N}} token per media asset. Existing
+ *          rows are backfilled image_1, image_2… per template (by created_at).
  */
 export function runMigrations(db: Database.Database): void {
     const version = db.pragma('user_version', { simple: true }) as number;
@@ -55,6 +57,34 @@ export function runMigrations(db: Database.Database): void {
                 }
             }
             db.pragma('user_version = 2');
+        });
+        tx();
+    }
+
+    if (version < 3) {
+        const tx = db.transaction(() => {
+            // On first launch media_assets doesn't exist yet (schema.exec runs after);
+            // it will be created with the token column, so this block is a no-op then.
+            const tblExists = db
+                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='media_assets'")
+                .get();
+            if (tblExists) {
+                const cols = db.prepare('PRAGMA table_info(media_assets)').all() as { name: string }[];
+                if (!cols.some(c => c.name === 'token')) {
+                    db.exec('ALTER TABLE media_assets ADD COLUMN token TEXT');
+                }
+                // Backfill existing rows: image_1, image_2… per template, ordered by creation.
+                const rows = db
+                    .prepare('SELECT id, template_id FROM media_assets WHERE token IS NULL ORDER BY template_id, created_at, id')
+                    .all() as { id: number; template_id: number }[];
+                const counter: Record<number, number> = {};
+                const upd = db.prepare('UPDATE media_assets SET token = ? WHERE id = ?');
+                for (const r of rows) {
+                    counter[r.template_id] = (counter[r.template_id] ?? 0) + 1;
+                    upd.run(`image_${counter[r.template_id]}`, r.id);
+                }
+            }
+            db.pragma('user_version = 3');
         });
         tx();
     }

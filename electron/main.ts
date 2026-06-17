@@ -249,6 +249,7 @@ function applyContentSecurityPolicy() {
         // The signature editor's WYSIWYG produces inline styles — 'unsafe-inline'
         // style is required even in production. Eval and inline script stay disabled.
         "style-src 'self' 'unsafe-inline'",
+        // lh3.googleusercontent.com serves signature images uploaded to Drive.
         "img-src 'self' data: blob: https://*.googleusercontent.com",
         "font-src 'self' data:",
         "connect-src 'self' https://www.googleapis.com https://accounts.google.com https://*.googleusercontent.com",
@@ -1023,6 +1024,25 @@ app.whenReady().then(async () => {
     try {
       const { mediaService } = await import('./services/media-service');
       const data = mediaService.create(input, authService?.getCurrentUserEmail() ?? null);
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Native upload: image buffer → Drive (logged-in admin's OAuth client) → public → media row.
+  ipcMain.handle('media:upload', async (_, input: { name: string; data: ArrayBuffer | Uint8Array; mimeType: string; templateId: number }) => {
+    try {
+      const { uploadImage, makePublic } = await import('./services/drive-upload-service');
+      const { mediaService } = await import('./services/media-service');
+      const auth = authService.getClient();
+      const buffer = Buffer.from(input.data as ArrayBuffer);
+      const fileId = await uploadImage(auth, buffer, input.name, input.mimeType || 'image/png');
+      await makePublic(auth, fileId);
+      const data = mediaService.create(
+        { name: input.name, fileId, mimeType: input.mimeType, templateId: input.templateId },
+        authService?.getCurrentUserEmail() ?? null,
+      );
       return { success: true, data };
     } catch (error: any) {
       return { success: false, error: error.message };

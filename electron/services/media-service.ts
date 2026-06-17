@@ -1,5 +1,6 @@
 import { getDb } from '../db';
-import { extractDriveFileId, toDirectUrl } from './drive-media';
+import { extractDriveFileId, toCdnUrl } from './drive-media';
+import { computeNextToken } from './media-token';
 import type { MediaRow } from './template-service';
 
 interface MediaDbRow {
@@ -10,6 +11,7 @@ interface MediaDbRow {
     mime_type: string;
     template_id: number;
     created_by: string | null;
+    token: string | null;
     created_at: string;
 }
 
@@ -22,8 +24,17 @@ function toApi(row: MediaDbRow): MediaRow {
         mimeType: row.mime_type,
         templateId: row.template_id,
         createdBy: row.created_by,
+        token: row.token,
         createdAt: row.created_at,
     };
+}
+
+/** Next stable token for a template (see computeNextToken for the gap-preserving rule). */
+function nextToken(templateId: number): string {
+    const rows = getDb()
+        .prepare('SELECT token FROM media_assets WHERE template_id = ?')
+        .all(templateId) as { token: string | null }[];
+    return computeNextToken(rows.map(r => r.token));
 }
 
 export const mediaService = {
@@ -39,21 +50,28 @@ export const mediaService = {
     },
 
     create(
-        input: { name: string; driveUrl: string; mimeType?: string; templateId: number },
+        input: { name: string; fileId?: string; driveUrl?: string; mimeType?: string; templateId: number },
         createdBy: string | null
     ): MediaRow {
-        if (!input.name?.trim() || !input.driveUrl?.trim()) {
-            throw new Error('Medya adı ve Drive URL gerekli');
+        if (!input.name?.trim()) {
+            throw new Error('Medya adı gerekli');
         }
         if (!input.templateId) {
             throw new Error('templateId gerekli');
         }
-        const fileId = extractDriveFileId(input.driveUrl);
-        if (!fileId) throw new Error('Geçersiz Google Drive URL');
-        const publicUrl = toDirectUrl(fileId);
+        // Prefer an explicit fileId (native upload); fall back to parsing a Drive URL
+        // (the legacy "advanced: add by URL" path).
+        let fileId = input.fileId?.trim() || null;
+        if (!fileId) {
+            if (!input.driveUrl?.trim()) throw new Error('fileId veya Drive URL gerekli');
+            fileId = extractDriveFileId(input.driveUrl);
+            if (!fileId) throw new Error('Geçersiz Google Drive URL');
+        }
+        const publicUrl = toCdnUrl(fileId);
+        const token = nextToken(input.templateId);
         const result = getDb()
             .prepare(
-                'INSERT INTO media_assets (name, drive_file_id, public_url, mime_type, template_id, created_by) VALUES (?, ?, ?, ?, ?, ?)'
+                'INSERT INTO media_assets (name, drive_file_id, public_url, mime_type, template_id, created_by, token) VALUES (?, ?, ?, ?, ?, ?, ?)'
             )
             .run(
                 input.name.trim(),
@@ -61,7 +79,8 @@ export const mediaService = {
                 publicUrl,
                 input.mimeType || 'image/png',
                 input.templateId,
-                createdBy
+                createdBy,
+                token
             );
         const row = getDb()
             .prepare('SELECT * FROM media_assets WHERE id = ?')
