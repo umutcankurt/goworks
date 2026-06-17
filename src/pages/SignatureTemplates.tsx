@@ -11,6 +11,7 @@ import { MediaManager } from '../components/MediaManager';
 import { HelpGuide } from '../components/HelpGuide';
 import { useLocaleFormat } from '../i18n/useLocaleFormat';
 import { Button } from '../components/ui/Button';
+import { SIGNATURE_STARTERS } from '../utils/signatureStarters';
 
 export function SignatureTemplates() {
   const { addToast } = useToast();
@@ -202,6 +203,24 @@ export function SignatureTemplates() {
             placeholder={t('list.templateNamePlaceholder')}
             className="w-full px-3 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm font-medium focus:ring-2 focus:ring-eth-primary-container/40 focus:border-eth-primary-container/40"
           />
+
+          {!htmlContent.trim() && (
+            <div className="space-y-2 rounded-lg border border-dashed border-outline-variant/40 bg-surface-container p-3">
+              <p className="text-xs text-on-surface-variant">{t('starters.heading')}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {SIGNATURE_STARTERS.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setHtmlContent(s.build(i18n.language))}
+                    className="px-2 py-2 text-xs font-medium text-on-surface bg-surface-container-high rounded border border-outline-variant/30 hover:border-eth-primary-container/50 hover:bg-eth-primary-container/10 transition-colors"
+                  >
+                    {t(`starters.${s.id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <SignatureEditor value={htmlContent} onChange={setHtmlContent} />
 

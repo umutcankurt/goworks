@@ -20,6 +20,21 @@
     "delete": "Delete"
   },
   "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "link": "Link",
+    "color": "Color",
+    "fontSize": "Font size",
+    "apply": "Apply",
+    "boldPlaceholder": "bold text",
+    "italicPlaceholder": "italic text",
+    "underlinePlaceholder": "underlined text",
+    "colorPlaceholder": "colored text",
+    "sizePlaceholder": "text",
+    "linkUrlPrompt": "Link address (URL):",
+    "colorPrompt": "Pick a color or enter HEX:",
+    "fontSizePrompt": "Font size (px):",
     "insertTagTitle": "Insert {{value}}",
     "conditionalButton": "Conditional Block",
     "conditionalTitle": "Mark selected text as conditional — hidden if variable is empty",
@@ -31,6 +46,12 @@
     "widthLabel": "{{tag}} max width",
     "widthApply": "Apply",
     "widthRemove": "Remove width limit"
+  },
+  "starters": {
+    "heading": "Start with a template:",
+    "logolu": "With logo",
+    "logosuz": "No logo",
+    "cizgili": "Accent line"
   },
   "list": {
     "title": "Signature Management",

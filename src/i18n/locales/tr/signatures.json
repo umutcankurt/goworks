@@ -20,6 +20,21 @@
     "delete": "Sil"
   },
   "editor": {
+    "bold": "Kalın",
+    "italic": "İtalik",
+    "underline": "Altı çizili",
+    "link": "Bağlantı",
+    "color": "Renk",
+    "fontSize": "Yazı boyutu",
+    "apply": "Uygula",
+    "boldPlaceholder": "kalın metin",
+    "italicPlaceholder": "italik metin",
+    "underlinePlaceholder": "altı çizili metin",
+    "colorPlaceholder": "renkli metin",
+    "sizePlaceholder": "metin",
+    "linkUrlPrompt": "Bağlantı adresi (URL):",
+    "colorPrompt": "Renk seçin veya HEX girin:",
+    "fontSizePrompt": "Yazı boyutu (px):",
     "insertTagTitle": "{{value}} ekle",
     "conditionalButton": "Koşullu Bölge",
     "conditionalTitle": "Seçili metni koşullu bölge olarak işaretle — değişken boşsa gizlenir",
@@ -31,6 +46,12 @@
     "widthLabel": "{{tag}} maks. genişliği",
     "widthApply": "Uygula",
     "widthRemove": "Genişlik sınırını kaldır"
+  },
+  "starters": {
+    "heading": "Bir şablonla başlayın:",
+    "logolu": "Logolu",
+    "logosuz": "Logosuz",
+    "cizgili": "Çizgili"
   },
   "list": {
     "title": "İmza Yönetimi",
