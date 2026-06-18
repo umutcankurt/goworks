@@ -27,17 +27,27 @@ export function Sidebar() {
 
     return (
         <aside className="w-64 bg-surface-container-lowest text-on-surface-variant flex flex-col h-screen eth-glow-cyan-ambient z-20">
-            <div className="p-6 flex flex-col items-center gap-2">
-                {logoDataUrl?.startsWith('data:') && (
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface-container-highest flex items-center justify-center">
-                        <img src={logoDataUrl} alt={t('logoAlt')} className="w-full h-full object-contain" />
+            {logoDataUrl?.startsWith('data:') ? (
+                /* Logo present: consistent centered tile — abbreviation hidden */
+                <div className="px-4 pt-4 pb-3">
+                    <div className="h-24 flex items-center justify-center">
+                        <img
+                            src={logoDataUrl}
+                            alt={t('logoAlt')}
+                            className="max-h-full max-w-full object-contain rounded-[5px]"
+                        />
                     </div>
-                )}
-                <div className="w-10 h-10 bg-eth-primary-container rounded-lg flex items-center justify-center text-on-eth-primary-container font-bold eth-glow-cyan">
-                    {effectiveSidebarAbbr}
+                    <h1 className="mt-2 text-xl font-bold text-on-surface tracking-tight text-center">GoWorks</h1>
                 </div>
-                <h1 className="text-xl font-bold text-on-surface tracking-tight">GoWorks</h1>
-            </div>
+            ) : (
+                /* No logo: centered abbreviation badge + title */
+                <div className="p-6 flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 bg-eth-primary-container rounded-lg flex items-center justify-center text-on-eth-primary-container font-bold eth-glow-cyan">
+                        {effectiveSidebarAbbr}
+                    </div>
+                    <h1 className="text-xl font-bold text-on-surface tracking-tight">GoWorks</h1>
+                </div>
+            )}
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {NAV_ITEMS.map((item) => (
