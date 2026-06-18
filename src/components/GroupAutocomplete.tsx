@@ -17,6 +17,7 @@ export const GroupAutocomplete: React.FC<GroupAutocompleteProps> = ({
     disabled = false,
 }) => {
     const { t } = useTranslation('groups');
+    const { t: tCommon } = useTranslation('common');
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -127,6 +128,7 @@ export const GroupAutocomplete: React.FC<GroupAutocompleteProps> = ({
                                 disabled={disabled}
                                 className="text-eth-primary hover:text-eth-primary disabled:opacity-50"
                                 type="button"
+                                aria-label={tCommon('remove')}
                             >
                                 <X size={14} />
                             </button>

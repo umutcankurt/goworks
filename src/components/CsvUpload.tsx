@@ -15,6 +15,7 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({ onUpload }) => {
     const [success, setSuccess] = useState<string | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
     const { t } = useTranslation('bulk');
+    const { t: tCommon } = useTranslation('common');
     const { t: tToast } = useTranslation('toast');
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -83,6 +84,7 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({ onUpload }) => {
                             <button
                                 onClick={clearFile}
                                 className="absolute -top-2 -right-2 bg-surface-container-high rounded-full p-1 hover:bg-surface-container-highest"
+                                aria-label={tCommon('clear')}
                             >
                                 <X className="w-4 h-4 text-on-surface-variant" />
                             </button>

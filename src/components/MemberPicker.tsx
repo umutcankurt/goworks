@@ -22,6 +22,7 @@ export const MemberPicker: React.FC<MemberPickerProps> = ({
     excludeEmails: extraExclude,
 }) => {
     const { t } = useTranslation('groups');
+    const { t: tCommon } = useTranslation('common');
     const excludeEmails = useMemo(() => {
         const set = new Set(selectedMembers.map((m) => m.email.toLowerCase()));
         if (extraExclude) {
@@ -98,6 +99,7 @@ export const MemberPicker: React.FC<MemberPickerProps> = ({
                                 onClick={() => handleRemove(m.email)}
                                 disabled={disabled}
                                 className="text-eth-primary hover:text-eth-primary disabled:opacity-50"
+                                aria-label={tCommon('remove')}
                             >
                                 <X size={14} />
                             </button>
