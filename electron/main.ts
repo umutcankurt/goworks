@@ -991,9 +991,10 @@ app.whenReady().then(async () => {
     try {
       const { templateService } = await import('./services/template-service');
       const { renderTemplate, AVAILABLE_TAGS } = await import('./services/template-renderer');
+      const { buildMediaTokenVars } = await import('./services/media-token');
       const tpl = templateService.get(id);
       if (!tpl) return { success: false, error: 'Şablon bulunamadı' };
-      const html = renderTemplate(tpl.htmlContent, variables || {});
+      const html = renderTemplate(tpl.htmlContent, { ...buildMediaTokenVars(tpl.media), ...(variables || {}) });
       return { success: true, data: { html, tags: AVAILABLE_TAGS } };
     } catch (error: any) {
       return { success: false, error: error.message };

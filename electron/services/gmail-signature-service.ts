@@ -7,6 +7,7 @@ import { renderTemplate, sanitizeTemplateHtml, type TemplateVariables } from './
 import { getUserInfo } from './google-admin-sa';
 import { formatPhoneForSignature } from './phone';
 import { signatureStateService } from './signature-state-service';
+import { buildMediaTokenVars } from './media-token';
 
 const authCache = new Map<string, GoogleAuth>();
 
@@ -163,7 +164,9 @@ export async function pushSignature(
         vars = await resolveSignatureVariables(userEmail, adminEmail);
     }
 
-    const html = renderTemplate(tpl.htmlContent, vars);
+    // Media tokens ({{image_N}} → CDN url) always come from the template's assets,
+    // not the caller; user vars are spread last but never collide with image_N keys.
+    const html = renderTemplate(tpl.htmlContent, { ...buildMediaTokenVars(tpl.media), ...vars });
     await setSignature(userEmail, html);
     signatureStateService.recordPush(userEmail, resolvedTemplateId, html, vars);
     return { success: true, email: userEmail };

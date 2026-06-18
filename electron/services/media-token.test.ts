@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeNextToken } from './media-token';
+import { computeNextToken, buildMediaTokenVars } from './media-token';
 
 describe('computeNextToken', () => {
     it('starts at image_1 for an empty template', () => {
@@ -21,5 +21,34 @@ describe('computeNextToken', () => {
 
     it('ignores tokens that are not strictly image_<number>', () => {
         expect(computeNextToken(['image_', 'image_1x', 'imageX', 'image_2'])).toBe('image_3');
+    });
+});
+
+describe('buildMediaTokenVars', () => {
+    it('maps each token to its public url', () => {
+        expect(
+            buildMediaTokenVars([
+                { token: 'image_1', publicUrl: 'https://lh3.googleusercontent.com/d/AAA' },
+                { token: 'image_2', publicUrl: 'https://lh3.googleusercontent.com/d/BBB' },
+            ]),
+        ).toEqual({
+            image_1: 'https://lh3.googleusercontent.com/d/AAA',
+            image_2: 'https://lh3.googleusercontent.com/d/BBB',
+        });
+    });
+
+    it('skips assets with a null token', () => {
+        expect(
+            buildMediaTokenVars([
+                { token: null, publicUrl: 'https://lh3.googleusercontent.com/d/AAA' },
+                { token: 'image_2', publicUrl: 'https://lh3.googleusercontent.com/d/BBB' },
+            ]),
+        ).toEqual({ image_2: 'https://lh3.googleusercontent.com/d/BBB' });
+    });
+
+    it('returns an empty map for empty/undefined/null input', () => {
+        expect(buildMediaTokenVars([])).toEqual({});
+        expect(buildMediaTokenVars(undefined)).toEqual({});
+        expect(buildMediaTokenVars(null)).toEqual({});
     });
 });

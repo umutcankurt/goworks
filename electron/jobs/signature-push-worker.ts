@@ -10,6 +10,7 @@ import { formatPhoneForSignature } from '../services/phone';
 import { getUserInfo, updateUser } from '../services/google-admin-sa';
 import { setSignature } from '../services/gmail-signature-service';
 import { signatureStateService } from '../services/signature-state-service';
+import { buildMediaTokenVars } from '../services/media-token';
 import type { ValidatedRow } from '../services/csv-analysis';
 
 const DB_BATCH_SIZE = 10;
@@ -35,10 +36,7 @@ async function processJob(
     if (!template) throw new Error(`Şablon bulunamadı: ${payload.templateId}`);
 
     // Media tokens ({{image_1}} → public CDN url) — same for every recipient.
-    const mediaTokens: Record<string, string> = {};
-    for (const m of template.media ?? []) {
-        if (m.token) mediaTokens[m.token] = m.publicUrl;
-    }
+    const mediaTokens = buildMediaTokenVars(template.media);
 
     const startedAt = Date.now();
     let succeeded = job.succeeded || 0;

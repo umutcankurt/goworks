@@ -13,3 +13,18 @@ export function computeNextToken(existingTokens: (string | null | undefined)[]):
     }, 0);
     return `image_${max + 1}`;
 }
+
+/**
+ * Build the `{{image_N}}` → public CDN url variable map from a template's media
+ * assets. Injected into the render variables wherever a signature is rendered
+ * (bulk push, single push, preview) so uploaded images resolve consistently.
+ */
+export function buildMediaTokenVars(
+    media: { token: string | null; publicUrl: string }[] | undefined | null,
+): Record<string, string> {
+    const vars: Record<string, string> = {};
+    for (const m of media ?? []) {
+        if (m.token) vars[m.token] = m.publicUrl;
+    }
+    return vars;
+}
