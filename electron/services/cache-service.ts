@@ -11,6 +11,8 @@ interface CacheEntry<T = any> {
 export class CacheService {
     private store = new Map<string, CacheEntry>();
     private cachePath = path.join(app.getPath('userData'), 'dashboard-cache.json');
+    private savePromise: Promise<void> | null = null;
+    private dirty = false;
 
     constructor() {
         this.loadFromDisk();
@@ -28,11 +30,35 @@ export class CacheService {
         }
     }
 
+    /**
+     * Persists the cache using asynchronous file I/O instead of blocking the
+     * Electron main thread with `fs.writeFileSync`. A `savePromise` + `dirty`
+     * flag serialize consecutive writes: while a write is in flight, later calls
+     * just mark the cache dirty, and the latest state is flushed once the current
+     * write settles — no data loss, near-zero main-thread blocking.
+     */
     private saveToDisk() {
+        if (this.savePromise) {
+            this.dirty = true;
+            return;
+        }
+
         try {
-            fs.writeFileSync(this.cachePath, JSON.stringify(Object.fromEntries(this.store)));
+            const raw = JSON.stringify(Object.fromEntries(this.store));
+            this.savePromise = fs.promises.writeFile(this.cachePath, raw)
+                .then(() => {
+                    this.savePromise = null;
+                    if (this.dirty) {
+                        this.dirty = false;
+                        this.saveToDisk();
+                    }
+                })
+                .catch((err) => {
+                    console.error('Cache save async error:', err);
+                    this.savePromise = null;
+                });
         } catch (err) {
-            console.error('Cache save error:', err);
+            console.error('Cache save serialization error:', err);
         }
     }
 

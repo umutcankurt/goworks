@@ -218,7 +218,7 @@ function safeParse(s: string | null): Record<string, string> | null {
     }
 }
 
-export function insertAuditItem(item: {
+export type AuditItemPayload = {
     jobId: string;
     email: string;
     category: AuditCategory;
@@ -226,22 +226,38 @@ export function insertAuditItem(item: {
     currentVariables?: TemplateVariables | Record<string, string> | null;
     previousVariables?: Record<string, string> | null;
     error?: string | null;
-}): void {
-    getDb()
-        .prepare(
+};
+
+export function insertAuditItem(item: AuditItemPayload): void {
+    insertAuditItems([item]);
+}
+
+/**
+ * Inserts multiple audit items in a single transaction.
+ * Performance: prevents N+1 query overhead by batching DB I/O.
+ */
+export function insertAuditItems(items: AuditItemPayload[]): void {
+    if (items.length === 0) return;
+    const db = getDb();
+    const insertMany = db.transaction((batch: AuditItemPayload[]) => {
+        const stmt = db.prepare(
             `INSERT INTO signature_audit_items
                (job_id, email, category, reason, current_variables, previous_variables, error)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .run(
-            item.jobId,
-            item.email,
-            item.category,
-            item.reason ?? null,
-            item.currentVariables ? JSON.stringify(item.currentVariables) : null,
-            item.previousVariables ? JSON.stringify(item.previousVariables) : null,
-            item.error ?? null,
         );
+        for (const item of batch) {
+            stmt.run(
+                item.jobId,
+                item.email,
+                item.category,
+                item.reason ?? null,
+                item.currentVariables ? JSON.stringify(item.currentVariables) : null,
+                item.previousVariables ? JSON.stringify(item.previousVariables) : null,
+                item.error ?? null,
+            );
+        }
+    });
+    insertMany(items);
 }
 
 /** Deletes all audit results for a job — for a clean start when the worker restarts. */

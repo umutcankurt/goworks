@@ -12,9 +12,10 @@ import {
     computeDesired,
     checkRequiredData,
     categorize,
-    insertAuditItem,
+    insertAuditItems,
     deleteAuditItems,
     type AuditScope,
+    type AuditItemPayload,
     type AuditDepth,
     type AuditCategory,
 } from '../services/signature-audit-service';
@@ -65,6 +66,10 @@ async function processJob(
     let lastDbUpdate = Date.now();
     let lastEmit = 0;
 
+    // Performance: buffer audit items to avoid N+1 DB queries in the hot loop;
+    // flushed in a single transaction at each batch interval and at the end.
+    let pendingAuditItems: AuditItemPayload[] = [];
+
     for (let i = 0; i < total; i++) {
         if (ctx.isCancelled()) {
             log.info(`Audit job ${job.id} cancelled at ${i}/${total}`);
@@ -76,7 +81,7 @@ async function processJob(
 
         try {
             if (entry.resolveError) {
-                insertAuditItem({
+                pendingAuditItems.push({
                     jobId: job.id, email, category: 'error',
                     reason: 'resolve_error', error: entry.resolveError,
                 });
@@ -110,7 +115,7 @@ async function processJob(
                     );
                 }
 
-                insertAuditItem({
+                pendingAuditItems.push({
                     jobId: job.id,
                     email,
                     category,
@@ -121,7 +126,7 @@ async function processJob(
                 counts[category]++;
             }
         } catch (err: any) {
-            insertAuditItem({
+            pendingAuditItems.push({
                 jobId: job.id, email, category: 'error',
                 reason: 'scan_error', error: err?.message || String(err),
             });
@@ -133,6 +138,10 @@ async function processJob(
         const now = Date.now();
 
         if (now - lastDbUpdate > DB_BATCH_INTERVAL_MS) {
+            if (pendingAuditItems.length > 0) {
+                insertAuditItems(pendingAuditItems);
+                pendingAuditItems = [];
+            }
             ctx.saveProgress({ progress: processed, succeeded: processed - counts.error, failed: counts.error });
             lastDbUpdate = now;
         }
@@ -144,6 +153,12 @@ async function processJob(
             });
             lastEmit = now;
         }
+    }
+
+    // Flush any remaining buffered items (covers both normal completion and early break).
+    if (pendingAuditItems.length > 0) {
+        insertAuditItems(pendingAuditItems);
+        pendingAuditItems = [];
     }
 
     ctx.saveProgress({ progress: processed, succeeded: processed - counts.error, failed: counts.error });
