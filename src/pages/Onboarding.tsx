@@ -8,6 +8,7 @@ import {
     ONBOARDING_STEP_ORDER,
     type OnboardingStep,
     WelcomeStep,
+    TermsStep,
     BrandingStep,
     CloudProjectStep,
     ServiceAccountStep,
@@ -16,9 +17,10 @@ import {
     CompletionStep,
 } from '../components/onboarding/steps';
 import type { ServiceAccountStatus } from '../services/server-api';
+import { CURRENT_TERMS_VERSION } from '../lib/legal';
 
 export function Onboarding() {
-    const { config, isLoading, setConfig } = useAppConfig();
+    const { config, isLoading, setConfig, acceptTerms } = useAppConfig();
     const { isAuthenticated } = useAuth();
     const { addToast } = useToast();
     const { t } = useTranslation('onboarding');
@@ -32,6 +34,7 @@ export function Onboarding() {
     const [step, setStep] = useState<OnboardingStep>(initialStep);
 
     // Per-step "enable the next button" signals
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [brandingValid, setBrandingValid] = useState(false);
     const [cloudCredentialsValid, setCloudCredentialsValid] = useState(false);
     const [serviceAccountStatus, setServiceAccountStatus] = useState<ServiceAccountStatus | null>(null);
@@ -79,6 +82,10 @@ export function Onboarding() {
             canGoNext = true;
             stepNode = <WelcomeStep onStart={goNext} />;
             break;
+        case 'terms':
+            canGoNext = termsAccepted;
+            stepNode = <TermsStep onValidChange={setTermsAccepted} />;
+            break;
         case 'branding':
             canGoNext = brandingValid;
             stepNode = <BrandingStep onValidChange={setBrandingValid} />;
@@ -110,7 +117,20 @@ export function Onboarding() {
             break;
     }
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        if (step === 'terms') {
+            if (!termsAccepted) {
+                addToast(t('errors.needTerms'), 'error');
+                return;
+            }
+            try {
+                // Persist acceptance (version + timestamp) before advancing.
+                await acceptTerms(CURRENT_TERMS_VERSION);
+            } catch {
+                // acceptTerms flashes its own error badge; block navigation.
+                return;
+            }
+        }
         if (step === 'branding' && !brandingValid) {
             addToast(t('errors.needBranding'), 'error');
             return;

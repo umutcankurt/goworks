@@ -34,6 +34,7 @@ export type AppLanguage = 'tr' | 'en';
 
 export type OnboardingStep =
   | 'welcome'
+  | 'terms'
   | 'branding'
   | 'cloud'
   | 'service-account'
@@ -50,6 +51,8 @@ export interface AppConfigDTO {
   onboardingStep: OnboardingStep | null;
   onboardingCompletedAt: string | null;
   googleClientId: string;
+  termsAcceptedAt: string | null;
+  termsVersion: string | null;
 }
 
 export interface DwdTestResult {
@@ -74,7 +77,11 @@ export const appConfigApi = {
   getLogoDataUrl: () => ipcInvoke<string | null>('config:getLogoDataUrl'),
   markOnboardingComplete: () =>
     ipcInvoke<AppConfigDTO>('config:markOnboardingComplete'),
+  acceptTerms: (version: string) =>
+    ipcInvoke<AppConfigDTO>('config:acceptTerms', version),
   resetOnboarding: () => ipcInvoke<AppConfigDTO>('config:resetOnboarding'),
+  /** Factory reset: permanently wipes all local data and returns to a fresh install. */
+  factoryReset: () => ipcInvoke<void>('config:factoryReset'),
   getDwdScopes: () => ipcInvoke<string[]>('config:getDwdScopes'),
   testDwdScopes: (adminEmail?: string) =>
     ipcInvoke<DwdTestResult>('config:testDwdScopes', { adminEmail }),

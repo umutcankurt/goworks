@@ -1,0 +1,42 @@
+{
+  "title": "Kullanım Koşulları ve Sorumluluk Reddi",
+  "subtitle": "Devam etmeden önce lütfen aşağıdaki koşulları okuyup onaylayın.",
+  "intro": "GoWorks'ü kullanmaya başlamadan önce aşağıdaki koşulları kabul etmeniz gerekir.",
+  "disclaimer": {
+    "heading": "Garanti Reddi",
+    "body": "GoWorks \"olduğu gibi\" ve \"mevcut haliyle\", açık ya da örtülü hiçbir garanti verilmeksizin sunulur. Uygulamanın kesintisiz, hatasız ya da veri kaybı olmadan çalışacağı garanti edilmez."
+  },
+  "liability": {
+    "heading": "Sorumluluk Sınırlaması",
+    "body": "Bu uygulama ile gerçekleştirdiğiniz işlemlerden (hesap silme, askıya alma, düzenleme, grup ve imza işlemleri ile toplu işlemler dâhil) doğabilecek veri kaybı veya zararlardan GoWorks ve geliştiricisi sorumlu tutulamaz. İşlemleri yürütmeden önce kapsamı ve hedef hesapları kontrol etmek sizin sorumluluğunuzdadır."
+  },
+  "charges": {
+    "heading": "Olası Ücretlendirme",
+    "body": "Hesap açma, kota, lisans veya provizyon gibi işlemler Google Workspace aboneliğinizde ek ücret doğurabilir. Bu ücretler GoWorks tarafından değil, Google Workspace kullanımınızdan kaynaklanır. Lütfen paket ve kota yapınızı göz önünde bulundurarak kullanın."
+  },
+  "dataResponsibility": {
+    "heading": "Veri ve Yetki Sorumluluğu",
+    "body": "Uygulama, giriş yapan yönetici hesabının yetkileriyle çalışır. Yönetilen kullanıcı verilerine erişim, izleme ve değişiklik için gerekli tüm onay ve yetkileri almak kurumunuzun sorumluluğundadır."
+  },
+  "accept": {
+    "app": "GoWorks kullanım koşullarını ve yukarıdaki sorumluluk reddini okudum, kabul ediyorum.",
+    "googlePrefix": "Google Workspace'i kullanımımın ",
+    "googleLink": "Google Workspace Kullanım Koşulları",
+    "googleSuffix": "'na tâbi olduğunu ve olası ücretlerin GoWorks ile ilgili olmadığını anlıyorum."
+  },
+  "links": {
+    "planNote": "Geçerli Google Workspace sözleşmesi, kurumunuzun planına göre (Business, Enterprise, Education veya bayi anlaşması) değişebilir. İlgili genel Google koşulları:",
+    "googleTos": "Google Kullanım Koşulları",
+    "userFeatures": "Google Workspace Kullanıcı Özellikleri"
+  },
+  "modal": {
+    "title": "Güncellenmiş Kullanım Koşulları",
+    "updatedNote": "Devam etmek için lütfen güncellenen kullanım koşullarını ve sorumluluk reddini onaylayın.",
+    "acceptLabel": "Yukarıdaki kullanım koşullarını ve sorumluluk reddini okudum, kabul ediyorum.",
+    "cta": "Onayla ve Devam Et"
+  },
+  "about": {
+    "heading": "Sorumluluk Reddi ve Ücretlendirme",
+    "intro": "GoWorks'ü kullanırken geçerli olan yasal koşullar ve ücretlendirme bilgisi."
+  }
+}

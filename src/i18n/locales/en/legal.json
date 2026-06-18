@@ -1,0 +1,42 @@
+{
+  "title": "Terms of Use & Disclaimer",
+  "subtitle": "Please read and accept the terms below before continuing.",
+  "intro": "Before you start using GoWorks, you must accept the terms below.",
+  "disclaimer": {
+    "heading": "Warranty Disclaimer",
+    "body": "GoWorks is provided \"as is\" and \"as available\", without any warranty of any kind, whether express or implied. There is no guarantee that the application will run uninterrupted, error-free, or without data loss."
+  },
+  "liability": {
+    "heading": "Limitation of Liability",
+    "body": "Neither GoWorks nor its developer can be held responsible for any data loss or damages arising from the operations you perform with this application (including deleting, suspending, or editing accounts, group and signature operations, and bulk actions). It is your responsibility to review the scope and the target accounts before running any operation."
+  },
+  "charges": {
+    "heading": "Possible Charges",
+    "body": "Operations such as account creation, quota, licensing, or provisioning may incur additional charges on your Google Workspace subscription. These charges originate from your use of Google Workspace, not from GoWorks. Please use the application with your plan and quota structure in mind."
+  },
+  "dataResponsibility": {
+    "heading": "Data & Authorization Responsibility",
+    "body": "The application operates with the privileges of the signed-in administrator account. It is your organization's responsibility to obtain all consents and authorizations required to access, monitor, and modify managed user data."
+  },
+  "accept": {
+    "app": "I have read and accept the GoWorks terms of use and the disclaimer above.",
+    "googlePrefix": "I understand that my use of Google Workspace is subject to the ",
+    "googleLink": "Google Workspace Terms of Service",
+    "googleSuffix": ", and that any charges are not related to GoWorks."
+  },
+  "links": {
+    "planNote": "The applicable Google Workspace agreement may vary depending on your organization's plan (Business, Enterprise, Education, or a reseller agreement). Related general Google terms:",
+    "googleTos": "Google Terms of Service",
+    "userFeatures": "Google Workspace User Features"
+  },
+  "modal": {
+    "title": "Updated Terms of Use",
+    "updatedNote": "Please accept the updated terms of use and disclaimer to continue.",
+    "acceptLabel": "I have read and accept the terms of use and disclaimer above.",
+    "cta": "Accept and Continue"
+  },
+  "about": {
+    "heading": "Disclaimer & Charges",
+    "intro": "The legal terms and charge information that apply when using GoWorks."
+  }
+}

@@ -5,6 +5,7 @@
   },
   "stepNav": {
     "welcome": "Welcome",
+    "terms": "Terms of use",
     "branding": "Company details",
     "cloud": "Google Cloud project",
     "serviceAccount": "Service Account",
@@ -211,6 +212,7 @@
     "needServiceAccount": "Upload the Service Account JSON key first.",
     "needBranding": "Fill in the company name and allowed domain before continuing.",
     "needDwdTest": "Run the DWD test successfully before continuing.",
-    "needCredentials": "Save the Google OAuth Client ID and Secret before continuing."
+    "needCredentials": "Save the Google OAuth Client ID and Secret before continuing.",
+    "needTerms": "Check both acceptance boxes before continuing."
   }
 }

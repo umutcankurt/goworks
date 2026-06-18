@@ -5,6 +5,7 @@
   },
   "stepNav": {
     "welcome": "Başlangıç",
+    "terms": "Kullanım koşulları",
     "branding": "Firma bilgileri",
     "cloud": "Google Cloud projesi",
     "serviceAccount": "Service Account",
@@ -211,6 +212,7 @@
     "needServiceAccount": "Önce Service Account JSON anahtarını yükleyin.",
     "needBranding": "Devam etmeden önce firma adı ve izin verilen domain doldurulmalı.",
     "needDwdTest": "Devam etmeden önce DWD bağlantısını başarıyla test edin.",
-    "needCredentials": "Devam etmeden önce Google OAuth Client ID ve Secret'ı kaydedin."
+    "needCredentials": "Devam etmeden önce Google OAuth Client ID ve Secret'ı kaydedin.",
+    "needTerms": "Devam etmeden önce her iki onay kutusunu da işaretleyin."
   }
 }

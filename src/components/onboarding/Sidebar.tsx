@@ -8,6 +8,7 @@ interface SidebarProps {
 
 const STEP_LABEL_KEYS: Record<OnboardingStep, string> = {
     welcome: 'stepNav.welcome',
+    terms: 'stepNav.terms',
     branding: 'stepNav.branding',
     cloud: 'stepNav.cloud',
     'service-account': 'stepNav.serviceAccount',

@@ -1,5 +1,6 @@
 export type OnboardingStep =
     | 'welcome'
+    | 'terms'
     | 'branding'
     | 'cloud'
     | 'service-account'
@@ -9,6 +10,7 @@ export type OnboardingStep =
 
 export const ONBOARDING_STEP_ORDER: OnboardingStep[] = [
     'welcome',
+    'terms',
     'branding',
     'cloud',
     'service-account',
@@ -18,6 +20,7 @@ export const ONBOARDING_STEP_ORDER: OnboardingStep[] = [
 ];
 
 export { WelcomeStep } from './WelcomeStep';
+export { TermsStep } from './TermsStep';
 export { BrandingStep } from './BrandingStep';
 export { CloudProjectStep } from './CloudProjectStep';
 export { ServiceAccountStep } from './ServiceAccountStep';

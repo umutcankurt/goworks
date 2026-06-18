@@ -23,6 +23,7 @@ import { JobHistory } from './pages/JobHistory';
 import { GroupsList } from './pages/GroupsList';
 import { GroupForm } from './pages/GroupForm';
 import { Onboarding } from './pages/Onboarding';
+import { TermsAcceptanceModal } from './components/legal/TermsAcceptanceModal';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -80,6 +81,7 @@ function App() {
                 </Routes>
               </OnboardingGate>
             </Router>
+            <TermsAcceptanceModal />
             <ToastContainer />
           </ToastProvider>
         </AuthProvider>

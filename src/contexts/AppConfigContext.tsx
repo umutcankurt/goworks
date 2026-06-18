@@ -24,6 +24,8 @@ const FALLBACK_CONFIG: AppConfigDTO = {
     onboardingStep: null,
     onboardingCompletedAt: null,
     googleClientId: '',
+    termsAcceptedAt: null,
+    termsVersion: null,
 };
 
 interface AppConfigContextType {
@@ -43,6 +45,8 @@ interface AppConfigContextType {
     deleteLogo: () => Promise<void>;
     /** Called when onboarding completes — sets completedAt. */
     markOnboardingComplete: () => Promise<void>;
+    /** Records acceptance of the legal terms for the given version. */
+    acceptTerms: (version: string) => Promise<void>;
     /** Called by Settings → General → "Restart wizard". */
     resetOnboarding: () => Promise<void>;
 }
@@ -195,6 +199,18 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         }
     }, [flashStatus]);
 
+    const acceptTerms = useCallback(async (version: string) => {
+        setSaveStatus('saving');
+        try {
+            const updated = await appConfigApi.acceptTerms(version);
+            setConfigState(updated);
+            flashStatus('saved');
+        } catch (err) {
+            flashStatus('error');
+            throw err;
+        }
+    }, [flashStatus]);
+
     const resetOnboarding = useCallback(async () => {
         setSaveStatus('saving');
         try {
@@ -239,6 +255,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
                 uploadLogo,
                 deleteLogo,
                 markOnboardingComplete,
+                acceptTerms,
                 resetOnboarding,
             }}
         >

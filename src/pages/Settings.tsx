@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Upload, ClipboardList, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink, Info, FileText, Copyright, Boxes } from 'lucide-react';
+import { Plus, Trash2, Upload, ClipboardList, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink, Info, FileText, Copyright, Boxes, AlertTriangle } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
@@ -13,6 +13,8 @@ import { LANGUAGES } from '../i18n/types';
 import { HelpGuide } from '../components/HelpGuide';
 import { OAuthCredentialsForm } from '../components/onboarding/shared/OAuthCredentialsForm';
 import { RequiredApisCard } from '../components/shared/RequiredApisCard';
+import { LegalSummary } from '../components/legal/LegalSummary';
+import { LegalLinks } from '../components/legal/LegalLinks';
 import { APP_VERSION } from '../build-info';
 
 type Tab = 'general' | 'titles' | 'institutions' | 'googleWorkspace' | 'about';
@@ -820,6 +822,7 @@ const REPO_URL = 'https://github.com/umutcankurt';
 
 function AboutTab() {
   const { t } = useTranslation('settings');
+  const { t: tLegal } = useTranslation('legal');
   return (
     <div className="space-y-6 max-w-2xl">
       {/* App + version + repo */}
@@ -840,6 +843,19 @@ function AboutTab() {
               <ExternalLink size={14} />
               {t('about.repoLink')}
             </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Disclaimer & charges */}
+      <div className="rounded-2xl bg-surface-container-low border border-outline-variant/40 p-6">
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={24} className="text-on-surface-variant mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-on-surface mb-1">{tLegal('about.heading')}</h2>
+            <p className="text-sm text-on-surface-variant mb-4">{tLegal('about.intro')}</p>
+            <LegalSummary />
+            <LegalLinks />
           </div>
         </div>
       </div>

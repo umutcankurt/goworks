@@ -12,12 +12,15 @@ export type AppConfigKey =
     | 'language'
     | 'onboardingStep'
     | 'onboardingCompletedAt'
-    | 'googleClientId';
+    | 'googleClientId'
+    | 'termsAcceptedAt'
+    | 'termsVersion';
 
 export type AppLanguage = 'tr' | 'en';
 
 export type OnboardingStep =
     | 'welcome'
+    | 'terms'
     | 'branding'
     | 'cloud'
     | 'service-account'
@@ -26,6 +29,7 @@ export type OnboardingStep =
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
     'welcome',
+    'terms',
     'branding',
     'cloud',
     'service-account',
@@ -43,6 +47,8 @@ export interface AppConfig {
     onboardingStep: OnboardingStep | null;
     onboardingCompletedAt: string | null;
     googleClientId: string;
+    termsAcceptedAt: string | null;
+    termsVersion: string | null;
 }
 
 /**
@@ -59,6 +65,8 @@ const DEFAULTS: AppConfig = {
     onboardingStep: null,
     onboardingCompletedAt: null,
     googleClientId: '',
+    termsAcceptedAt: null,
+    termsVersion: null,
 };
 
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
@@ -154,6 +162,8 @@ export const appConfigService = {
             onboardingStep: this.get('onboardingStep'),
             onboardingCompletedAt: this.get('onboardingCompletedAt'),
             googleClientId: this.get('googleClientId'),
+            termsAcceptedAt: this.get('termsAcceptedAt'),
+            termsVersion: this.get('termsVersion'),
         };
     },
 
@@ -184,6 +194,29 @@ export const appConfigService = {
         const tx = db.transaction(() => {
             upsert.run('onboardingCompletedAt', now, now);
             db.prepare('DELETE FROM app_config WHERE key = ?').run('onboardingStep');
+        });
+        tx();
+        return this.getAll();
+    },
+
+    /**
+     * Record acceptance of the legal terms / disclaimer. Stores the accepted
+     * version (for re-prompting when terms change) and a timestamp.
+     */
+    acceptTerms(version: string): AppConfig {
+        const clean = (version ?? '').trim();
+        if (!clean) {
+            throw new Error('Terms version is required.');
+        }
+        const now = nowIso();
+        const db = getDb();
+        const upsert = db.prepare(
+            `INSERT INTO app_config (key, value, updated_at) VALUES (?, ?, ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+        );
+        const tx = db.transaction(() => {
+            upsert.run('termsAcceptedAt', now, now);
+            upsert.run('termsVersion', clean, now);
         });
         tx();
         return this.getAll();
