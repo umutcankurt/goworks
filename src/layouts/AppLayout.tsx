@@ -16,7 +16,7 @@ export function AppLayout() {
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <Header />
                     <ConfigWarningBanner />
-                    <main className="flex-1 overflow-x-hidden overflow-y-auto p-8 relative">
+                    <main className="flex-1 overflow-x-hidden overflow-y-auto relative">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={location.pathname}
@@ -24,7 +24,7 @@ export function AppLayout() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
-                                className="h-full"
+                                className="min-h-full px-8 pt-8 pb-12"
                             >
                                 <Outlet />
                             </motion.div>

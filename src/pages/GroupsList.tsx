@@ -95,7 +95,7 @@ export const GroupsList: React.FC = () => {
         : null;
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-2xl font-bold text-on-surface">{t('list.title')}</h1>
 

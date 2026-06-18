@@ -399,7 +399,7 @@ function ActiveJobsWidget() {
 export const Dashboard: React.FC = () => {
     const { t } = useTranslation('dashboard');
     return (
-        <div className="p-6">
+        <div>
             <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-on-surface tracking-tight">{t('title')}</h1>

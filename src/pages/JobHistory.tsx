@@ -77,7 +77,7 @@ export const JobHistory: React.FC = () => {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 max-w-6xl mx-auto"
+            className="max-w-6xl mx-auto"
         >
             <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>

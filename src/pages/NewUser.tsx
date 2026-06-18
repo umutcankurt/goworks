@@ -402,7 +402,7 @@ export const NewUser: React.FC = () => {
                 : 'border-outline-variant/30 focus:ring-blue-500 focus:border-eth-primary-container/40';
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto">
             <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-on-surface">{t('title')}</h1>
