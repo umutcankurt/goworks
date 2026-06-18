@@ -3,6 +3,7 @@ import { Trash2, Copy, Loader, Image, ImageOff, AlertTriangle, Upload } from 'lu
 import { useTranslation } from 'react-i18next';
 import { mediaApi } from '../services/server-api';
 import { useToast } from '../contexts/ToastContext';
+import { buildImageEmbed } from '../utils/signatureFormat';
 
 interface MediaManagerProps {
   templateId: number;
@@ -88,16 +89,18 @@ export function MediaManager({ templateId, onInsertToken, onMediaChange }: Media
     }
   };
 
+  // Both paths embed a full <img> block — never a bare {{token}} — so the image
+  // always renders (a loose token would resolve to a raw URL string in the body).
   const handleInsert = (m: any) => {
     if (!m.token || !onInsertToken) return;
-    const alt = (m.name || '').replace(/"/g, '');
-    onInsertToken(`<img src="{{${m.token}}}" width="90" height="90" alt="${alt}" style="display:block" />`);
+    onInsertToken(buildImageEmbed(m.token, m.name));
     addToast(t('media.inserted'), 'info');
   };
 
-  const copyToken = (token: string) => {
-    navigator.clipboard.writeText(`{{${token}}}`);
-    addToast(t('media.tokenCopied'), 'info');
+  const copyImage = (m: any) => {
+    if (!m.token) return;
+    navigator.clipboard.writeText(buildImageEmbed(m.token, m.name));
+    addToast(t('media.imageCopied'), 'info');
   };
 
   if (loading) return <div className="flex items-center gap-2 text-on-surface-variant"><Loader className="animate-spin" size={18} /> {tCommon('loading')}</div>;
@@ -150,14 +153,17 @@ export function MediaManager({ templateId, onInsertToken, onMediaChange }: Media
                   )}
                 </button>
                 {m.token && (
-                  <button
-                    onClick={() => copyToken(m.token)}
-                    type="button"
-                    title={t('media.copyToken')}
-                    className="inline-flex items-center gap-1 text-xs font-mono text-eth-primary hover:underline max-w-full truncate"
-                  >
-                    <Copy size={11} className="shrink-0" /> {`{{${m.token}}}`}
-                  </button>
+                  <div className="flex flex-col items-center gap-0.5 max-w-full">
+                    <button
+                      onClick={() => copyImage(m)}
+                      type="button"
+                      title={t('media.copyImage')}
+                      className="inline-flex items-center gap-1 text-xs text-eth-primary hover:underline"
+                    >
+                      <Copy size={11} className="shrink-0" /> {t('media.copyImage')}
+                    </button>
+                    <span className="text-[10px] font-mono text-on-surface-variant truncate max-w-full">{m.token}</span>
+                  </div>
                 )}
                 <button
                   onClick={() => handleDelete(m.id)}

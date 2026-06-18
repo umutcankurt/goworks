@@ -19,6 +19,7 @@ import {
     Code,
     Ruler,
     FileText,
+    Image as ImageIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -73,6 +74,7 @@ const GUIDE_ICONS: Record<string, LucideIcon> = {
     code: Code,
     ruler: Ruler,
     file: FileText,
+    image: ImageIcon,
 };
 const resolveIcon = (name?: string): LucideIcon => (name && GUIDE_ICONS[name]) || Info;
 

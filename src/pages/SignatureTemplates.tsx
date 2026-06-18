@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Save, Trash2, Star, Loader } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../contexts/ToastContext';
 import { templatesApi } from '../services/server-api';
 import { useAppConfig } from '../contexts/AppConfigContext';
-import { SignatureEditor } from '../components/SignatureEditor';
+import { SignatureEditor, type SignatureEditorHandle } from '../components/SignatureEditor';
 import { SignaturePreview } from '../components/SignaturePreview';
 import { MediaManager } from '../components/MediaManager';
 import { HelpGuide } from '../components/HelpGuide';
@@ -30,6 +30,7 @@ export function SignatureTemplates() {
 
   const [originalName, setOriginalName] = useState('');
   const [originalHtml, setOriginalHtml] = useState('');
+  const editorRef = useRef<SignatureEditorHandle>(null);
 
   const isDirty = name !== originalName || htmlContent !== originalHtml;
 
@@ -58,8 +59,10 @@ export function SignatureTemplates() {
     return { ...SAMPLE_VARIABLES, ...imageVars };
   }, [SAMPLE_VARIABLES, media]);
 
+  // Insert at the editor caret (not appended at the end) so images land where
+  // the user is editing — the editor exposes this via its ref handle.
   const handleInsertToken = (snippet: string) => {
-    setHtmlContent(prev => (prev ? `${prev}\n${snippet}` : snippet));
+    editorRef.current?.insertAtCaret(snippet);
   };
 
   const fetchTemplates = useCallback(async () => {
@@ -240,7 +243,7 @@ export function SignatureTemplates() {
             </div>
           )}
 
-          <SignatureEditor value={htmlContent} onChange={setHtmlContent} />
+          <SignatureEditor ref={editorRef} value={htmlContent} onChange={setHtmlContent} />
 
           <div className="flex gap-2">
             <Button onClick={handleSave} loading={saving} size="sm" leftIcon={<Save size={16} />}>

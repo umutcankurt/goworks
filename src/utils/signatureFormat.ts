@@ -53,3 +53,28 @@ export function applyWrap(
 
   return { value: newValue, selectionStart, selectionEnd };
 }
+
+/**
+ * Build the full `<img>` embed for a media token. The media UI always
+ * inserts/copies this — never a bare `{{token}}` — so a token can never land
+ * outside an `<img src>` (where it would render as a raw URL, not an image).
+ */
+export function buildImageEmbed(token: string, name = ''): string {
+  const alt = name.replace(/"/g, '');
+  return `<img src="{{${token}}}" width="90" height="90" alt="${alt}" style="display:block" />`;
+}
+
+/**
+ * Insert `snippet` into `value`, replacing the `[start, end)` range (an empty
+ * range is a plain caret insert). Returns the new value and where the caret
+ * should land — right after the inserted snippet.
+ */
+export function insertAtCaret(
+  value: string,
+  start: number,
+  snippet: string,
+  end: number = start,
+): { value: string; selectionStart: number } {
+  const newValue = value.slice(0, start) + snippet + value.slice(end);
+  return { value: newValue, selectionStart: start + snippet.length };
+}

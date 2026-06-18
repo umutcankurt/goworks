@@ -1,8 +1,8 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bold, Italic, Underline, Link2, Palette, Type } from 'lucide-react';
 import { CANONICAL_TAG_KEYS, localeToken, type CanonicalTagKey } from '../utils/signatureTokens';
-import { applyWrap } from '../utils/signatureFormat';
+import { applyWrap, insertAtCaret as insertAtCaretPure } from '../utils/signatureFormat';
 
 /** Preset swatches offered in the colour popover; users may also type a free HEX. */
 const COLOR_PRESETS = ['#1a1a1a', '#555555', '#0066cc', '#0a7d3c', '#c0392b', '#8e44ad'];
@@ -11,6 +11,11 @@ interface SignatureEditorProps {
   value: string;
   onChange: (value: string) => void;
   showTags?: boolean;
+}
+
+export interface SignatureEditorHandle {
+  /** Insert a snippet at the current caret (replacing any selection). */
+  insertAtCaret: (snippet: string) => void;
 }
 
 const TAG_FIND_REGEX = /\{\{(\w+)(?:\|[^}]*)?\}\}/g;
@@ -28,7 +33,7 @@ function findTagAtCursor(text: string, cursorPos: number): { start: number; end:
   return null;
 }
 
-export function SignatureEditor({ value, onChange, showTags = true }: SignatureEditorProps) {
+export const SignatureEditor = forwardRef<SignatureEditorHandle, SignatureEditorProps>(function SignatureEditor({ value, onChange, showTags = true }, ref) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showConditionPicker, setShowConditionPicker] = useState(false);
   const [showWidthPicker, setShowWidthPicker] = useState(false);
@@ -118,21 +123,26 @@ export function SignatureEditor({ value, onChange, showTags = true }: SignatureE
     else if (key === 'u') { e.preventDefault(); wrapSelection('<u>', '</u>', t('editor.underlinePlaceholder')); }
   };
 
-  const insertTag = (key: CanonicalTagKey) => {
-    const tag = `{{${localeToken(key, i18n.language)}}}`;
+  /** Insert a snippet at the caret (replacing any selection), then restore caret.
+   *  Shared by the tag chips and exposed to the media manager via the ref. */
+  const doInsertAtCaret = (snippet: string) => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newValue = value.substring(0, start) + tag + value.substring(end);
-      onChange(newValue);
-      requestAnimationFrame(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + tag.length;
-        textarea.focus();
-      });
-    } else {
-      onChange(value + tag);
+    if (!textarea) {
+      onChange(value + snippet);
+      return;
     }
+    const result = insertAtCaretPure(value, textarea.selectionStart, snippet, textarea.selectionEnd);
+    onChange(result.value);
+    requestAnimationFrame(() => {
+      textarea.selectionStart = textarea.selectionEnd = result.selectionStart;
+      textarea.focus();
+    });
+  };
+
+  useImperativeHandle(ref, () => ({ insertAtCaret: doInsertAtCaret }), [value, onChange]);
+
+  const insertTag = (key: CanonicalTagKey) => {
+    doInsertAtCaret(`{{${localeToken(key, i18n.language)}}}`);
   };
 
   const handleConditionWrap = (conditionKey: CanonicalTagKey) => {
@@ -459,4 +469,4 @@ export function SignatureEditor({ value, onChange, showTags = true }: SignatureE
       />
     </div>
   );
-}
+});

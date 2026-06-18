@@ -21,9 +21,9 @@
     "addImage": "Görsel Ekle",
     "uploading": "Yükleniyor...",
     "insertToken": "Editöre ekle",
-    "copyToken": "Token'ı kopyala",
-    "tokenCopied": "Token kopyalandı",
-    "inserted": "Görsel editöre eklendi",
+    "copyImage": "Görseli kopyala",
+    "imageCopied": "Görsel kopyalandı",
+    "inserted": "Görsel imleç konumuna eklendi",
     "advancedUrl": "Gelişmiş: URL ile ekle",
     "tokenNote": "Token kalıcıdır — görsel silinse de numarası tekrar kullanılmaz."
   },
@@ -86,7 +86,7 @@
           { "term": "Yeni Şablon:", "desc": "Sol paneldeki \"Yeni Şablon\" butonuna tıklayın, şablon adı ve HTML içeriği girin, \"Kaydet\" butonuna basın." },
           { "term": "Düzenleme:", "desc": "Sol panelden mevcut bir şablona tıklayarak düzenleyebilirsiniz." },
           { "term": "Varsayılan Şablon:", "desc": "Yıldız ikonuyla bir şablonu varsayılan olarak işaretleyebilirsiniz. Yeni kullanıcı oluşturma ve tekli imza atama gibi işlemlerde bu şablon otomatik seçili gelir." },
-          { "term": "Medya:", "desc": "Şablon kaydedildikten sonra Google Drive URL'leri ile medya dosyaları ekleyebilirsiniz." }
+          { "term": "Görsel:", "desc": "Şablon kaydedildikten sonra logo ve görselleri doğrudan yükleyip tek tıkla imzaya ekleyebilirsiniz (aşağıdaki \"Görsel Ekleme\" bölümüne bakın)." }
         ],
         "callout": {
           "tone": "tip",
@@ -123,6 +123,23 @@
             ["<code>{{telefon}}</code>", "Kullanıcının kişisel telefonu"],
             ["<code>{{eposta}}</code>", "E-posta adresi"]
           ]
+        }
+      },
+      {
+        "icon": "image",
+        "heading": "Görsel Ekleme",
+        "paragraphs": [
+          "Logo ve görselleri doğrudan bu sayfadan yükleyebilirsiniz — HTML yazmanıza gerek yoktur. Şablonu kaydettikten sonra \"Medya Yönetimi\" bölümü görünür."
+        ],
+        "bullets": [
+          { "term": "Görsel Ekle:", "desc": "\"Görsel Ekle\" butonuyla bilgisayarınızdan bir görsel seçin. Görsel otomatik olarak Google Drive'a yüklenir ve e-postalarda görünebilmesi için herkese açık (bağlantısı olan görüntüleyebilir) yapılır." },
+          { "term": "Tıkla ve ekle:", "desc": "Yüklenen görselin küçük resmine tıklayın — sistem tam <code>&lt;img&gt;</code> etiketini imlecin bulunduğu yere kendisi ekler. Etiketi elle yazmanıza gerek yoktur." },
+          { "term": "Kopyala:", "desc": "\"Görseli kopyala\" ile hazır <code>&lt;img&gt;</code> bloğunu panoya alıp şablonda istediğiniz yere yapıştırabilirsiniz." },
+          { "term": "Otomatik numara:", "desc": "Her görsele kalıcı bir <code>{{image_1}}</code>, <code>{{image_2}}</code> … numarası verilir; bunu elle yönetmeniz gerekmez. Görsel silinse bile numarası tekrar kullanılmaz." }
+        ],
+        "callout": {
+          "tone": "warning",
+          "text": "Görsel numarası mutlaka bir <code>&lt;img src=\"...\"&gt;</code> etiketinin içinde olmalıdır — tıkla-ekle ve kopyala bunu zaten sağlar. Numarayı tek başına yapıştırırsanız e-postada görsel yerine düz bağlantı metni görünür."
         }
       },
       {

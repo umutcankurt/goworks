@@ -21,9 +21,9 @@
     "addImage": "Add image",
     "uploading": "Uploading...",
     "insertToken": "Insert into editor",
-    "copyToken": "Copy token",
-    "tokenCopied": "Token copied",
-    "inserted": "Image inserted into editor",
+    "copyImage": "Copy image",
+    "imageCopied": "Image copied",
+    "inserted": "Image inserted at cursor",
     "advancedUrl": "Advanced: add by URL",
     "tokenNote": "Tokens are permanent — a deleted image's number is not reused."
   },
@@ -86,7 +86,7 @@
           { "term": "New Template:", "desc": "Click \"New Template\" on the left panel, enter a name and HTML content, then click \"Save\"." },
           { "term": "Edit:", "desc": "Click an existing template on the left panel to edit it." },
           { "term": "Default Template:", "desc": "Mark a template as default with the star icon. It is auto-selected when creating users or assigning a single signature." },
-          { "term": "Media:", "desc": "After saving the template you can add media files via Google Drive URLs." }
+          { "term": "Images:", "desc": "After saving the template you can upload logos and images directly and add them to the signature with one click (see \"Adding Images\" below)." }
         ],
         "callout": {
           "tone": "tip",
@@ -123,6 +123,23 @@
             ["<code>{{phone}}</code>", "User personal phone"],
             ["<code>{{email}}</code>", "Email address"]
           ]
+        }
+      },
+      {
+        "icon": "image",
+        "heading": "Adding Images",
+        "paragraphs": [
+          "You can upload logos and images directly from this page — no HTML required. The \"Media Management\" section appears once the template is saved."
+        ],
+        "bullets": [
+          { "term": "Add image:", "desc": "Pick an image from your computer with the \"Add image\" button. It is uploaded to Google Drive automatically and made public (anyone with the link can view) so it shows in emails." },
+          { "term": "Click to insert:", "desc": "Click an uploaded image's thumbnail — the system inserts the full <code>&lt;img&gt;</code> tag at your cursor. No need to write the tag by hand." },
+          { "term": "Copy:", "desc": "Use \"Copy image\" to copy the ready <code>&lt;img&gt;</code> block to the clipboard and paste it wherever you want." },
+          { "term": "Automatic number:", "desc": "Each image gets a permanent <code>{{image_1}}</code>, <code>{{image_2}}</code> … number; you never manage it by hand. A deleted image's number is not reused." }
+        ],
+        "callout": {
+          "tone": "warning",
+          "text": "An image number must sit inside an <code>&lt;img src=\"...\"&gt;</code> tag — click-to-insert and copy already do this. If you paste the number on its own, the email shows a plain link instead of the image."
         }
       },
       {

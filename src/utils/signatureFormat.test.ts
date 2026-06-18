@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyWrap } from './signatureFormat';
+import { applyWrap, buildImageEmbed, insertAtCaret } from './signatureFormat';
 
 describe('applyWrap', () => {
   it('seçili metni etiketle sarar ve caret\'i blok sonuna koyar', () => {
@@ -41,5 +41,40 @@ describe('applyWrap', () => {
   it('link/renk gibi öznitelikli etiketlerle çalışır', () => {
     const r = applyWrap('site', 0, 4, '<a href="https://x.com">', '</a>');
     expect(r.value).toBe('<a href="https://x.com">site</a>');
+  });
+});
+
+describe('buildImageEmbed', () => {
+  it('token\'ı tam <img src="{{token}}"> bloğuna sarar (çıplak token asla)', () => {
+    expect(buildImageEmbed('image_1', 'logo.png')).toBe(
+      '<img src="{{image_1}}" width="90" height="90" alt="logo.png" style="display:block" />',
+    );
+  });
+
+  it('alt metnindeki çift tırnakları temizler (öznitelik kırılmasın)', () => {
+    expect(buildImageEmbed('image_2', 'a"b".png')).toContain('alt="ab.png"');
+  });
+
+  it('isim verilmezse alt boş kalır', () => {
+    expect(buildImageEmbed('image_3')).toContain('alt=""');
+  });
+});
+
+describe('insertAtCaret', () => {
+  it('caret konumuna ekler ve caret\'i snippet sonuna koyar', () => {
+    const r = insertAtCaret('abef', 2, 'cd');
+    expect(r.value).toBe('abcdef');
+    expect(r.selectionStart).toBe(4);
+  });
+
+  it('başa ve sona ekleyebilir', () => {
+    expect(insertAtCaret('xyz', 0, '>>').value).toBe('>>xyz');
+    expect(insertAtCaret('xyz', 3, '<<').value).toBe('xyz<<');
+  });
+
+  it('seçili aralığı (end > start) snippet ile değiştirir', () => {
+    const r = insertAtCaret('a SEL b', 2, 'IMG', 5);
+    expect(r.value).toBe('a IMG b');
+    expect(r.selectionStart).toBe(2 + 'IMG'.length);
   });
 });
