@@ -76,8 +76,9 @@ async function processJob(
     let auth: OAuth2Client;
     try {
         auth = getAuthClient();
-    } catch (err: any) {
-        log.error(`Job ${job.id} (BULK_GROUP_ADD) has no active admin session`, err?.message);
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        log.error(`Job ${job.id} (BULK_GROUP_ADD) has no active admin session`, errorMessage);
         const executionReport: JobExecutionReport = {
             totalProcessed: 0,
             successCount: succeeded,
@@ -116,7 +117,7 @@ async function processJob(
             );
             succeeded++;
             succeededItems.push({ email: memberEmail, rowNumber: i + 1 });
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (isAlreadyMember(err)) {
                 // Already a member — count as an idempotent success.
                 succeeded++;
@@ -124,13 +125,14 @@ async function processJob(
                 log.info(`Already a member of ${groupKey}: ${memberEmail}`);
             } else {
                 failed++;
+                const errorMessage = err instanceof Error ? err.message : String(err);
                 failedItems.push({
                     email: memberEmail,
                     rowNumber: i + 1,
                     step: 'add_to_group',
-                    error: `${groupKey}: ${err?.message || String(err)}`,
+                    error: `${groupKey}: ${errorMessage}`,
                 });
-                log.error(`Add to group failed for ${memberEmail} → ${groupKey}`, err?.message);
+                log.error(`Add to group failed for ${memberEmail} → ${groupKey}`, errorMessage);
             }
         }
 

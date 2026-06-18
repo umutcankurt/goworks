@@ -125,13 +125,14 @@ async function processJob(
                 });
                 counts[category]++;
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
             pendingAuditItems.push({
                 jobId: job.id, email, category: 'error',
-                reason: 'scan_error', error: err?.message || String(err),
+                reason: 'scan_error', error: errorMessage,
             });
             counts.error++;
-            log.error(`Audit scan failed for ${email}`, err?.message);
+            log.error(`Audit scan failed for ${email}`, errorMessage);
         }
 
         processed = i + 1;

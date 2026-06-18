@@ -87,8 +87,12 @@ async function processJob(
             }
             succeeded++;
             succeededItems.push({ email, rowNumber: i + 1 });
-        } catch (err: any) {
-            const status = err?.code || err?.response?.status;
+        } catch (err: unknown) {
+            // Extract a status code from a GaxiosError-like shape without assuming `any`.
+            const status = typeof err === 'object' && err !== null
+                ? ((err as { code?: number }).code ?? (err as { response?: { status?: number } }).response?.status)
+                : undefined;
+            const errorMessage = err instanceof Error ? err.message : String(err);
             if (status === 404 && job.type === 'BULK_DELETE') {
                 // User already deleted — count as an idempotent success
                 succeeded++;
@@ -100,9 +104,9 @@ async function processJob(
                     email,
                     rowNumber: i + 1,
                     step: job.type === 'BULK_SUSPEND' ? 'suspend' : 'delete',
-                    error: err?.message || String(err),
+                    error: errorMessage,
                 });
-                log.error(`Bulk ${job.type} failed for ${email}`, err?.message);
+                log.error(`Bulk ${job.type} failed for ${email}`, errorMessage);
             }
         }
 

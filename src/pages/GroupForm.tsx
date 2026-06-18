@@ -68,17 +68,27 @@ export const GroupForm: React.FC<GroupFormProps> = ({ mode }) => {
     );
 
     useEffect(() => {
-        adminApi.getDomains().then((r) => {
-            if (r?.success && r.domains) {
-                const sorted = [...r.domains].sort((a: Domain, b: Domain) => {
-                    if (a.isPrimary && !b.isPrimary) return -1;
-                    if (!a.isPrimary && b.isPrimary) return 1;
-                    return a.domainName.localeCompare(b.domainName);
-                });
-                setDomains(sorted);
-                if (mode === 'create' && sorted.length > 0) setDomain(sorted[0].domainName);
+        let cancelled = false;
+        (async () => {
+            try {
+                const r = await adminApi.getDomains();
+                if (cancelled) return;
+                if (r?.success && r.domains) {
+                    const sorted = [...r.domains].sort((a: Domain, b: Domain) => {
+                        if (a.isPrimary && !b.isPrimary) return -1;
+                        if (!a.isPrimary && b.isPrimary) return 1;
+                        return a.domainName.localeCompare(b.domainName);
+                    });
+                    setDomains(sorted);
+                    if (mode === 'create' && sorted.length > 0) setDomain(sorted[0].domainName);
+                }
+            } catch {
+                // Preserve original behavior: failures here were silently ignored.
             }
-        });
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, [mode]);
 
     useEffect(() => {

@@ -164,16 +164,17 @@ async function processJob(
             } else {
                 throw new Error('payload.rows veya payload.emails gerekli');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             failed++;
-            const step = err?.message?.toLowerCase().includes('signature') ? 'push_signature' : 'patch_profile';
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            const step = errorMessage.toLowerCase().includes('signature') ? 'push_signature' : 'patch_profile';
             failedItems.push({
                 email,
                 rowNumber: rowNumber ?? i + 1,
                 step,
-                error: err?.message || String(err),
+                error: errorMessage,
             });
-            log.error(`Signature push failed for ${email}`, err?.message);
+            log.error(`Signature push failed for ${email}`, errorMessage);
         }
 
         const now = Date.now();

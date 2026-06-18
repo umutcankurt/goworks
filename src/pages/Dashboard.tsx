@@ -84,16 +84,22 @@ function StorageWidget() {
     const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
     useEffect(() => {
-        dashboardApi
-            .getStorageUsage()
-            .then((res) => {
+        const load = async () => {
+            try {
+                const res = await dashboardApi.getStorageUsage();
                 if (res.success && res.data) {
                     setData(res.data);
                     setUpdatedAt(res.updatedAt || null);
-                } else setError(res.error || t('loadFailed'));
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+                } else {
+                    setError(res.error || t('loadFailed'));
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : t('loadFailed'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, [t]);
 
     if (loading) return <SkeletonCard />;
@@ -177,16 +183,22 @@ function RecentUsersWidget() {
     const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
     useEffect(() => {
-        dashboardApi
-            .getRecentUsers()
-            .then((res) => {
+        const load = async () => {
+            try {
+                const res = await dashboardApi.getRecentUsers();
                 if (res.success && res.data) {
                     setUsers(res.data);
                     setUpdatedAt(res.updatedAt || null);
-                } else setError(res.error || t('loadFailed'));
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+                } else {
+                    setError(res.error || t('loadFailed'));
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : t('loadFailed'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, [t]);
 
     if (loading) return <SkeletonCard />;
@@ -237,16 +249,22 @@ function UserCountsWidget() {
     const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
     useEffect(() => {
-        dashboardApi
-            .getUserCounts()
-            .then((res) => {
+        const load = async () => {
+            try {
+                const res = await dashboardApi.getUserCounts();
                 if (res.success && res.data) {
                     setData(res.data);
                     setUpdatedAt(res.updatedAt || null);
-                } else setError(res.error || t('loadFailed'));
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+                } else {
+                    setError(res.error || t('loadFailed'));
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : t('loadFailed'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, [t]);
 
     if (loading) return <SkeletonCard />;
