@@ -269,6 +269,12 @@ app.whenReady().then(async () => {
   // Phase E security: attach the CSP BEFORE the window is created.
   applyContentSecurityPolicy();
 
+  // Dev-only: show the app icon in the macOS dock during `npm run dev`.
+  // Packaged builds get the dock/app icon from electron-builder (build/icon.png).
+  if (VITE_DEV_SERVER_URL && process.platform === 'darwin' && app.dock) {
+    app.dock.setIcon(path.join(process.env.APP_ROOT!, 'build', 'icon.png'));
+  }
+
   // Boot-time validation (env, userData writable, service account). On a hard-fail,
   // runBootCheck shows a dialog and calls app.exit(1).
   try {
