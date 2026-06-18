@@ -154,6 +154,18 @@ describe('bulkColumns', () => {
         it('add_to_group: EN başlıklar group_email/email/role', () => {
             expect(localeColumnsForAction('add_to_group', 'en')).toEqual(['group_email', 'email', 'role']);
         });
+
+        it('fallback: bilinmeyen diller için TR başlıkları döner', () => {
+            expect(localeColumnsForAction('add_to_group', 'fr')).toEqual(['grup_email', 'email', 'rol']);
+            expect(localeColumnsForAction('signature_push', '')).toEqual([
+                'email',
+                'ad',
+                'soyad',
+                'unvan',
+                'kurum_adi',
+                'telefon',
+            ]);
+        });
     });
 
     describe('Veri bütünlüğü (data integrity)', () => {
