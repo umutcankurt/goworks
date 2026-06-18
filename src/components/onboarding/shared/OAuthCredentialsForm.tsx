@@ -34,6 +34,7 @@ export function OAuthCredentialsForm({
 
     const [clientId, setClientId] = useState('');
     const [clientSecret, setClientSecret] = useState('');
+    const [storedClientId, setStoredClientId] = useState('');
     const [hasStoredSecret, setHasStoredSecret] = useState(false);
     const [revealSecret, setRevealSecret] = useState(false);
     const [test, setTest] = useState<TestState>({ kind: 'idle' });
@@ -47,17 +48,17 @@ export function OAuthCredentialsForm({
             setLoading(true);
             const status = await appConfigApi.getOAuthCredentials();
             setClientId(status.clientId ?? '');
+            setStoredClientId(status.clientId ?? '');
             setHasStoredSecret(status.hasSecret);
-            const valid = !!status.clientId && status.hasSecret;
-            onValidChange?.(valid);
         } catch {
             // silent: on first install the service doesn't error when no key exists,
             // but in extreme cases like IPC being unavailable we land here.
-            onValidChange?.(false);
+            setStoredClientId('');
+            setHasStoredSecret(false);
         } finally {
             setLoading(false);
         }
-    }, [onValidChange]);
+    }, []);
 
     useEffect(() => {
         refresh();
@@ -69,6 +70,18 @@ export function OAuthCredentialsForm({
             setTest({ kind: 'idle' });
         }
     }, [clientId, clientSecret]);
+
+    // Reactively report validity to the parent (drives onboarding's "Continue").
+    // Valid only when stored credentials are complete AND there are no unsaved
+    // edits — typing a new secret or changing the clientId marks the form dirty,
+    // so the user must save the new credentials before continuing.
+    const storedComplete = storedClientId.trim().length > 0 && hasStoredSecret;
+    const isDirty =
+        clientSecret.trim().length > 0 || clientId.trim() !== storedClientId.trim();
+    const valid = storedComplete && !isDirty;
+    useEffect(() => {
+        onValidChange?.(valid);
+    }, [valid, onValidChange]);
 
     const canTest = clientId.trim().length > 0 && clientSecret.trim().length > 0;
     const canSave = requireSecret
@@ -113,8 +126,8 @@ export function OAuthCredentialsForm({
             addToast(t('cloud.credentials.cleared'));
             setClientId('');
             setClientSecret('');
+            setStoredClientId('');
             setHasStoredSecret(false);
-            onValidChange?.(false);
         } catch (err: any) {
             addToast(t('cloud.credentials.saveFailed', { error: err.message }), 'error');
         }
