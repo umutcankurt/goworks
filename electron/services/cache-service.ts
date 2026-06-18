@@ -67,4 +67,14 @@ export class CacheService {
         this.store.delete(key);
         this.saveToDisk();
     }
+
+    /** Wipes the in-memory store and removes the on-disk cache file (factory reset). */
+    clear(): void {
+        this.store.clear();
+        try {
+            if (fs.existsSync(this.cachePath)) fs.unlinkSync(this.cachePath);
+        } catch (err) {
+            console.error('Cache clear error:', err);
+        }
+    }
 }

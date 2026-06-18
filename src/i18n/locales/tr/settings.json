@@ -122,6 +122,17 @@
       "description": "Onboarding adımlarını yeniden çalıştırmak istiyorsanız sihirbazı sıfırlayın. Mevcut yapılandırma silinmez; sadece sihirbaz tekrar açılır.",
       "button": "Sihirbazı tekrar başlat",
       "confirm": "Kurulum sihirbazını tekrar başlatmak istiyor musunuz? Mevcut ayarlarınız korunacak."
+    },
+    "factoryReset": {
+      "button": "GoWorks'ü sıfırla",
+      "modalTitle": "GoWorks'ü sıfırla",
+      "warning": "Tüm bilgileriniz (firma bilgileri, kullanıcı/imza verileri, OAuth kimlik bilgileri, Service Account ve oturum) kalıcı olarak silinecek ve sıfırdan kurulum yapacaksınız. Bu işlem GERİ ALINAMAZ.",
+      "confirmPrompt": "Onaylamak için {{keyword}} yazın:",
+      "confirmKeyword": "SIFIRLA",
+      "confirmButton": "Sıfırla ve yeniden kur",
+      "inProgress": "Sıfırlanıyor…",
+      "cancel": "İptal",
+      "failed": "Sıfırlama başarısız: {{error}}"
     }
   },
   "titles": {

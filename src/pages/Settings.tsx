@@ -772,6 +772,7 @@ function GeneralTab() {
         </div>
       </div>
 
+      <ResetWizardSection />
     </div>
   );
 }
@@ -788,7 +789,6 @@ function GoogleWorkspaceTab() {
       <RequiredApisCard variant="expanded" />
       <ServiceAccountSection />
       <DwdSection />
-      <ResetWizardSection />
     </div>
   );
 }
@@ -1200,6 +1200,9 @@ function ResetWizardSection() {
   const { addToast } = useToast();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [showFactory, setShowFactory] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const handleReset = async () => {
     if (!window.confirm(t('general.resetWizard.confirm'))) return;
@@ -1214,6 +1217,39 @@ function ResetWizardSection() {
     }
   };
 
+  // Type-to-confirm: .toUpperCase() is locale-invariant (i→I), so this stays
+  // case-insensitive without the Turkish dotted/dotless-I pitfall.
+  const keyword = t('general.factoryReset.confirmKeyword');
+  const confirmMatches = confirmText.trim().toUpperCase() === keyword.toUpperCase();
+
+  const closeFactory = () => {
+    if (resetting) return;
+    setShowFactory(false);
+    setConfirmText('');
+  };
+
+  const handleFactoryReset = async () => {
+    if (!confirmMatches || resetting) return;
+    setResetting(true);
+    try {
+      await appConfigApi.factoryReset();
+      // Clear renderer-side persisted state so the reload starts truly fresh.
+      try {
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('goworks.theme');
+        localStorage.removeItem('goworks.lang');
+      } catch {
+        /* ignore */
+      }
+      // Full renderer reload is the most robust way to drop in-memory context
+      // state (AppConfig/Auth/Theme); the backend already wiped all data.
+      window.location.reload();
+    } catch (err: any) {
+      addToast(t('general.factoryReset.failed', { error: err?.message || '' }), 'error');
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="border-t border-outline-variant/30 pt-6">
       <div className="flex items-start gap-3 mb-3">
@@ -1223,15 +1259,90 @@ function ResetWizardSection() {
           <p className="text-sm text-on-surface-variant">{t('general.resetWizard.description')}</p>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={handleReset}
-        disabled={busy}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border eth-border-ghost text-on-surface hover:bg-surface-container-low text-sm disabled:opacity-50"
-      >
-        {busy ? <Loader className="animate-spin" size={16} /> : <RotateCcw size={16} />}
-        {t('general.resetWizard.button')}
-      </button>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={busy}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border eth-border-ghost text-on-surface hover:bg-surface-container-low text-sm disabled:opacity-50"
+        >
+          {busy ? <Loader className="animate-spin" size={16} /> : <RotateCcw size={16} />}
+          {t('general.resetWizard.button')}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowFactory(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-eth-danger/30 text-eth-danger hover:bg-eth-danger/10 text-sm transition-colors"
+        >
+          <AlertTriangle size={16} />
+          {t('general.factoryReset.button')}
+        </button>
+      </div>
+
+      {showFactory && (
+        <div
+          className="eth-app fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="factory-reset-title"
+        >
+          <div className="eth-glass eth-glow-cyan-panel w-full max-w-lg rounded-2xl p-6">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-eth-danger/40 bg-eth-danger/15 text-eth-danger"
+                aria-hidden
+              >
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 id="factory-reset-title" className="text-lg font-semibold text-on-surface">
+                  {t('general.factoryReset.modalTitle')}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">
+                  {t('general.factoryReset.warning')}
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm text-on-surface">
+              {t('general.factoryReset.confirmPrompt', { keyword })}
+            </p>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              autoFocus
+              spellCheck={false}
+              autoComplete="off"
+              placeholder={keyword}
+              disabled={resetting}
+              className="mt-2 w-full rounded-lg border eth-border-ghost bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-eth-danger/40 disabled:opacity-50"
+            />
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeFactory}
+                disabled={resetting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border eth-border-ghost text-on-surface hover:bg-surface-container-low text-sm disabled:opacity-50"
+              >
+                {t('general.factoryReset.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleFactoryReset}
+                disabled={!confirmMatches || resetting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-eth-danger text-white text-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resetting ? <Loader className="animate-spin" size={16} /> : <AlertTriangle size={16} />}
+                {resetting ? t('general.factoryReset.inProgress') : t('general.factoryReset.confirmButton')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

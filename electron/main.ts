@@ -1173,16 +1173,71 @@ app.whenReady().then(async () => {
     }
   });
 
+  ipcMain.handle('config:acceptTerms', async (_, version: string) => {
+    try {
+      const { appConfigService } = await import('./services/app-config-service');
+      return { success: true, data: appConfigService.acceptTerms(version) };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('config:resetOnboarding', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      // OAuth credentials are reset too, so the user doesn't run into confusion
-      // with the old clientId/secret when running the wizard again from scratch.
-      appConfigService.set('googleClientId', null);
-      secureStorage.clearClientSecret();
+      // Non-destructive restart: only the wizard progress is reset. OAuth
+      // credentials and the admin session are preserved so an admin who only
+      // wants to tweak settings (e.g. company branding) can walk through without
+      // re-entering credentials or signing in again. To remove credentials use
+      // Settings → Google Workspace → "Clear"; to switch admin use Logout.
+      return { success: true, data: appConfigService.resetOnboarding() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Factory reset: permanently wipe ALL local data and return to a fresh install
+  // (e.g. handing the same machine to a different company / admin). Destructive
+  // and irreversible — guarded by a type-to-confirm modal in the renderer.
+  ipcMain.handle('config:factoryReset', async () => {
+    try {
+      const { appConfigService } = await import('./services/app-config-service');
+      const { getDb } = await import('./db');
+      const { clearKey } = await import('./secrets/service-account-loader');
+      const { clearAuthCache } = await import('./services/google-admin-sa');
+      const { clearGmailAuthCache } = await import('./services/gmail-signature-service');
+      const { clearEmailNotificationCache } = await import('./services/email-notification-service');
+
+      // 1. Sign out (revoke + clear auth-token.enc) and drop all credentials/caches.
+      try { await authService?.logout(); } catch { /* offline revoke can fail; continue */ }
       authService?.invalidateCredentials();
       adminService = null;
-      return { success: true, data: appConfigService.resetOnboarding() };
+      secureStorage.clearClientSecret(); // oauth-secret.enc
+      clearKey();                        // service-account.enc
+      clearAuthCache();
+      clearGmailAuthCache();
+      clearEmailNotificationCache();
+      bootStatus.soft.serviceAccountMissing = true;
+
+      // 2. Delete the logo file (before config rows are wiped, so logoPath resolves).
+      try { appConfigService.deleteLogo(); } catch { /* ignore */ }
+
+      // 3. Wipe every SQLite table (schema + pragma user_version preserved).
+      const db = getDb();
+      const wipe = db.transaction(() => {
+        for (const tbl of [
+          'signature_audit_items', 'signature_state', 'jobs', 'media_assets',
+          'signature_templates', 'institutions', 'titles', 'app_config',
+        ]) {
+          db.prepare(`DELETE FROM ${tbl}`).run();
+        }
+      });
+      wipe();
+
+      // 4. Drop the dashboard cache.
+      cache.clear();
+
+      return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

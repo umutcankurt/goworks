@@ -122,6 +122,17 @@
       "description": "Restart the onboarding wizard if you'd like to walk through the steps again. Existing configuration is preserved; only the wizard reopens.",
       "button": "Restart wizard",
       "confirm": "Restart the setup wizard? Your existing settings will be preserved."
+    },
+    "factoryReset": {
+      "button": "Reset GoWorks",
+      "modalTitle": "Reset GoWorks",
+      "warning": "All your data (company details, user/signature data, OAuth credentials, Service Account, and session) will be permanently deleted and you'll set up from scratch. This action CANNOT be undone.",
+      "confirmPrompt": "Type {{keyword}} to confirm:",
+      "confirmKeyword": "RESET",
+      "confirmButton": "Reset and reinstall",
+      "inProgress": "Resetting…",
+      "cancel": "Cancel",
+      "failed": "Reset failed: {{error}}"
     }
   },
   "titles": {
