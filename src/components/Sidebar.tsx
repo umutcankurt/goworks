@@ -1,3 +1,4 @@
+import React from 'react';
 import { LayoutDashboard, Users, UsersRound, UserPlus, UserMinus, Settings, LogOut, BarChart2, FileSpreadsheet, PenTool, ClipboardList, ShieldCheck } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
@@ -19,7 +20,10 @@ const NAV_ITEMS = [
     { to: '/settings', icon: Settings, key: 'settings' as const },
 ];
 
-export function Sidebar() {
+// Wrapped in React.memo to eliminate the navigation subtree re-render on every
+// route change (AppLayout re-renders via useLocation). Active NavLink states
+// still update independently.
+export const Sidebar = React.memo(function Sidebar() {
     const { logout } = useAuth();
     const { effectiveSidebarAbbr, logoDataUrl } = useAppConfig();
     const navigate = useNavigate();
@@ -80,4 +84,4 @@ export function Sidebar() {
             </div>
         </aside>
     );
-}
+});

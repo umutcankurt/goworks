@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 
@@ -19,7 +19,9 @@ interface IpcWindow {
  * handler returns a warning flag; otherwise null. The banner is placed at the
  * topmost layer of App.tsx so it shows on every page.
  */
-export function ConfigWarningBanner() {
+// Wrapped in React.memo to avoid re-rendering on every route change — AppLayout
+// re-renders via useLocation, but this banner's props/context rarely change.
+export const ConfigWarningBanner = React.memo(function ConfigWarningBanner() {
     const { t } = useTranslation('common');
     const [status, setStatus] = useState<BootStatus | null>(null);
 
@@ -47,4 +49,4 @@ export function ConfigWarningBanner() {
             <span>{t('bootWarning.serviceAccountMissingDetail')}</span>
         </div>
     );
-}
+});

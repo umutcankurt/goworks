@@ -1,3 +1,4 @@
+import React from 'react';
 import { User, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -13,7 +14,9 @@ function formatTime(seconds: number): string {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-export function Header() {
+// Wrapped in React.memo to avoid re-rendering on every route change triggered by
+// AppLayout's useLocation; the session timer still updates via its own context.
+export const Header = React.memo(function Header() {
     const { user } = useAuth();
     const { remainingSeconds } = useSession();
     const { config } = useAppConfig();
@@ -58,4 +61,4 @@ export function Header() {
             </div>
         </header>
     );
-}
+});
