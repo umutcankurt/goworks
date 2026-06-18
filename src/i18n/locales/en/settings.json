@@ -182,6 +182,14 @@
         "callout": { "tone": "info", "text": "When branding info is changed, the sidebar and header update <b>instantly</b>; the same app is adapted to different organizations from this tab." }
       },
       {
+        "icon": "zap",
+        "heading": "Setup Wizard & Reset",
+        "paragraphs": [
+          "Two reset options sit at the bottom of the General tab. <b>Restart the setup wizard</b> reopens the onboarding steps while keeping your existing configuration (OAuth, Service Account, branding). <b>Reset GoWorks</b> performs a factory reset that <b>permanently deletes all data</b>, including company details, OAuth credentials, the Service Account, signature templates, job history and your session."
+        ],
+        "callout": { "tone": "warning", "text": "<b>Reset GoWorks cannot be undone.</b> To prevent accidental triggering you are asked to type <code>RESET</code> into the box to confirm; the app then returns to a fresh setup." }
+      },
+      {
         "icon": "tag",
         "heading": "Titles Tab",
         "paragraphs": [
@@ -200,14 +208,14 @@
         "icon": "settings",
         "heading": "Google Workspace Settings Tab",
         "paragraphs": [
-          "Google Cloud OAuth credentials, required APIs, the Service Account and Domain-Wide Delegation configuration, and the onboarding reset live on this tab. The Service Account and DWD are required for signature management."
+          "Google Cloud OAuth credentials, required APIs, and the Service Account and Domain-Wide Delegation configuration live on this tab. The Service Account and DWD are required for signature management."
         ]
       },
       {
         "icon": "info",
         "heading": "About Tab",
         "paragraphs": [
-          "The application version, license (Apache 2.0), trademark notices, and the open-source libraries used are listed here."
+          "The application version, license (Apache 2.0), trademark notices, and the open-source libraries used are listed here. The Terms of Use and liability-disclaimer summary, along with the relevant Google links, are also shown on this tab."
         ]
       }
     ]

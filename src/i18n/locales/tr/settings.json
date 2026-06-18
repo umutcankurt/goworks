@@ -182,6 +182,14 @@
         "callout": { "tone": "info", "text": "Marka bilgileri değiştirildiğinde sidebar ve header <b>anında</b> güncellenir; aynı uygulama farklı kurumlara bu sekmeden uyarlanır." }
       },
       {
+        "icon": "zap",
+        "heading": "Kurulum Sihirbazı ve Sıfırlama",
+        "paragraphs": [
+          "Genel sekmesinin en altında iki sıfırlama seçeneği bulunur. <b>Kurulum Sihirbazı'nı tekrar başlat</b>, onboarding adımlarını yeniden açar; mevcut yapılandırmanız (OAuth, Service Account, marka) korunur. <b>GoWorks'ü Sıfırla</b> ise fabrika ayarlarına döner; firma bilgileri, OAuth kimlik bilgileri, Service Account, imza şablonları, iş geçmişi ve oturum dâhil <b>tüm verileri kalıcı olarak siler</b>."
+        ],
+        "callout": { "tone": "warning", "text": "<b>GoWorks'ü Sıfırla geri alınamaz.</b> Yanlışlıkla tetiklenmemesi için kutuya <code>SIFIRLA</code> yazıp onaylamanız istenir; ardından uygulama sıfırdan kuruluma döner." }
+      },
+      {
         "icon": "tag",
         "heading": "Ünvanlar Sekmesi",
         "paragraphs": [
@@ -200,14 +208,14 @@
         "icon": "settings",
         "heading": "Google Workspace Ayarları Sekmesi",
         "paragraphs": [
-          "Google Cloud OAuth bilgileri, gerekli API'ler, Service Account ve Domain-Wide Delegation yapılandırması ile kurulum sihirbazını sıfırlama bu sekmede yer alır. İmza yönetimi için Service Account ve DWD zorunludur."
+          "Google Cloud OAuth bilgileri, gerekli API'ler, Service Account ve Domain-Wide Delegation yapılandırması bu sekmede yer alır. İmza yönetimi için Service Account ve DWD zorunludur."
         ]
       },
       {
         "icon": "info",
         "heading": "Hakkında Sekmesi",
         "paragraphs": [
-          "Uygulama sürümü, lisans (Apache 2.0), ticari marka bildirimleri ve kullanılan açık kaynak kütüphaneler burada listelenir."
+          "Uygulama sürümü, lisans (Apache 2.0), ticari marka bildirimleri ve kullanılan açık kaynak kütüphaneler burada listelenir. Ayrıca Kullanım Koşulları ve Sorumluluk Reddi özeti ile ilgili Google bağlantıları da bu sekmede yer alır."
         ]
       }
     ]

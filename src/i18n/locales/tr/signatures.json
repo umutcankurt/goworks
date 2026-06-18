@@ -83,7 +83,7 @@
           "Sayfa üç panelden oluşur: sol panelde şablon listesi, ortada HTML editörü, sağda canlı önizleme. Yaptığınız her değişiklik sağ panelde anında görüntülenir."
         ],
         "bullets": [
-          { "term": "Yeni Şablon:", "desc": "Sol paneldeki \"Yeni Şablon\" butonuna tıklayın, şablon adı ve HTML içeriği girin, \"Kaydet\" butonuna basın." },
+          { "term": "Yeni Şablon:", "desc": "Sol paneldeki \"Yeni Şablon\" butonuna tıklayın ve şablon adı girin. Boş editör yerine hazır bir başlangıç kartı (Logolu / Logosuz / Çizgili) seçerek hızlı başlayabilir, ardından \"Kaydet\" butonuna basabilirsiniz." },
           { "term": "Düzenleme:", "desc": "Sol panelden mevcut bir şablona tıklayarak düzenleyebilirsiniz." },
           { "term": "Varsayılan Şablon:", "desc": "Yıldız ikonuyla bir şablonu varsayılan olarak işaretleyebilirsiniz. Yeni kullanıcı oluşturma ve tekli imza atama gibi işlemlerde bu şablon otomatik seçili gelir." },
           { "term": "Görsel:", "desc": "Şablon kaydedildikten sonra logo ve görselleri doğrudan yükleyip tek tıkla imzaya ekleyebilirsiniz (aşağıdaki \"Görsel Ekleme\" bölümüne bakın)." }
@@ -105,6 +105,20 @@
           { "term": "Görseller için", "desc": "mutlaka <code>width</code> ve <code>height</code> değerlerini belirtin." }
         ],
         "callout": { "tone": "info", "text": "<b>İzin verilen etiketler:</b> table, tr, td, th, img, a, br, p, div, span, b, i, u, strong, em, font, hr" }
+      },
+      {
+        "icon": "zap",
+        "heading": "Biçimlendirme Araç Çubuğu",
+        "paragraphs": [
+          "Editörün üstündeki araç çubuğu, HTML yazmadan metni biçimlendirmenizi sağlar. Bir metin parçası seçip ilgili butona basın — sistem seçili metni uygun etikete kendisi sarar."
+        ],
+        "bullets": [
+          { "term": "Kalın / İtalik / Altı çizili:", "desc": "Seçili metni sırasıyla <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code> veya <code>&lt;u&gt;</code> etiketiyle sarar." },
+          { "term": "Bağlantı:", "desc": "Bir URL sorar ve seçili metni tıklanabilir <code>&lt;a href&gt;</code> bağlantısına dönüştürür." },
+          { "term": "Renk:", "desc": "Renk seçici veya HEX kodu ile seçili metnin rengini ayarlar." },
+          { "term": "Yazı boyutu:", "desc": "Piksel cinsinden bir değer alıp seçili metnin boyutunu ayarlar." }
+        ],
+        "callout": { "tone": "tip", "text": "Araç çubuğunda ayrıca <b>Koşullu Bölge</b> ve <b>Genişlik Sınırı</b> butonları da bulunur; bunlar aşağıdaki ilgili bölümlerde ayrıntılı anlatılır." }
       },
       {
         "icon": "layers",

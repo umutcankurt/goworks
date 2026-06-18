@@ -83,7 +83,7 @@
           "The page has three panels: template list on the left, HTML editor in the middle, live preview on the right. Each change is reflected instantly in the preview."
         ],
         "bullets": [
-          { "term": "New Template:", "desc": "Click \"New Template\" on the left panel, enter a name and HTML content, then click \"Save\"." },
+          { "term": "New Template:", "desc": "Click \"New Template\" on the left panel and enter a name. Instead of a blank editor you can start quickly from a ready-made starter card (With logo / No logo / Accent line), then click \"Save\"." },
           { "term": "Edit:", "desc": "Click an existing template on the left panel to edit it." },
           { "term": "Default Template:", "desc": "Mark a template as default with the star icon. It is auto-selected when creating users or assigning a single signature." },
           { "term": "Images:", "desc": "After saving the template you can upload logos and images directly and add them to the signature with one click (see \"Adding Images\" below)." }
@@ -105,6 +105,20 @@
           { "term": "For images", "desc": "always set the <code>width</code> and <code>height</code> values." }
         ],
         "callout": { "tone": "info", "text": "<b>Allowed tags:</b> table, tr, td, th, img, a, br, p, div, span, b, i, u, strong, em, font, hr" }
+      },
+      {
+        "icon": "zap",
+        "heading": "Formatting Toolbar",
+        "paragraphs": [
+          "The toolbar above the editor lets you format text without writing HTML. Select a piece of text and click a button — the system wraps the selection in the right tag for you."
+        ],
+        "bullets": [
+          { "term": "Bold / Italic / Underline:", "desc": "Wraps the selected text in <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code> or <code>&lt;u&gt;</code> respectively." },
+          { "term": "Link:", "desc": "Prompts for a URL and turns the selected text into a clickable <code>&lt;a href&gt;</code> link." },
+          { "term": "Color:", "desc": "Sets the color of the selected text via a color picker or HEX code." },
+          { "term": "Font size:", "desc": "Takes a pixel value and sets the size of the selected text." }
+        ],
+        "callout": { "tone": "tip", "text": "The toolbar also has <b>Conditional Block</b> and <b>Width Limit</b> buttons; these are explained in detail in the sections below." }
       },
       {
         "icon": "layers",

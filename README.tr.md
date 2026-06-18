@@ -43,13 +43,15 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 - **👥 Kullanıcı yönetimi** — kullanıcı profillerini ve grup üyeliklerini arama, görüntüleme ve düzenleme; hesapları askıya alma, silme ve geri yükleme; alias ve e-posta yönlendirme yönetimi.
 - **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı işlerini yürütme; rehberli sihirbaz, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
 - **🚪 Offboarding sihirbazı** — ayrılan bir çalışanı güvenle deprovizyon etmek için rehberli, çok adımlı akış: askıya alma, e-posta yönlendirme ayarlama, gruplardan çıkarma ve daha fazlası.
-- **🧭 Onboarding sihirbazı** — ilk açılışta sizi firma markası, Google Cloud projesi, Service Account ve Domain-Wide Delegation adımlarında yönlendiren kurulum akışı.
-- **✍️ Gmail imza yönetimi** — yeniden kullanılabilir token'lara sahip WYSIWYG HTML şablon editörü, medya yönetimi ve Service Account üzerinden domain genelinde arka planda imza dağıtımı.
+- **🧭 Onboarding sihirbazı** — ilk açılışta sizi kullanım koşulları onayı, firma markası, Google Cloud projesi, Service Account ve Domain-Wide Delegation adımlarında yönlendiren kurulum akışı.
+- **🧹 Fabrika ayarlarına sıfırlama** — tüm verileri (marka, OAuth kimlik bilgileri, Service Account, imzalar, geçmiş) yazarak-onayla korumasının ardından silip sıfırdan başlama; ayrıca yapılandırmanızı koruyan daha hafif bir sihirbaz yeniden başlatma seçeneği.
+- **✍️ Gmail imza yönetimi** — yeniden kullanılabilir token'lara sahip WYSIWYG HTML şablon editörü, biçimlendirme araç çubuğu, başlangıç şablonları, otomatik medya token'larıyla (`{{image_N}}`) doğrudan görsel yükleme ve Service Account üzerinden domain genelinde arka planda imza dağıtımı.
 - **🔎 İmza denetimi** — kurumdaki imza sapmalarını tarayın, ardından düzeltmeleri inceleyip uygulayın.
 - **👨‍👩‍👧 Google Groups yönetimi** — gruplar, üyeler, roller, alias'lar ve erişim ayarları için tam CRUD (Directory API + Groups Settings API).
 - **📊 Panel ve raporlar** — aktif iş takibi, Google Admin denetim günlüğü ve Workspace depolama/kullanım raporları.
 - **🗂️ Kalıcı yerel depo** — şablonlar, unvanlar, kurumlar, uygulama yapılandırması ve tüm iş geçmişi yerel bir SQLite veritabanında; çökme sonrası işler kaldığı yerden devam eder.
 - **🎨 Dinamik marka** — firma adı, sidebar kısaltması, logo, e-posta gönderici adı ve izin verilen giriş domaini uygulama içinden yapılandırılır. GoWorks **tek bir kuruma bağlı değildir** — yeniden markalama bir ayar değişikliğidir.
+- **⚖️ Kullanım koşulları ve sorumluluk reddi** — onboarding sırasında gösterilen, koşullar değiştiğinde yeniden sorulan, sürümlenmiş ve dile duyarlı bir kullanım koşulları/sorumluluk reddi onay ekranı; Ayarlar → Hakkında'dan da görüntülenebilir.
 - **🌍 İki dilli arayüz** — tam Türkçe ve İngilizce arayüz, çalışma anında değiştirilebilir.
 
 ## Neden GoWorks

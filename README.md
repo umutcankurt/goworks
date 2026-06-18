@@ -43,13 +43,15 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 - **👥 User management** — search, view, and edit user profiles and group memberships; suspend, delete, and restore accounts; manage aliases and email forwarding.
 - **📦 Bulk operations** — drive suspend / delete / signature-push jobs from a CSV file, with a guided wizard, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
 - **🚪 Offboarding wizard** — a guided multi-step flow to safely deprovision a departing employee: suspend, set email forwarding, remove from groups, and more.
-- **🧭 Onboarding wizard** — first-run setup that walks you through company branding, the Google Cloud project, the Service Account, and Domain-Wide Delegation.
-- **✍️ Gmail signature management** — a WYSIWYG HTML template editor with reusable tokens, media management, and background signature deployment across the domain via a Service Account.
+- **🧭 Onboarding wizard** — first-run setup that walks you through terms acceptance, company branding, the Google Cloud project, the Service Account, and Domain-Wide Delegation.
+- **🧹 Factory reset** — wipe all data (branding, OAuth credentials, Service Account, signatures, history) behind a type-to-confirm guard and start fresh — plus a lighter wizard restart that preserves your configuration.
+- **✍️ Gmail signature management** — a WYSIWYG HTML template editor with reusable tokens, a formatting toolbar, starter templates, direct image upload with auto media tokens (`{{image_N}}`), and background signature deployment across the domain via a Service Account.
 - **🔎 Signature audit** — scan the organization for signature drift, then review and apply fixes.
 - **👨‍👩‍👧 Google Groups management** — full CRUD for groups, members, roles, aliases, and access settings (Directory API + Groups Settings API).
 - **📊 Dashboard & reports** — active job tracking, Google Admin audit log, and Workspace storage/usage reports.
 - **🗂️ Persistent local store** — templates, job titles, institutions, app config, and full job history in a local SQLite database, with crash-safe job resumption.
 - **🎨 Dynamic branding** — company name, sidebar abbreviation, logo, email sender name, and allowed login domain are all configurable in-app. GoWorks is **not tied to any single organization** — re-branding is a settings change.
+- **⚖️ Terms & disclaimer** — a versioned, locale-aware terms-of-use and liability-disclaimer acceptance gate shown during onboarding and re-prompted when the terms change; also viewable from Settings → About.
 - **🌍 Bilingual UI** — full English and Turkish interface, switchable at runtime.
 
 ## Why GoWorks
