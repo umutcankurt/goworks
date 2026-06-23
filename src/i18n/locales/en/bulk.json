@@ -66,6 +66,7 @@
     "continue": "Continue"
   },
   "execution": {
+    "powerWarning": "Keep the app open and check your computer's sleep/shutdown settings while this bulk operation runs; it continues in the background.",
     "progressLabel": "Progress",
     "succeeded": "Succeeded",
     "failed": "Failed",

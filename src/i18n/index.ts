@@ -23,6 +23,7 @@ import trToast from './locales/tr/toast.json';
 import trReports from './locales/tr/reports.json';
 import trOnboarding from './locales/tr/onboarding.json';
 import trLegal from './locales/tr/legal.json';
+import trVault from './locales/tr/vault.json';
 
 import enCommon from './locales/en/common.json';
 import enHeader from './locales/en/header.json';
@@ -45,6 +46,7 @@ import enToast from './locales/en/toast.json';
 import enReports from './locales/en/reports.json';
 import enOnboarding from './locales/en/onboarding.json';
 import enLegal from './locales/en/legal.json';
+import enVault from './locales/en/vault.json';
 
 export const STORAGE_KEY_LANG = 'goworks.lang';
 
@@ -70,6 +72,7 @@ export const NAMESPACES = [
     'reports',
     'onboarding',
     'legal',
+    'vault',
 ] as const;
 
 const resources = {
@@ -95,6 +98,7 @@ const resources = {
         reports: trReports,
         onboarding: trOnboarding,
         legal: trLegal,
+        vault: trVault,
     },
     en: {
         common: enCommon,
@@ -118,6 +122,7 @@ const resources = {
         reports: enReports,
         onboarding: enOnboarding,
         legal: enLegal,
+        vault: enVault,
     },
 } as const;
 

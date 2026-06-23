@@ -1,0 +1,70 @@
+{
+  "lock": {
+    "title": "GoWorks Kilitli",
+    "subtitle": "Devam etmek için ana parolanızı girin.",
+    "passwordLabel": "Ana parola",
+    "passwordPlaceholder": "Ana parolanız",
+    "unlock": "Kilidi Aç",
+    "unlocking": "Açılıyor…",
+    "wrongPassword": "Parola hatalı. Tekrar deneyin.",
+    "genericError": "Kilit açılamadı: {{error}}",
+    "pending": "{{count}} işlem arka planda devam ediyor.",
+    "corrupt": "Vault dosyası okunamıyor. Sıfırlamanız gerekebilir.",
+    "lockedOut": "Çok fazla hatalı deneme. {{seconds}} sn sonra tekrar deneyin.",
+    "forgot": "Parolamı unuttum"
+  },
+  "setup": {
+    "title": "Ana Parola Oluşturun",
+    "subtitle": "Hassas anahtarlarınız (Service Account, oturum) bu parolayla şifrelenir ve yalnızca bu cihazda saklanır. Unutursanız kurtarılamaz.",
+    "passwordLabel": "Ana parola",
+    "confirmLabel": "Ana parola (tekrar)",
+    "create": "Vault Oluştur",
+    "creating": "Oluşturuluyor…",
+    "mismatch": "Parolalar eşleşmiyor.",
+    "tooShort": "Parola en az {{min}} karakter olmalı.",
+    "recommend": "İpucu: 12+ karakterlik bir parola daha güvenlidir.",
+    "error": "Vault oluşturulamadı: {{error}}"
+  },
+  "reset": {
+    "title": "Vault'u sıfırla",
+    "warning": "Bu işlem ana parolayı ve şifreli anahtarları siler. Service Account anahtarını yeniden yüklemeniz ve Google ile yeniden giriş yapmanız gerekir. Geri alınamaz.",
+    "warningDetailed": "Bu işlem GERİ ALINAMAZ. Şunlar kalıcı olarak silinir: ana parola ve şifreli anahtarlar, Service Account anahtarı, Google oturumu (refresh token). Sıfırlama sonrası kurulum sihirbazını baştan tamamlamanız gerekir.",
+    "confirmKeyword": "SIFIRLA",
+    "confirmPrompt": "Onaylamak için {{keyword}} yazın",
+    "confirm": "Evet, vault'u sıfırla",
+    "cancel": "Vazgeç"
+  },
+  "onboarding": {
+    "title": "Ana Parola",
+    "description": "Service Account anahtarı ve Google oturum token'ı bu ana parolayla şifrelenir ve yalnızca bu bilgisayarda saklanır.",
+    "note": "Kurtarma anahtarı yoktur: parolayı unutursanız anahtarları yeniden yüklemeniz gerekir.",
+    "done": "Vault oluşturuldu ve kilidi açıldı.",
+    "minHint": "En az {{min}} karakter."
+  },
+  "common": {
+    "showPassword": "Parolayı göster",
+    "hidePassword": "Parolayı gizle",
+    "capsLock": "Caps Lock açık",
+    "match": "Parolalar eşleşiyor.",
+    "noMatch": "Parolalar eşleşmiyor."
+  },
+  "strength": {
+    "label": "Parola gücü:",
+    "weak": "Zayıf",
+    "medium": "Orta",
+    "strong": "Güçlü"
+  },
+  "changePassword": {
+    "title": "Ana Parolayı Değiştir",
+    "description": "Mevcut parolanızı doğrulayın ve yeni bir parola belirleyin. Şifreli anahtarlarınız (Service Account, oturum) korunur — yeniden yükleme gerekmez.",
+    "currentLabel": "Mevcut parola",
+    "newLabel": "Yeni parola",
+    "confirmLabel": "Yeni parola (tekrar)",
+    "submit": "Parolayı Değiştir",
+    "submitting": "Değiştiriliyor…",
+    "success": "Ana parola başarıyla değiştirildi.",
+    "wrongCurrent": "Mevcut parola hatalı.",
+    "error": "Parola değiştirilemedi: {{error}}",
+    "cancel": "Vazgeç"
+  }
+}

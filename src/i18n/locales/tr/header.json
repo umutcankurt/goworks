@@ -1,5 +1,6 @@
 {
   "titleSuffix": "Workspace Yönetim",
   "fallbackTitle": "GoWorks · Workspace Yönetim",
-  "userPlaceholder": "Kullanıcı"
+  "userPlaceholder": "Kullanıcı",
+  "lockNow": "Şimdi kilitle"
 }

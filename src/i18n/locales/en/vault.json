@@ -1,0 +1,70 @@
+{
+  "lock": {
+    "title": "GoWorks Locked",
+    "subtitle": "Enter your master password to continue.",
+    "passwordLabel": "Master password",
+    "passwordPlaceholder": "Your master password",
+    "unlock": "Unlock",
+    "unlocking": "Unlocking…",
+    "wrongPassword": "Wrong password. Try again.",
+    "genericError": "Couldn't unlock: {{error}}",
+    "pending": "{{count}} operation(s) still running in the background.",
+    "corrupt": "The vault file can't be read. You may need to reset it.",
+    "lockedOut": "Too many failed attempts. Try again in {{seconds}}s.",
+    "forgot": "Forgot my password"
+  },
+  "setup": {
+    "title": "Create a Master Password",
+    "subtitle": "Your sensitive keys (Service Account, session) are encrypted with this password and stored only on this device. There is no recovery if you forget it.",
+    "passwordLabel": "Master password",
+    "confirmLabel": "Master password (again)",
+    "create": "Create Vault",
+    "creating": "Creating…",
+    "mismatch": "Passwords don't match.",
+    "tooShort": "Password must be at least {{min}} characters.",
+    "recommend": "Tip: a 12+ character password is more secure.",
+    "error": "Couldn't create the vault: {{error}}"
+  },
+  "reset": {
+    "title": "Reset vault",
+    "warning": "This deletes the master password and the encrypted keys. You'll need to re-upload the Service Account key and sign in to Google again. This can't be undone.",
+    "warningDetailed": "This CANNOT be undone. The following are permanently deleted: the master password and encrypted keys, the Service Account key, and the Google session (refresh token). After resetting you'll have to complete the setup wizard from scratch.",
+    "confirmKeyword": "RESET",
+    "confirmPrompt": "Type {{keyword}} to confirm",
+    "confirm": "Yes, reset the vault",
+    "cancel": "Cancel"
+  },
+  "onboarding": {
+    "title": "Master Password",
+    "description": "The Service Account key and Google session token are encrypted with this master password and stored only on this computer.",
+    "note": "There is no recovery key: if you forget the password you'll have to re-upload the keys.",
+    "done": "Vault created and unlocked.",
+    "minHint": "At least {{min}} characters."
+  },
+  "common": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "capsLock": "Caps Lock is on",
+    "match": "Passwords match.",
+    "noMatch": "Passwords don't match."
+  },
+  "strength": {
+    "label": "Password strength:",
+    "weak": "Weak",
+    "medium": "Medium",
+    "strong": "Strong"
+  },
+  "changePassword": {
+    "title": "Change Master Password",
+    "description": "Verify your current password and set a new one. Your encrypted keys (Service Account, session) are preserved — no re-upload needed.",
+    "currentLabel": "Current password",
+    "newLabel": "New password",
+    "confirmLabel": "New password (again)",
+    "submit": "Change Password",
+    "submitting": "Changing…",
+    "success": "Master password changed successfully.",
+    "wrongCurrent": "Current password is incorrect.",
+    "error": "Couldn't change the password: {{error}}",
+    "cancel": "Cancel"
+  }
+}

@@ -8,6 +8,7 @@
     "terms": "Kullanım koşulları",
     "branding": "Firma bilgileri",
     "cloud": "Google Cloud projesi",
+    "masterPassword": "Ana parola",
     "serviceAccount": "Service Account",
     "adminLogin": "Yönetici girişi",
     "dwd": "Domain-Wide Delegation",
@@ -213,6 +214,7 @@
     "needBranding": "Devam etmeden önce firma adı ve izin verilen domain doldurulmalı.",
     "needDwdTest": "Devam etmeden önce DWD bağlantısını başarıyla test edin.",
     "needCredentials": "Devam etmeden önce Google OAuth Client ID ve Secret'ı kaydedin.",
-    "needTerms": "Devam etmeden önce her iki onay kutusunu da işaretleyin."
+    "needTerms": "Devam etmeden önce her iki onay kutusunu da işaretleyin.",
+    "needMasterPassword": "Devam etmeden önce ana parolayı belirleyip vault'u oluşturun."
   }
 }

@@ -117,6 +117,20 @@
         "step3": "Paste the scope list (Copy All) and save, then run the test again."
       }
     },
+    "security": {
+      "title": "Security",
+      "description": "Master password and auto-lock settings.",
+      "changePasswordButton": "Change master password",
+      "autoLock": {
+        "label": "Auto-lock timeout",
+        "description": "If there's no activity for this long, the vault locks and asks for the master password to continue.",
+        "option15": "15 minutes",
+        "option30": "30 minutes",
+        "option60": "1 hour",
+        "off": "Off",
+        "saved": "Auto-lock timeout updated."
+      }
+    },
     "resetWizard": {
       "heading": "Setup Wizard",
       "description": "Restart the onboarding wizard if you'd like to walk through the steps again. Existing configuration is preserved; only the wizard reopens.",

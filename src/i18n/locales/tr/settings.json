@@ -117,6 +117,20 @@
         "step3": "Yukarıdaki scope listesini (Tümünü kopyala) yapıştırıp kaydedin, ardından testi tekrar çalıştırın."
       }
     },
+    "security": {
+      "title": "Güvenlik",
+      "description": "Ana parola ve otomatik kilit ayarları.",
+      "changePasswordButton": "Ana parolayı değiştir",
+      "autoLock": {
+        "label": "Otomatik kilit süresi",
+        "description": "Bu süre boyunca işlem yapılmazsa vault kilitlenir ve devam etmek için ana parola istenir.",
+        "option15": "15 dakika",
+        "option30": "30 dakika",
+        "option60": "1 saat",
+        "off": "Kapalı",
+        "saved": "Otomatik kilit süresi güncellendi."
+      }
+    },
     "resetWizard": {
       "heading": "Kurulum Sihirbazı",
       "description": "Onboarding adımlarını yeniden çalıştırmak istiyorsanız sihirbazı sıfırlayın. Mevcut yapılandırma silinmez; sadece sihirbaz tekrar açılır.",

@@ -8,6 +8,7 @@
     "terms": "Terms of use",
     "branding": "Company details",
     "cloud": "Google Cloud project",
+    "masterPassword": "Master password",
     "serviceAccount": "Service Account",
     "adminLogin": "Admin sign-in",
     "dwd": "Domain-Wide Delegation",
@@ -213,6 +214,7 @@
     "needBranding": "Fill in the company name and allowed domain before continuing.",
     "needDwdTest": "Run the DWD test successfully before continuing.",
     "needCredentials": "Save the Google OAuth Client ID and Secret before continuing.",
-    "needTerms": "Check both acceptance boxes before continuing."
+    "needTerms": "Check both acceptance boxes before continuing.",
+    "needMasterPassword": "Set a master password and create the vault before continuing."
   }
 }

@@ -66,6 +66,7 @@
     "continue": "Devam Et"
   },
   "execution": {
+    "powerWarning": "Bu toplu işlem sürerken uygulamayı kapatmayın ve bilgisayarınızın uyku/kapanma ayarlarını kontrol edin; işlem arka planda devam eder.",
     "progressLabel": "İlerleme Durumu",
     "succeeded": "Başarılı",
     "failed": "Başarısız",
