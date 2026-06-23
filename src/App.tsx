@@ -3,8 +3,10 @@ import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'reac
 import { AppLayout } from './layouts/AppLayout';
 import { AppConfigProvider, useAppConfig } from './contexts/AppConfigContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { VaultProvider, useVault } from './contexts/VaultContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { VaultLockScreen } from './components/vault/VaultLockScreen';
 import { ToastContainer } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -32,6 +34,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
+ * Gates the whole app on the master-password vault. When the vault is LOCKED
+ * (fresh launch / after idle) or needs a password set outside the wizard (legacy
+ * upgrade / post-reset), a full-screen lock screen replaces all routes.
+ * NEEDS_ONBOARDING passes through to OnboardingGate (the wizard sets the password
+ * in its own step); UNLOCKED passes through to the app.
+ */
+function VaultGate({ children }: { children: ReactNode }) {
+  const { state, isLoading } = useVault();
+  if (isLoading) return null;
+  const status = state?.status;
+  if (status === 'LOCKED') return <VaultLockScreen mode="unlock" />;
+  if (status === 'NEEDS_VAULT_SETUP') return <VaultLockScreen mode="setup" />;
+  return <>{children}</>;
+}
+
+/**
  * Forces the user to /onboarding if onboarding is not complete; once complete,
  * redirects to the home page if /onboarding is visited. Fed by AppConfigProvider,
  * so it is active before login too.
@@ -55,10 +73,12 @@ function App() {
     <ThemeProvider>
       <AppConfigProvider>
         <AuthProvider>
-          <ToastProvider>
-            <Router>
-              <OnboardingGate>
-                <Routes>
+          <VaultProvider>
+            <ToastProvider>
+              <Router>
+                <VaultGate>
+                  <OnboardingGate>
+                    <Routes>
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/login" element={<Login />} />
 
@@ -79,11 +99,13 @@ function App() {
                     <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
                   </Route>
                 </Routes>
-              </OnboardingGate>
-            </Router>
-            <TermsAcceptanceModal />
-            <ToastContainer />
-          </ToastProvider>
+                  </OnboardingGate>
+                </VaultGate>
+              </Router>
+              <TermsAcceptanceModal />
+              <ToastContainer />
+            </ToastProvider>
+          </VaultProvider>
         </AuthProvider>
       </AppConfigProvider>
     </ThemeProvider>

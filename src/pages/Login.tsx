@@ -62,7 +62,14 @@ export function Login() {
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="w-full max-w-md relative z-10"
             >
-                <div className="eth-glass eth-glow-cyan-panel p-8 rounded-3xl flex flex-col items-center">
+                {/* Opaque surface fill (~1 tone above the eth-app background) — the
+                    translucent eth-glass fill was nearly identical to the page bg in
+                    light mode. Token-based, so it stays correct in dark mode. Matches
+                    the vault lock screen (its pre-auth twin). */}
+                <div
+                    className="eth-glass eth-glow-cyan-panel p-8 rounded-3xl flex flex-col items-center"
+                    style={{ backgroundColor: 'var(--color-surface-container-high)' }}
+                >
                     <div className="w-16 h-16 bg-eth-primary-container rounded-2xl flex items-center justify-center text-on-eth-primary-container eth-glow-cyan mb-6">
                         <Fingerprint size={32} strokeWidth={1.5} />
                     </div>

@@ -11,6 +11,7 @@ import {
     TermsStep,
     BrandingStep,
     CloudProjectStep,
+    MasterPasswordStep,
     ServiceAccountStep,
     DwdStep,
     AdminLoginStep,
@@ -37,6 +38,7 @@ export function Onboarding() {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [brandingValid, setBrandingValid] = useState(false);
     const [cloudCredentialsValid, setCloudCredentialsValid] = useState(false);
+    const [masterPasswordSet, setMasterPasswordSet] = useState(false);
     const [serviceAccountStatus, setServiceAccountStatus] = useState<ServiceAccountStatus | null>(null);
     const [dwdVerified, setDwdVerified] = useState(false);
 
@@ -94,6 +96,10 @@ export function Onboarding() {
             canGoNext = cloudCredentialsValid;
             stepNode = <CloudProjectStep onValidChange={setCloudCredentialsValid} />;
             break;
+        case 'master-password':
+            canGoNext = masterPasswordSet;
+            stepNode = <MasterPasswordStep onValidChange={setMasterPasswordSet} />;
+            break;
         case 'service-account':
             canGoNext = !!serviceAccountStatus?.configured;
             stepNode = <ServiceAccountStep onStatusChange={setServiceAccountStatus} />;
@@ -137,6 +143,10 @@ export function Onboarding() {
         }
         if (step === 'cloud' && !cloudCredentialsValid) {
             addToast(t('errors.needCredentials'), 'error');
+            return;
+        }
+        if (step === 'master-password' && !masterPasswordSet) {
+            addToast(t('errors.needMasterPassword'), 'error');
             return;
         }
         if (step === 'service-account' && !serviceAccountStatus?.configured) {

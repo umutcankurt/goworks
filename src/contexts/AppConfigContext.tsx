@@ -26,6 +26,7 @@ const FALLBACK_CONFIG: AppConfigDTO = {
     googleClientId: '',
     termsAcceptedAt: null,
     termsVersion: null,
+    autoLockMinutes: '60',
 };
 
 interface AppConfigContextType {

@@ -37,9 +37,35 @@ export type OnboardingStep =
   | 'terms'
   | 'branding'
   | 'cloud'
+  | 'master-password'
   | 'service-account'
   | 'dwd'
   | 'admin-login';
+
+// --- Vault (master-password) ---
+export type VaultStatus = 'NEEDS_ONBOARDING' | 'NEEDS_VAULT_SETUP' | 'LOCKED' | 'UNLOCKED';
+
+export interface VaultState {
+  status: VaultStatus;
+  hardLockPending: boolean;
+  googleReauthNeeded: boolean;
+  pendingJobs: number;
+  corrupt: boolean;
+  /** Epoch ms until which unlock is blocked after too many wrong passwords (0 = not locked out). */
+  lockedUntil: number;
+}
+
+export const vaultApi = {
+  getState: () => ipcInvoke<VaultState>('vault:getState'),
+  /** Create a new vault (onboarding / legacy upgrade / post-reset). */
+  setup: (password: string) => ipcInvoke<VaultState>('vault:setup', { password }),
+  unlock: (password: string) => ipcInvoke<VaultState>('vault:unlock', { password }),
+  lock: () => ipcInvoke<VaultState>('vault:lock'),
+  reset: () => ipcInvoke<VaultState>('vault:reset'),
+  /** Re-key the vault to a new master password (Settings → Security). */
+  changePassword: (current: string, next: string) =>
+    ipcInvoke<void>('vault:changePassword', { current, next }),
+};
 
 export interface AppConfigDTO {
   companyName: string;
@@ -53,6 +79,8 @@ export interface AppConfigDTO {
   googleClientId: string;
   termsAcceptedAt: string | null;
   termsVersion: string | null;
+  /** Idle auto-lock timeout in minutes as a string ('0' = disabled). */
+  autoLockMinutes: string;
 }
 
 export interface DwdTestResult {

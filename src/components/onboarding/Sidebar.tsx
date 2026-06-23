@@ -11,6 +11,7 @@ const STEP_LABEL_KEYS: Record<OnboardingStep, string> = {
     terms: 'stepNav.terms',
     branding: 'stepNav.branding',
     cloud: 'stepNav.cloud',
+    'master-password': 'stepNav.masterPassword',
     'service-account': 'stepNav.serviceAccount',
     'admin-login': 'stepNav.adminLogin',
     dwd: 'stepNav.dwd',
