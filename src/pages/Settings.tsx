@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Upload, ClipboardList, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink, Info, FileText, Copyright, Boxes, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Upload, ClipboardList, Server, CheckCircle, XCircle, Loader, Pencil, Check, X, Search, Image as ImageIcon, Building2, Languages, ShieldCheck, RefreshCw, RotateCcw, Copy, ExternalLink, Info, FileText, Copyright, Boxes, AlertTriangle, KeyRound } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
+import { ChangePasswordModal } from '../components/vault/ChangePasswordModal';
 import { titlesApi, institutionsApi, serverApi, appConfigApi, type ServiceAccountStatus, type DwdTestResult } from '../services/server-api';
 import { useAppConfig } from '../contexts/AppConfigContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -772,6 +773,8 @@ function GeneralTab() {
         </div>
       </div>
 
+      <SecuritySection />
+
       <ResetWizardSection />
     </div>
   );
@@ -1193,6 +1196,71 @@ function DwdSection() {
 /* ============================================================
  * "Restart the wizard" — resets onboarding
  * ============================================================ */
+/**
+ * Security section (General tab): change the master password and configure the
+ * idle auto-lock timeout. Sits above the wizard/factory-reset controls.
+ */
+function SecuritySection() {
+  const { t } = useTranslation('settings');
+  const { config, commitConfig } = useAppConfig();
+  const { addToast } = useToast();
+  const [showChangePw, setShowChangePw] = useState(false);
+
+  const autoLockValue = config.autoLockMinutes ?? '60';
+
+  const handleAutoLockChange = async (value: string) => {
+    try {
+      await commitConfig('autoLockMinutes', value);
+      addToast(t('general.security.autoLock.saved'), 'success');
+    } catch (err: any) {
+      addToast(err?.message || '', 'error');
+    }
+  };
+
+  return (
+    <div className="border-t border-outline-variant/30 pt-6">
+      <div className="flex items-start gap-3 mb-3">
+        <ShieldCheck size={24} className="text-on-surface-variant mt-0.5" />
+        <div>
+          <h3 className="font-medium text-on-surface">{t('general.security.title')}</h3>
+          <p className="text-sm text-on-surface-variant">{t('general.security.description')}</p>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <button
+          type="button"
+          onClick={() => setShowChangePw(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border eth-border-ghost text-on-surface hover:bg-surface-container-low text-sm"
+        >
+          <KeyRound size={16} />
+          {t('general.security.changePasswordButton')}
+        </button>
+
+        <div className="max-w-sm">
+          <label htmlFor="auto-lock-select" className="block text-sm font-medium text-on-surface">
+            {t('general.security.autoLock.label')}
+          </label>
+          <p className="mt-0.5 text-xs text-on-surface-variant">{t('general.security.autoLock.description')}</p>
+          <select
+            id="auto-lock-select"
+            value={autoLockValue}
+            onChange={(e) => handleAutoLockChange(e.target.value)}
+            className="mt-2 w-full rounded-lg border eth-border-ghost bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-eth-primary/40"
+          >
+            <option value="15">{t('general.security.autoLock.option15')}</option>
+            <option value="30">{t('general.security.autoLock.option30')}</option>
+            <option value="60">{t('general.security.autoLock.option60')}</option>
+            <option value="0">{t('general.security.autoLock.off')}</option>
+          </select>
+        </div>
+      </div>
+
+      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
+    </div>
+  );
+}
+
 function ResetWizardSection() {
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');

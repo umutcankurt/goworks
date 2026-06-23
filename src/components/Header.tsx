@@ -1,10 +1,11 @@
 import React from 'react';
-import { User, Clock } from 'lucide-react';
+import { User, Clock, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 import { useSession } from '../contexts/SessionContext';
 import { useAppConfig } from '../contexts/AppConfigContext';
+import { useVault } from '../contexts/VaultContext';
 import { LanguageSwitch } from './LanguageSwitch';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -20,6 +21,7 @@ export const Header = React.memo(function Header() {
     const { user } = useAuth();
     const { remainingSeconds } = useSession();
     const { config } = useAppConfig();
+    const { lock } = useVault();
     const { t } = useTranslation('header');
 
     const isWarning = remainingSeconds <= 300; // 5 minutes
@@ -55,6 +57,16 @@ export const Header = React.memo(function Header() {
                     <Clock size={13} strokeWidth={2} />
                     <span>{formatTime(remainingSeconds)}</span>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={() => { lock().catch(() => { /* main process drives the lock */ }); }}
+                    aria-label={t('lockNow')}
+                    title={t('lockNow')}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border bg-surface-container-high text-on-surface-variant eth-border-ghost-soft transition-colors hover:text-on-surface"
+                >
+                    <Lock size={15} strokeWidth={2} aria-hidden="true" />
+                </button>
 
                 <ThemeToggle variant="ethereal" />
                 <LanguageSwitch variant="ethereal" />

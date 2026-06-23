@@ -170,6 +170,13 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
                     />
                 </div>
 
+                {isProcessing && (
+                    <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300 border border-amber-500/20">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{t('execution.powerWarning')}</span>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-6 mb-4">
                     <div className="bg-eth-secondary/10 p-4 rounded-xl border border-eth-secondary/20 flex flex-col items-center">
                         <span className="text-eth-secondary text-sm font-medium mb-1">{t('execution.succeeded')}</span>
