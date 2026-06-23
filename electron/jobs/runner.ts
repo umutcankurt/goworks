@@ -1,8 +1,9 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, powerSaveBlocker } from 'electron';
 import { jobQueue } from './queue';
 import type { JobRecord, ProgressEventPayload } from './types';
 import { getLogger } from '../services/logger';
 import { getDb } from '../db';
+import { vaultManager } from '../services/vault-manager';
 
 type WorkerHandler = (
     job: JobRecord,
@@ -31,6 +32,9 @@ class JobRunner {
     private activeByType = new Map<string, number>();
     private mainWindow: BrowserWindow | null = null;
     private dispatchScheduled = false;
+    // While any job runs, prevent the OS from suspending the app so long bulk
+    // operations aren't interrupted if the user walks away (sleep/idle).
+    private powerBlockerId: number | null = null;
 
     setWindow(win: BrowserWindow | null) {
         this.mainWindow = win;
@@ -45,6 +49,12 @@ class JobRunner {
         if (!job) return false;
         this.cancelled.add(id);
         return true;
+    }
+
+    /** Number of jobs currently executing — used by the vault Graceful Lock to
+     *  decide when it is safe to zeroize the DEK. */
+    getRunningCount(): number {
+        return this.running.size;
     }
 
     /**
@@ -73,6 +83,11 @@ class JobRunner {
         void record;
     }
 
+    /** Public nudge to (re)run the dispatch loop — e.g. after the vault unlocks. */
+    resumeDispatch(): void {
+        this.scheduleDispatch();
+    }
+
     private scheduleDispatch() {
         if (this.dispatchScheduled) return;
         this.dispatchScheduled = true;
@@ -83,6 +98,11 @@ class JobRunner {
     }
 
     private dispatch() {
+        // Vault unlock-gate: while the vault is locked (fresh startup before
+        // unlock, or after an idle soft-lock) do NOT start new jobs — they wait in
+        // PENDING until the master password is entered. Jobs already RUNNING are
+        // unaffected (Graceful Lock keeps the DEK alive until they finish).
+        if (vaultManager.isLocked()) return;
         const pending = jobQueue.listByStatus(['PENDING']);
         for (const job of pending) {
             if (this.running.has(job.id)) continue;
@@ -98,9 +118,37 @@ class JobRunner {
         }
     }
 
+    private acquirePowerBlocker(): void {
+        if (this.powerBlockerId !== null) return;
+        try {
+            // 'prevent-app-suspension' keeps the process running (and the system
+            // awake on AC) without forcing the display to stay on.
+            this.powerBlockerId = powerSaveBlocker.start('prevent-app-suspension');
+            getLogger().info('[runner] powerSaveBlocker started (job running).');
+        } catch (e) {
+            getLogger().warn('[runner] powerSaveBlocker start failed', e);
+            this.powerBlockerId = null;
+        }
+    }
+
+    private releasePowerBlocker(): void {
+        if (this.powerBlockerId === null) return;
+        try {
+            if (powerSaveBlocker.isStarted(this.powerBlockerId)) {
+                powerSaveBlocker.stop(this.powerBlockerId);
+            }
+            getLogger().info('[runner] powerSaveBlocker stopped (queue idle).');
+        } catch (e) {
+            getLogger().warn('[runner] powerSaveBlocker stop failed', e);
+        } finally {
+            this.powerBlockerId = null;
+        }
+    }
+
     private startJob(job: JobRecord, handler: WorkerHandler) {
         this.running.add(job.id);
         this.activeByType.set(job.type, (this.activeByType.get(job.type) ?? 0) + 1);
+        this.acquirePowerBlocker();
         jobQueue.markRunning(job.id);
 
         const ctx: WorkerContext = {
@@ -142,7 +190,12 @@ class JobRunner {
                 this.running.delete(job.id);
                 this.cancelled.delete(job.id);
                 this.activeByType.set(job.type, Math.max(0, (this.activeByType.get(job.type) ?? 1) - 1));
+                // Release the power blocker once the queue is fully idle.
+                if (this.running.size === 0) this.releasePowerBlocker();
                 this.scheduleDispatch();
+                // Graceful Lock: if a soft-lock is waiting for jobs to drain,
+                // zeroize the DEK now that this job (maybe the last one) settled.
+                vaultManager.onJobSettled();
             });
     }
 

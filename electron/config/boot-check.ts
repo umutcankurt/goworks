@@ -32,7 +32,7 @@ import * as dotenv from 'dotenv';
 import { logger } from '../services/logger';
 import { appConfigService } from '../services/app-config-service';
 import { secureStorage, serviceAccountStore } from '../services/secure-storage';
-import { getStatus } from '../secrets/service-account-loader';
+import { vaultManager } from '../services/vault-manager';
 
 const PLACEHOLDER_VALUES = new Set([
     '',
@@ -210,11 +210,16 @@ function validateUserDataWritable(): FailureDetail | null {
 }
 
 function checkServiceAccount(): boolean {
-    // true = missing/invalid. getStatus() reads from the encrypted store
-    // (service-account.enc); if safeStorage is unavailable or the content is
-    // corrupt it returns configured:false.
+    // true = missing. The Service Account key now lives in the encrypted vault,
+    // which is LOCKED at boot (no master password yet) — so we can't read it here.
+    // Infer instead: if a vault file exists, or a legacy service-account.enc is
+    // still around (pre-migration), assume the SA is present; the real status is
+    // recomputed after the vault is unlocked (see main.ts onUnlocked). Only a
+    // clean install with neither is definitely "missing".
     try {
-        return !getStatus().configured;
+        if (vaultManager.fileExists()) return false;
+        if (serviceAccountStore.has()) return false;
+        return true;
     } catch {
         return true;
     }
@@ -323,15 +328,18 @@ function runEnvMigration(): void {
         }
     }
 
-    if (!isPlaceholder(envClientSecret) && !secureStorage.hasClientSecret()) {
+    if (
+        !isPlaceholder(envClientSecret) &&
+        !appConfigService.get('googleClientSecret') &&
+        !secureStorage.hasClientSecret()
+    ) {
         try {
-            secureStorage.setClientSecret(envClientSecret!);
-            logger.info('[boot-check] .env → safeStorage: clientSecret migrated.');
+            // Vault model: the client secret goes to plaintext app_config (not
+            // safeStorage) — it's a public-client secret needed before unlock.
+            appConfigService.set('googleClientSecret', envClientSecret!);
+            logger.info('[boot-check] .env → app_config: clientSecret migrated.');
             migratedAnything = true;
         } catch (err) {
-            // safeStorage may be unavailable (Linux headless, etc.). Even if the
-            // migration fails the app keeps starting; the user can re-enter the
-            // value via onboarding.
             logger.warn('[boot-check] clientSecret migration başarısız:', err);
         }
     }
@@ -436,8 +444,12 @@ export function runBootCheck(): BootCheckResult {
         );
     }
 
+    // The client secret moved to plaintext app_config (vault model). A legacy
+    // install may still have it in secure-storage until the vault migration runs,
+    // so accept either source.
     const oauthCredentialsMissing =
-        !appConfigService.get('googleClientId') || !secureStorage.hasClientSecret();
+        !appConfigService.get('googleClientId') ||
+        (!appConfigService.get('googleClientSecret') && !secureStorage.hasClientSecret());
     if (oauthCredentialsMissing) {
         logger.warn(
             '[boot-check] OAuth credentials eksik — onboarding sihirbazı kullanıcıdan toplayacak.',

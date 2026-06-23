@@ -1,4 +1,4 @@
-import { serviceAccountStore } from '../services/secure-storage';
+import { vaultManager } from '../services/vault-manager';
 
 interface ServiceAccountKey {
     type?: string;
@@ -37,18 +37,21 @@ export interface ServiceAccountCredentials {
 }
 
 /**
- * Reads the Service Account key from encrypted storage and returns the parsed
- * credential object. Returns `null` if the store is empty or the content is invalid.
+ * Reads the Service Account key from the unlocked master-password vault and
+ * returns the parsed credential object. Returns `null` if the vault has no
+ * Service Account stored, or the content is invalid.
  *
- * If `safeStorage` is unavailable (the store file exists but cannot be opened),
- * `serviceAccountStore.get()` throws — this error is deliberately propagated upward
- * so the caller (consuming service / IPC handler) can show a clear error.
+ * If the vault is LOCKED, `vaultManager.getServiceAccount()` throws
+ * `VaultLockedError` — propagated upward so the caller (worker / IPC handler)
+ * surfaces a clear "vault locked" error. In practice SA-backed jobs only run
+ * while unlocked (dispatch-gate) or during a pending hard-lock where the DEK is
+ * still alive.
  *
  * NO cache: decrypt+parse is cheap, and `GoogleAuth` instances are already cached in
  * the consuming services — which also eliminates the stale-credential class of errors.
  */
 export function getServiceAccountCredentials(): ServiceAccountCredentials | null {
-    const raw = serviceAccountStore.get();
+    const raw = vaultManager.getServiceAccount();
     if (!raw) return null;
     let json: ServiceAccountKey;
     try {
@@ -91,9 +94,9 @@ export function uploadFromContent(content: string): ServiceAccountUploadResult {
     if (!parsed.client_email || !parsed.private_key) {
         throw new Error('Service Account JSON gerekli alanları içermiyor (client_email, private_key)');
     }
-    // If safeStorage is unavailable, this throws — the IPC handler's
-    // try/catch surfaces it to the UI (see the boot-check hard-fail policy).
-    serviceAccountStore.set(content);
+    // Writes into the unlocked vault (re-encrypts + persists vault.enc). Throws
+    // VaultLockedError if the vault is locked — the IPC handler surfaces it.
+    vaultManager.setServiceAccount(content);
     return {
         configured: true,
         email: parsed.client_email,
@@ -102,5 +105,5 @@ export function uploadFromContent(content: string): ServiceAccountUploadResult {
 }
 
 export function clearKey(): void {
-    serviceAccountStore.clear();
+    vaultManager.clearServiceAccount();
 }

@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const storeMock = vi.hoisted(() => ({
-    set: vi.fn(),
-    get: vi.fn((): string | null => null),
-    has: vi.fn(() => false),
-    clear: vi.fn(),
+// The loader now reads/writes the Service Account through the master-password
+// vault (vaultManager), not the legacy safeStorage store.
+const vaultMock = vi.hoisted(() => ({
+    getServiceAccount: vi.fn((): string | null => null),
+    setServiceAccount: vi.fn(),
+    clearServiceAccount: vi.fn(),
 }));
 
-vi.mock('../services/secure-storage', () => ({
-    serviceAccountStore: storeMock,
+vi.mock('../services/vault-manager', () => ({
+    vaultManager: vaultMock,
 }));
 
 import {
@@ -28,37 +29,36 @@ const VALID_SA = JSON.stringify({
 
 beforeEach(() => {
     vi.clearAllMocks();
-    storeMock.get.mockReturnValue(null);
-    storeMock.has.mockReturnValue(false);
+    vaultMock.getServiceAccount.mockReturnValue(null);
 });
 
 describe('getServiceAccountCredentials', () => {
-    it('depo boşsa null döner', () => {
-        storeMock.get.mockReturnValue(null);
+    it('vault boşsa null döner', () => {
+        vaultMock.getServiceAccount.mockReturnValue(null);
         expect(getServiceAccountCredentials()).toBeNull();
     });
 
     it('geçersiz JSON için null döner', () => {
-        storeMock.get.mockReturnValue('{not json');
+        vaultMock.getServiceAccount.mockReturnValue('{not json');
         expect(getServiceAccountCredentials()).toBeNull();
     });
 
     it('type service_account değilse null döner', () => {
-        storeMock.get.mockReturnValue(
+        vaultMock.getServiceAccount.mockReturnValue(
             JSON.stringify({ type: 'authorized_user', client_email: 'a', private_key: 'b' }),
         );
         expect(getServiceAccountCredentials()).toBeNull();
     });
 
     it('private_key eksikse null döner', () => {
-        storeMock.get.mockReturnValue(
+        vaultMock.getServiceAccount.mockReturnValue(
             JSON.stringify({ type: 'service_account', client_email: 'a' }),
         );
         expect(getServiceAccountCredentials()).toBeNull();
     });
 
     it('geçerli SA için credential objesi döner (project_id hariç)', () => {
-        storeMock.get.mockReturnValue(VALID_SA);
+        vaultMock.getServiceAccount.mockReturnValue(VALID_SA);
         expect(getServiceAccountCredentials()).toEqual({
             client_email: 'sa@project.iam.gserviceaccount.com',
             private_key: 'PRIVATE_KEY_CONTENT',
@@ -66,22 +66,22 @@ describe('getServiceAccountCredentials', () => {
         });
     });
 
-    it('safeStorage hatası yukarı taşınır', () => {
-        storeMock.get.mockImplementation(() => {
-            throw new Error('OS keychain kullanılabilir değil');
+    it('vault kilitli hatası yukarı taşınır', () => {
+        vaultMock.getServiceAccount.mockImplementation(() => {
+            throw new Error('Vault kilitli');
         });
-        expect(() => getServiceAccountCredentials()).toThrow(/keychain/i);
+        expect(() => getServiceAccountCredentials()).toThrow(/kilitli/i);
     });
 });
 
 describe('getStatus', () => {
-    it('depo boşsa configured:false döner', () => {
-        storeMock.get.mockReturnValue(null);
+    it('vault boşsa configured:false döner', () => {
+        vaultMock.getServiceAccount.mockReturnValue(null);
         expect(getStatus()).toEqual({ configured: false, email: null, clientId: null });
     });
 
     it('geçerli SA için configured:true + email/clientId döner', () => {
-        storeMock.get.mockReturnValue(VALID_SA);
+        vaultMock.getServiceAccount.mockReturnValue(VALID_SA);
         expect(getStatus()).toEqual({
             configured: true,
             email: 'sa@project.iam.gserviceaccount.com',
@@ -89,9 +89,9 @@ describe('getStatus', () => {
         });
     });
 
-    it('safeStorage hatası yutulur → configured:false', () => {
-        storeMock.get.mockImplementation(() => {
-            throw new Error('OS keychain kullanılabilir değil');
+    it('vault kilitli hatası yutulur → configured:false', () => {
+        vaultMock.getServiceAccount.mockImplementation(() => {
+            throw new Error('Vault kilitli');
         });
         expect(getStatus()).toEqual({ configured: false, email: null, clientId: null });
     });
@@ -114,9 +114,9 @@ describe('uploadFromContent', () => {
         ).toThrow(/client_email, private_key/);
     });
 
-    it('geçerli içerik şifreli depoya yazılır ve sonuç döner', () => {
+    it('geçerli içerik vault\'a yazılır ve sonuç döner', () => {
         const result = uploadFromContent(VALID_SA);
-        expect(storeMock.set).toHaveBeenCalledWith(VALID_SA);
+        expect(vaultMock.setServiceAccount).toHaveBeenCalledWith(VALID_SA);
         expect(result).toEqual({
             configured: true,
             email: 'sa@project.iam.gserviceaccount.com',
@@ -126,8 +126,8 @@ describe('uploadFromContent', () => {
 });
 
 describe('clearKey', () => {
-    it('şifreli depoyu temizler', () => {
+    it('vault\'taki Service Account alanını temizler', () => {
         clearKey();
-        expect(storeMock.clear).toHaveBeenCalled();
+        expect(vaultMock.clearServiceAccount).toHaveBeenCalled();
     });
 });

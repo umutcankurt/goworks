@@ -104,6 +104,12 @@ const invokeChannels = [
   'titles:getAll',
   'titles:importCsv',
   'titles:update',
+  'vault:changePassword',
+  'vault:getState',
+  'vault:lock',
+  'vault:reset',
+  'vault:setup',
+  'vault:unlock',
   'window:maximize',
 ]
 
@@ -117,6 +123,8 @@ const receiveChannels = [
   'jobs:done',
   'jobs:progress',
   'main-process-message',
+  'vault:locked',
+  'vault:unlocked',
 ]
 
 // --------- Expose a channel-restricted IPC bridge to the renderer ---------

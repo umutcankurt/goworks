@@ -13,8 +13,17 @@ export type AppConfigKey =
     | 'onboardingStep'
     | 'onboardingCompletedAt'
     | 'googleClientId'
+    // OAuth client secret. Stored in plaintext alongside clientId: a desktop app
+    // is a "public client" (RFC 8252) so this is not a true secret, and it is
+    // needed BEFORE the vault is unlocked (to build the OAuth2 client that
+    // refreshes the access token). The truly sensitive secrets (Service Account
+    // key, refresh token) live encrypted in the master-password vault.
+    | 'googleClientSecret'
     | 'termsAcceptedAt'
-    | 'termsVersion';
+    | 'termsVersion'
+    // Idle auto-lock timeout in minutes ('0' = disabled). Drives both the
+    // main-process OS-idle timer and the renderer session timer.
+    | 'autoLockMinutes';
 
 export type AppLanguage = 'tr' | 'en';
 
@@ -23,6 +32,7 @@ export type OnboardingStep =
     | 'terms'
     | 'branding'
     | 'cloud'
+    | 'master-password'
     | 'service-account'
     | 'dwd'
     | 'admin-login';
@@ -32,6 +42,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     'terms',
     'branding',
     'cloud',
+    // Master password must be set BEFORE the first vault write (the Service
+    // Account step), so the vault is created + unlocked here and stays unlocked
+    // for the remainder of the wizard.
+    'master-password',
     'service-account',
     'dwd',
     'admin-login',
@@ -47,9 +61,14 @@ export interface AppConfig {
     onboardingStep: OnboardingStep | null;
     onboardingCompletedAt: string | null;
     googleClientId: string;
+    googleClientSecret: string;
     termsAcceptedAt: string | null;
     termsVersion: string | null;
+    autoLockMinutes: string;
 }
+
+/** Config shape exposed to the renderer — never includes the OAuth client secret. */
+export type PublicAppConfig = Omit<AppConfig, 'googleClientSecret'>;
 
 /**
  * Default values are for the initial setup. Until onboarding is complete
@@ -65,8 +84,10 @@ const DEFAULTS: AppConfig = {
     onboardingStep: null,
     onboardingCompletedAt: null,
     googleClientId: '',
+    googleClientSecret: '',
     termsAcceptedAt: null,
     termsVersion: null,
+    autoLockMinutes: '60',
 };
 
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
@@ -101,6 +122,13 @@ function normalizeValue(key: AppConfigKey, raw: string | null): string | null {
             throw new Error(`Geçersiz onboarding adımı: ${trimmed}`);
         }
         return trimmed;
+    }
+    if (key === 'autoLockMinutes') {
+        const n = parseInt(trimmed, 10);
+        if (!Number.isFinite(n) || n < 0 || n > 1440) {
+            throw new Error(`Geçersiz otomatik kilit süresi: ${trimmed}`);
+        }
+        return String(n);
     }
     return trimmed;
 }
@@ -151,7 +179,12 @@ export const appConfigService = {
         }
     },
 
-    getAll(): AppConfig {
+    /**
+     * Public config snapshot for the renderer. Deliberately OMITS
+     * `googleClientSecret` — the renderer only ever learns whether a secret
+     * exists (via `config:getOAuthCredentials` → `hasSecret`), never its value.
+     */
+    getAll(): PublicAppConfig {
         return {
             companyName: this.get('companyName'),
             sidebarAbbr: this.get('sidebarAbbr'),
@@ -164,14 +197,22 @@ export const appConfigService = {
             googleClientId: this.get('googleClientId'),
             termsAcceptedAt: this.get('termsAcceptedAt'),
             termsVersion: this.get('termsVersion'),
+            autoLockMinutes: this.get('autoLockMinutes'),
         };
+    },
+
+    /** Auto-lock idle timeout in minutes (0 = disabled). Clamped to a sane range. */
+    getAutoLockMinutes(): number {
+        const raw = parseInt(this.get('autoLockMinutes') || '60', 10);
+        if (!Number.isFinite(raw) || raw < 0) return 60;
+        return Math.min(raw, 1440);
     },
 
     /**
      * Finish onboarding: companyName + allowedDomain must be filled.
      * `onboardingCompletedAt` is set, `onboardingStep` is cleared.
      */
-    markOnboardingComplete(): AppConfig {
+    markOnboardingComplete(): PublicAppConfig {
         const company = this.get('companyName');
         const domain = this.get('allowedDomain');
         const clientId = this.get('googleClientId');
@@ -203,7 +244,7 @@ export const appConfigService = {
      * Record acceptance of the legal terms / disclaimer. Stores the accepted
      * version (for re-prompting when terms change) and a timestamp.
      */
-    acceptTerms(version: string): AppConfig {
+    acceptTerms(version: string): PublicAppConfig {
         const clean = (version ?? '').trim();
         if (!clean) {
             throw new Error('Terms version is required.');
@@ -223,7 +264,7 @@ export const appConfigService = {
     },
 
     /** Restart the wizard: completedAt null, step set to welcome. */
-    resetOnboarding(): AppConfig {
+    resetOnboarding(): PublicAppConfig {
         const db = getDb();
         const tx = db.transaction(() => {
             db.prepare('DELETE FROM app_config WHERE key = ?').run('onboardingCompletedAt');

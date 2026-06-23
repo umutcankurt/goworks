@@ -6,7 +6,7 @@ import url from 'url';
 import path from 'path';
 import fs from 'fs';
 import { appConfigService } from './services/app-config-service';
-import { secureStorage, authTokenStore } from './services/secure-storage';
+import { vaultManager } from './services/vault-manager';
 
 const REDIRECT_URI = 'http://localhost:3000/callback';
 const SCOPES = [
@@ -39,7 +39,10 @@ export class AuthService {
     private currentUserEmail: string | null = null;
 
     constructor() {
-        this.clearStoredTokens();
+        // Tokens are NO LONGER cleared on startup. The refresh token now lives in
+        // the master-password vault and must survive restarts so the Google
+        // session can be silently restored after the vault is unlocked (no browser
+        // OAuth dance). Only the leftover legacy plaintext file is purged.
         this.clearLegacyPlainTokenFile();
     }
 
@@ -54,7 +57,7 @@ export class AuthService {
         if (this.oauth2Client) return this.oauth2Client;
 
         const clientId = appConfigService.get('googleClientId');
-        const clientSecret = secureStorage.getClientSecret();
+        const clientSecret = appConfigService.get('googleClientSecret');
         if (!clientId || !clientSecret) {
             throw new MissingOAuthCredentialsError();
         }
@@ -69,6 +72,17 @@ export class AuthService {
      * Clears the current session's access tokens so the user has to log in again.
      */
     invalidateCredentials(): void {
+        this.dropInMemoryCredentials();
+    }
+
+    /**
+     * Drop the in-memory OAuth credentials WITHOUT revoking at Google and WITHOUT
+     * touching the vault. This is the "lock" operation (idle / vault hard-lock):
+     * the refresh token survives in the vault so the session can be silently
+     * restored on the next unlock. Contrast with `logout()`, which revokes and
+     * deletes the refresh token.
+     */
+    dropInMemoryCredentials(): void {
         if (this.oauth2Client) {
             try {
                 this.oauth2Client.setCredentials({});
@@ -78,15 +92,6 @@ export class AuthService {
         }
         this.oauth2Client = null;
         this.currentUserEmail = null;
-        this.clearStoredTokens();
-    }
-
-    private clearStoredTokens() {
-        try {
-            authTokenStore.clear();
-        } catch (e) {
-            console.error('Failed to delete stored token file:', e);
-        }
     }
 
     /**
@@ -106,14 +111,17 @@ export class AuthService {
         }
     }
 
-    private saveTokens(tokens: any) {
+    private saveTokens(tokens: { refresh_token?: string | null }) {
+        // Persist ONLY the refresh token, encrypted in the vault. The access token
+        // is short-lived and kept in the in-memory OAuth2 client. Google omits
+        // refresh_token on refreshes after the first consent — don't overwrite a
+        // good stored token with undefined.
         try {
-            // Written encrypted via safeStorage; if safeStorage is unavailable the
-            // error is swallowed (token persistence is best-effort anyway — it's
-            // cleared on every startup).
-            authTokenStore.set(JSON.stringify(tokens));
+            if (tokens?.refresh_token) {
+                vaultManager.setRefreshToken(tokens.refresh_token);
+            }
         } catch (e) {
-            console.error('Failed to save tokens:', e);
+            console.error('Failed to persist refresh token to vault:', e);
         }
     }
 
@@ -214,11 +222,62 @@ export class AuthService {
                 console.error('Failed to revoke token on logout:', error);
             }
         }
-        this.clearStoredTokens();
+        // Full logout: also drop the persisted refresh token (vs. a lock, which
+        // keeps it for silent restore). Best-effort — the vault may be locked.
+        try {
+            vaultManager.setRefreshToken(null);
+        } catch {
+            // vault locked / no vault — nothing to clear
+        }
         if (this.oauth2Client) {
             this.oauth2Client.setCredentials({});
         }
         this.currentUserEmail = null;
+    }
+
+    /**
+     * Restore the Google session from the vault's refresh token after an unlock —
+     * no browser OAuth. Sets credentials, forces a silent access-token refresh and
+     * (best-effort) restores the current user email. Returns whether a full
+     * re-login is required (refresh token missing/invalid/revoked).
+     */
+    async restoreSession(): Promise<{ authenticated: boolean; reauthNeeded: boolean }> {
+        let client: OAuth2Client;
+        try {
+            client = this.ensureOAuth2Client();
+        } catch {
+            // No OAuth credentials configured yet (fresh onboarding).
+            return { authenticated: false, reauthNeeded: true };
+        }
+        let refreshToken: string | null = null;
+        try {
+            refreshToken = vaultManager.getRefreshToken();
+        } catch {
+            refreshToken = null;
+        }
+        if (!refreshToken) {
+            return { authenticated: false, reauthNeeded: true };
+        }
+        client.setCredentials({ refresh_token: refreshToken });
+        try {
+            const { token } = await client.getAccessToken();
+            if (!token) throw new Error('No access token from refresh');
+            // Best-effort: restore the signed-in admin email.
+            try {
+                const google = getGoogle();
+                const oauth2 = google.oauth2({ version: 'v2', auth: client });
+                const { data } = await oauth2.userinfo.get();
+                this.currentUserEmail = data.email ?? null;
+            } catch {
+                // email is best-effort; the session is still authenticated
+            }
+            return { authenticated: true, reauthNeeded: false };
+        } catch {
+            // invalid_grant / revoked / expired / scope change → full re-login.
+            client.setCredentials({});
+            this.oauth2Client = null;
+            return { authenticated: false, reauthNeeded: true };
+        }
     }
 
     isAuthenticated(): boolean {
@@ -231,7 +290,7 @@ export class AuthService {
      */
     hasCredentials(): boolean {
         try {
-            return !!appConfigService.get('googleClientId') && secureStorage.hasClientSecret();
+            return !!appConfigService.get('googleClientId') && !!appConfigService.get('googleClientSecret');
         } catch {
             return false;
         }

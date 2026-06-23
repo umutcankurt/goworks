@@ -39,12 +39,17 @@ import { registerBulkActionWorker } from './jobs/bulk-action-worker';
 import { registerSignatureAuditWorker } from './jobs/signature-audit-worker';
 import { registerBulkGroupAddWorker } from './jobs/bulk-group-add-worker';
 import { setAuthClientProvider } from './services/auth-context';
+import { vaultManager, TooManyAttemptsError } from './services/vault-manager';
+import { WrongPasswordError, VaultCorruptError } from './services/vault-service';
 
 let win: BrowserWindow | null
 let authService: AuthService
 let adminService: AdminService | null = null
 let cache: CacheService
 let cancelBulkOperation = false
+
+// Idle threshold after which the vault auto-locks (1 hour). Single source of
+// truth for the timeout — the renderer SessionContext only reflects/warns.
 
 /**
  * adminService accessor — throws MissingOAuthCredentialsError when there are no
@@ -293,6 +298,15 @@ app.whenReady().then(async () => {
     writeLog('DB INIT FAILED', err);
   }
 
+  // Initialize the vault manager: detect vault.enc + onboarding state. The vault
+  // stays LOCKED until the renderer sends vault:unlock with the master password —
+  // the DEK is never derived here.
+  try {
+    vaultManager.init();
+  } catch (err) {
+    writeLog('VAULT INIT FAILED', err);
+  }
+
   createWindow();
   if (win) jobRunner.setWindow(win);
 
@@ -330,15 +344,67 @@ app.whenReady().then(async () => {
   cache = new CacheService();
   cancelBulkOperation = false;
 
-  // Handle 1-hour idle timeout (system-level safety net)
-  setInterval(async () => {
-    if (!authService?.isAuthenticated()) return;
-    const idleTime = powerMonitor.getSystemIdleTime();
-    if (idleTime >= 3600) { // 1 hour
-      await authService.logout();
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('auth:logout-event');
+  // Bridge the vault manager to the runner + auth service + window. The DEK lives
+  // ONLY in main-process memory; these injected hooks avoid import cycles.
+  vaultManager.setHooks({
+    getRunningCount: () => jobRunner.getRunningCount(),
+    getPendingCount: () => {
+      try { return jobQueue.listByStatus(['PENDING']).length; } catch { return 0; }
+    },
+    // Lock (not logout): drop in-memory OAuth creds WITHOUT revoking; the vault
+    // keeps the refresh token for a silent restore on the next unlock.
+    dropAuthCredentials: () => authService?.dropInMemoryCredentials(),
+    // Clear cached GoogleAuth clients that may hold the Service Account key.
+    clearSecretCaches: () => {
+      void (async () => {
+        try {
+          (await import('./services/google-admin-sa')).clearAuthCache();
+          (await import('./services/gmail-signature-service')).clearGmailAuthCache();
+          (await import('./services/email-notification-service')).clearEmailNotificationCache();
+        } catch (e) {
+          logger.warn('[vault] secret cache temizliği başarısız:', e);
+        }
+      })();
+    },
+    onUnlocked: async () => {
+      // Silently restore the Google session from the vault's refresh token.
+      try {
+        const res = await authService?.restoreSession();
+        vaultManager.setGoogleReauthNeeded(!!res && res.reauthNeeded);
+        if (res?.authenticated) ensureAdminService();
+      } catch (e) {
+        logger.warn('[vault] restoreSession başarısız:', e);
       }
+      // Recompute the SA soft-warn now that the vault is readable.
+      try {
+        const { getStatus } = await import('./secrets/service-account-loader');
+        bootStatus.soft.serviceAccountMissing = !getStatus().configured;
+      } catch { /* ignore */ }
+      // Resume the dispatcher: crash-resumed + queued jobs were gated while locked.
+      jobRunner.resumeDispatch();
+      if (win && !win.isDestroyed()) win.webContents.send('vault:unlocked');
+    },
+    notify: (channel: string) => {
+      if (win && !win.isDestroyed()) win.webContents.send(channel);
+    },
+  });
+
+  // Idle auto-lock: LOCK the vault (NOT a logout). The OS-level idle timer is the
+  // authority; the timeout is configurable from Settings → Security
+  // (`autoLockMinutes`, 0 = disabled) and read fresh each tick so changes apply
+  // without a restart. Locking drops the in-memory DEK + OAuth credentials but
+  // KEEPS the refresh token in the vault, so unlocking with the master password
+  // restores the Google session silently — no browser OAuth. Running bulk jobs are
+  // not interrupted: Graceful Lock keeps the DEK alive until they drain
+  // (vaultManager.requestLock → finalizeLock on the last job settling).
+  const { appConfigService: autoLockConfig } = await import('./services/app-config-service');
+  setInterval(() => {
+    if (!vaultManager.isUnlocked()) return;
+    const minutes = autoLockConfig.getAutoLockMinutes();
+    if (minutes <= 0) return; // auto-lock disabled
+    const idleTime = powerMonitor.getSystemIdleTime();
+    if (idleTime >= minutes * 60) {
+      vaultManager.requestLock();
     }
   }, 60000); // Check every minute
 
@@ -383,6 +449,81 @@ app.whenReady().then(async () => {
       return { success: true, token };
     } catch (error: any) {
       return { success: false, error: error.message };
+    }
+  });
+
+  // ---- Vault (master-password) handlers ----
+  // The DEK / decrypted secrets NEVER cross IPC — the renderer only sends the
+  // password and receives a status snapshot.
+  ipcMain.handle('vault:getState', async () => {
+    try {
+      return { success: true, data: vaultManager.getState() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Create a new vault (onboarding master-password step, legacy upgrade, or
+  // post-reset). Absorbs any legacy safeStorage secrets and leaves it unlocked.
+  ipcMain.handle('vault:setup', async (_, { password }: { password: string }) => {
+    try {
+      const data = await vaultManager.create(password);
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('vault:unlock', async (_, { password }: { password: string }) => {
+    try {
+      const data = await vaultManager.unlock(password);
+      return { success: true, data };
+    } catch (error: any) {
+      const code = error instanceof WrongPasswordError
+        ? 'WRONG_PASSWORD'
+        : error instanceof VaultCorruptError
+          ? 'CORRUPT'
+          : error instanceof TooManyAttemptsError
+            ? 'LOCKED_OUT'
+            : 'ERROR';
+      // Audit failed unlocks (never log the password). The renderer reads the
+      // back-off window from getState().lockedUntil for a live countdown.
+      if (code === 'WRONG_PASSWORD' || code === 'LOCKED_OUT') {
+        writeLog('VAULT UNLOCK FAILED', `code=${code}; ${error.message}`);
+      }
+      return { success: false, error: error.message, code };
+    }
+  });
+
+  // Manual lock (e.g. a "Lock now" button). Graceful: running jobs finish first.
+  ipcMain.handle('vault:lock', async () => {
+    try {
+      vaultManager.requestLock();
+      return { success: true, data: vaultManager.getState() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // "Forgot password": delete the vault and restart the wizard (re-set password,
+  // re-upload Service Account, re-login). No recovery key by design (MVP).
+  ipcMain.handle('vault:reset', async () => {
+    try {
+      return { success: true, data: vaultManager.resetVault() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Change the master password (Settings → Security). Re-wraps the DEK under the
+  // new password; the encrypted payload (Service Account + refresh token) survives.
+  ipcMain.handle('vault:changePassword', async (_, { current, next }: { current: string; next: string }) => {
+    try {
+      vaultManager.changePassword(current, next);
+      return { success: true };
+    } catch (error: any) {
+      const code = error instanceof WrongPasswordError ? 'WRONG_PASSWORD' : 'ERROR';
+      return { success: false, error: error.message, code };
     }
   });
 
@@ -1173,6 +1314,11 @@ app.whenReady().then(async () => {
   ipcMain.handle('config:markOnboardingComplete', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
+      // The vault must exist and be unlocked before onboarding can complete —
+      // otherwise the Service Account / refresh token had nowhere to be stored.
+      if (!vaultManager.isUnlocked() || !vaultManager.fileExists()) {
+        return { success: false, error: 'Ana parola belirlenmeden onboarding tamamlanamaz.' };
+      }
       return { success: true, data: appConfigService.markOnboardingComplete() };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1209,17 +1355,17 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       const { getDb } = await import('./db');
-      const { clearKey } = await import('./secrets/service-account-loader');
       const { clearAuthCache } = await import('./services/google-admin-sa');
       const { clearGmailAuthCache } = await import('./services/gmail-signature-service');
       const { clearEmailNotificationCache } = await import('./services/email-notification-service');
 
-      // 1. Sign out (revoke + clear auth-token.enc) and drop all credentials/caches.
+      // 1. Sign out (revoke + drop the vault refresh token) and clear all
+      //    credentials/caches. Then delete the vault entirely.
       try { await authService?.logout(); } catch { /* offline revoke can fail; continue */ }
       authService?.invalidateCredentials();
       adminService = null;
-      secureStorage.clearClientSecret(); // oauth-secret.enc
-      clearKey();                        // service-account.enc
+      vaultManager.wipe();               // zeroize + delete vault.enc (SA + refresh token)
+      secureStorage.clearClientSecret(); // defensive: clear any legacy oauth-secret.enc
       clearAuthCache();
       clearGmailAuthCache();
       clearEmailNotificationCache();
@@ -1256,7 +1402,7 @@ app.whenReady().then(async () => {
         success: true,
         data: {
           clientId: appConfigService.get('googleClientId') ?? '',
-          hasSecret: secureStorage.hasClientSecret(),
+          hasSecret: !!appConfigService.get('googleClientSecret'),
         },
       };
     } catch (error: any) {
@@ -1286,11 +1432,13 @@ app.whenReady().then(async () => {
         appConfigService.set('googleClientId', trimmedId);
       }
       if (trimmedSecret) {
-        secureStorage.setClientSecret(trimmedSecret);
+        // Plaintext app_config (vault model): a desktop OAuth app is a public
+        // client (RFC 8252) and the secret is needed before the vault unlocks.
+        appConfigService.set('googleClientSecret', trimmedSecret);
       }
 
       const currentId = appConfigService.get('googleClientId');
-      const hasSecret = secureStorage.hasClientSecret();
+      const hasSecret = !!appConfigService.get('googleClientSecret');
       if (!currentId || !hasSecret) {
         return {
           success: false,
@@ -1316,7 +1464,8 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       appConfigService.set('googleClientId', null);
-      secureStorage.clearClientSecret();
+      appConfigService.set('googleClientSecret', null);
+      secureStorage.clearClientSecret(); // defensive: clear any legacy .enc too
       authService?.invalidateCredentials();
       adminService = null;
       return { success: true };

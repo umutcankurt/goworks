@@ -14,6 +14,7 @@ const oauth2Instance = vi.hoisted(() => ({
     getToken: vi.fn(),
     setCredentials: vi.fn(),
     revokeToken: vi.fn(),
+    getAccessToken: vi.fn(),
     credentials: {} as any,
 }));
 
@@ -23,20 +24,18 @@ const OAuth2Constructor = vi.hoisted(() =>
     })
 );
 
+// Keyed config getter: clientId + clientSecret now both live in app_config.
 const appConfigMock = vi.hoisted(() => ({
     get: vi.fn((_key: string): string => ''),
 }));
 
-const secureStorageMock = vi.hoisted(() => ({
-    getClientSecret: vi.fn((): string | null => null),
-    hasClientSecret: vi.fn(() => false),
-}));
-
-const authTokenStoreMock = vi.hoisted(() => ({
-    set: vi.fn(),
-    get: vi.fn((): string | null => null),
-    has: vi.fn(() => false),
-    clear: vi.fn(),
+// The refresh token / Service Account now live in the master-password vault.
+const vaultManagerMock = vi.hoisted(() => ({
+    getRefreshToken: vi.fn((): string | null => null),
+    setRefreshToken: vi.fn(),
+    getServiceAccount: vi.fn((): string | null => null),
+    setServiceAccount: vi.fn(),
+    clearServiceAccount: vi.fn(),
 }));
 
 // --- Module mocks ---
@@ -60,27 +59,29 @@ vi.mock('./services/app-config-service', () => ({
     appConfigService: appConfigMock,
 }));
 
-vi.mock('./services/secure-storage', () => ({
-    secureStorage: secureStorageMock,
-    authTokenStore: authTokenStoreMock,
+vi.mock('./services/vault-manager', () => ({
+    vaultManager: vaultManagerMock,
 }));
+
+/** Make appConfig.get return values per key. */
+function setConfig(values: Record<string, string>) {
+    appConfigMock.get.mockImplementation((key: string) => values[key] ?? '');
+}
 
 describe('AuthService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         fsMock.existsSync.mockReturnValue(false);
-        // Phase 31 default: no credentials. For lazy init.
         appConfigMock.get.mockReturnValue('');
-        secureStorageMock.getClientSecret.mockReturnValue(null);
-        secureStorageMock.hasClientSecret.mockReturnValue(false);
+        vaultManagerMock.getRefreshToken.mockReturnValue(null);
     });
 
-    describe('clearStoredTokens', () => {
-        it('constructor şifreli token deposunu temizler', async () => {
+    describe('constructor', () => {
+        it('vault modelinde token deposunu TEMİZLEMEZ (refresh token vault\'ta yaşar)', async () => {
             const { AuthService } = await import('./auth-service');
             new AuthService();
-
-            expect(authTokenStoreMock.clear).toHaveBeenCalled();
+            // The constructor must not wipe the persisted refresh token any more.
+            expect(vaultManagerMock.setRefreshToken).not.toHaveBeenCalled();
         });
 
         it('constructor eski düz google_auth_token.json artığını siler (varsa)', async () => {
@@ -111,8 +112,7 @@ describe('AuthService', () => {
         });
 
         it('clientId yokken getClient() MissingOAuthCredentialsError fırlatır', async () => {
-            appConfigMock.get.mockReturnValue('');
-            secureStorageMock.getClientSecret.mockReturnValue('some-secret');
+            setConfig({ googleClientSecret: 'some-secret' });
 
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
@@ -120,8 +120,7 @@ describe('AuthService', () => {
         });
 
         it('clientSecret yokken getClient() MissingOAuthCredentialsError fırlatır', async () => {
-            appConfigMock.get.mockReturnValue('some-client-id');
-            secureStorageMock.getClientSecret.mockReturnValue(null);
+            setConfig({ googleClientId: 'some-client-id' });
 
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
@@ -129,8 +128,7 @@ describe('AuthService', () => {
         });
 
         it('hem clientId hem secret varsa getClient() OAuth2Client kurar', async () => {
-            appConfigMock.get.mockReturnValue('test-client-id');
-            secureStorageMock.getClientSecret.mockReturnValue('test-secret');
+            setConfig({ googleClientId: 'test-client-id', googleClientSecret: 'test-secret' });
 
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
@@ -146,13 +144,47 @@ describe('AuthService', () => {
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
 
-            appConfigMock.get.mockReturnValue('');
-            secureStorageMock.hasClientSecret.mockReturnValue(false);
+            setConfig({});
             expect(svc.hasCredentials()).toBe(false);
 
-            appConfigMock.get.mockReturnValue('id');
-            secureStorageMock.hasClientSecret.mockReturnValue(true);
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret' });
             expect(svc.hasCredentials()).toBe(true);
+        });
+    });
+
+    describe('restoreSession (silent resume from vault)', () => {
+        it('refresh token yoksa reauthNeeded döner', async () => {
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret' });
+            vaultManagerMock.getRefreshToken.mockReturnValue(null);
+
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+            const res = await svc.restoreSession();
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true });
+        });
+
+        it('geçerli refresh token ile sessiz access token alır (re-login yok)', async () => {
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret' });
+            vaultManagerMock.getRefreshToken.mockReturnValue('rt-123');
+            oauth2Instance.getAccessToken.mockResolvedValue({ token: 'access-xyz' });
+
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+            const res = await svc.restoreSession();
+            expect(oauth2Instance.setCredentials).toHaveBeenCalledWith({ refresh_token: 'rt-123' });
+            expect(res.authenticated).toBe(true);
+            expect(res.reauthNeeded).toBe(false);
+        });
+
+        it('refresh başarısızsa (invalid_grant) reauthNeeded döner', async () => {
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret' });
+            vaultManagerMock.getRefreshToken.mockReturnValue('rt-bad');
+            oauth2Instance.getAccessToken.mockRejectedValue(new Error('invalid_grant'));
+
+            const { AuthService } = await import('./auth-service');
+            const svc = new AuthService();
+            const res = await svc.restoreSession();
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true });
         });
     });
 });
