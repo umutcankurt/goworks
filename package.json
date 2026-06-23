@@ -49,6 +49,7 @@
     "postinstall": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron"
   },
   "dependencies": {
+    "@noble/hashes": "^2.2.0",
     "@types/papaparse": "^5.5.2",
     "@types/react-dropzone": "^4.2.2",
     "better-sqlite3": "^12.9.0",
