@@ -40,6 +40,7 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 ## Özellikler
 
 - **🔐 Güvenli Google OAuth2 girişi** — domain ve admin rolü doğrulamalı loopback OAuth akışı. Yalnızca yapılandırdığınız domaindeki Workspace yöneticileri giriş yapabilir.
+- **🔒 Ana parola kasası (vault)** — hassas sırlar (Service Account anahtarı ve Google oturum/refresh token'ı) Argon2id + AES-256-GCM ile şifreli saklanır ve onboarding'de belirlediğiniz bir ana parolayla açılır. Yapılandırılabilir boşta otomatik kilit, uygulama içi parola değiştirme (yeniden yükleme veya giriş gerektirmez), çalışan işlerin bitmesine izin veren nazik (graceful) kilit ve üstel geri çekilmeli kaba kuvvet kilidi.
 - **👥 Kullanıcı yönetimi** — kullanıcı profillerini ve grup üyeliklerini arama, görüntüleme ve düzenleme; hesapları askıya alma, silme ve geri yükleme; alias ve e-posta yönlendirme yönetimi.
 - **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı işlerini yürütme; rehberli sihirbaz, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
 - **🚪 Offboarding sihirbazı** — ayrılan bir çalışanı güvenle deprovizyon etmek için rehberli, çok adımlı akış: askıya alma, e-posta yönlendirme ayarlama, gruplardan çıkarma ve daha fazlası.
@@ -107,7 +108,7 @@ GoWorks kimlik bilgileriyle dağıtılmaz — her kurulum kendi Google Cloud OAu
 3. **OAuth onay ekranını** yapılandırın — **Internal (Dahili)** kullanıcı türünü seçin (tek bir kurum için önerilir; Google doğrulaması gerekmez).
 4. Uygulama türü **Desktop app (Masaüstü uygulaması)** olan bir **OAuth istemci kimliği** oluşturun. Client ID ve Secret'ı bir kenara not edin — onboarding sihirbazı ilk açılışta soracak.
 
-   > **`.env` gerekmiyor.** OAuth Client ID/Secret onboarding sihirbazının "Google Cloud projesi" adımında toplanır ve cihazınızda yerel olarak saklanır — Client ID SQLite `app_config` tablosunda, Secret ise işletim sisteminin anahtar deposunda (macOS Keychain / Windows DPAPI) şifreli olarak. Daha sonra Settings → Genel → "Google OAuth Bilgileri" kartından değiştirebilirsiniz.
+   > **`.env` gerekmiyor.** OAuth Client ID/Secret onboarding sihirbazının "Google Cloud projesi" adımında toplanır ve cihazınızda yerel olarak SQLite `app_config` tablosunda düz yapılandırma olarak saklanır. Masaüstü uygulamasında client secret bir "public client" kimlik bilgisidir (RFC 8252), gerçek bir sır değildir — üstelik access token'ı yenilemek için ana parola kasası açılmadan ÖNCE okunabilir olması gerekir. Gerçekten hassas sırlar (Service Account anahtarı ve refresh token) bunun yerine kasada şifreli durur. OAuth değerlerini daha sonra Settings → Genel → "Google OAuth Bilgileri" kartından değiştirebilirsiniz.
    >
    > Yerel geliştirme için isterseniz değerleri `.env`'e koyabilirsiniz (`.env.example`'dan kopyalayın); ilk açılışta otomatik şifreli depoya migrate edilir. Production'da `.env` → `.env.migrated` olarak yeniden adlandırılır; geliştirme modunda dokunulmaz.
 
@@ -128,7 +129,7 @@ Gmail imza dağıtımı ve iş tamamlanma e-postaları, **Domain-Wide Delegation
 
 1. Google Cloud projenizde bir Service Account oluşturup JSON anahtarı üretin.
 2. [Google Admin Konsolu](https://admin.google.com/) → **Güvenlik → API denetimleri → Etki alanı genelinde yetki devri** bölümünde, Service Account'un istemci kimliğini [DWD izin kapsamları](#oauth-izin-kapsamları) için yetkilendirin.
-3. GoWorks'te **Ayarlar → Servis Hesabı** sekmesini açıp JSON anahtarını yükleyin. Anahtar `app.getPath('userData')/secrets/service-account.json` yolunda `0600` izinleriyle saklanır ve makinenizden asla çıkmaz.
+3. GoWorks'te **Ayarlar → Servis Hesabı** sekmesini açıp JSON anahtarını yükleyin. Anahtar, ana parola kasasına (`vault.enc`) şifreli olarak yazılır ve makinenizden asla çıkmaz. (Anahtarı eskiden `…/secrets/` altında `0600` izinli bir dosyada tutan kurulumlar, ilk kilit açılışında kasaya taşınır ve düz metin dosya silinir.)
 
 ## Kurulum Dosyalarını Derleme
 
@@ -197,11 +198,13 @@ Daha derin bir mimari referansı için [`CLAUDE.md`](CLAUDE.md) dosyasına bakı
 
 ## Güvenlik ve Gizlilik
 
-- **Kimlik bilgileri sizin, proje sizin** — GoWorks hiçbir API anahtarı içermez. OAuth istemcisini siz oluşturursunuz; token'lar işletim sisteminizin kullanıcı verisi klasöründe yerel olarak saklanır.
+- **Kimlik bilgileri sizin, proje sizin** — GoWorks hiçbir API anahtarı içermez. OAuth istemcisini siz oluşturursunuz; her şey işletim sisteminizin kullanıcı verisi klasöründe yerel olarak saklanır.
 - **Yalnızca yönetici** — hesap, yapılandırdığınız domainde bir Workspace yöneticisi değilse giriş reddedilir.
-- **Yalnızca yerel veri** — SQLite veritabanı, OAuth token'ları ve Service Account anahtarı makinenizden asla çıkmaz. Telemetri yoktur ve GoWorks'ün bir arka uç sunucusu yoktur.
-- **Boşta otomatik çıkış** — oturum, 2 saat hareketsizlikten sonra sona erer.
-- `.env` veya `service-account.json` dosyalarınızı asla commit etmeyin — ikisi de varsayılan olarak git tarafından yok sayılır.
+- **Ana parola kasası** — gerçekten hassas sırlar (Service Account anahtarı ve Google refresh token'ı) bir ana parola kasasında (`vault.enc`, Argon2id + AES-256-GCM) şifreli durur ve makinenizden asla çıkmaz. Access token yalnızca bellekte tutulur; OAuth Client ID/Secret ise düz yapılandırma olarak saklanır (masaüstü uygulaması "public client"tır — secret gerçek bir sır değildir). Electron `safeStorage` emekliye ayrıldı ve yalnızca eski kurulumları taşımak için bir kez okunur.
+- **Yalnızca yerel veri** — SQLite veritabanı ve tüm sırlar makinenizde kalır. Telemetri yoktur ve GoWorks'ün bir arka uç sunucusu yoktur.
+- **Boşta otomatik kilit** — yapılandırılabilir bir boşta süresinden sonra (varsayılan 1 saat; Ayarlar → Genel → Güvenlik'ten ayarlanır, `0` = kapalı) kasa, çıkış yapmak yerine **kilitlenir**: bellekteki kimlik bilgileri düşürülür ama refresh token kasada yaşamaya devam eder, böylece ana parolayla kilit açıldığında Google oturumu sessizce geri yüklenir.
+- **Ana parolayı unutmak geri alınamaz** — tek yol kasayı sıfırlamaktır; bu, saklanan Service Account anahtarını ve oturumu siler. Ardından anahtarı yeniden yükler ve Google'a yeniden giriş yaparsınız.
+- `.env` dosyanızı asla commit etmeyin — varsayılan olarak git tarafından yok sayılır.
 
 Bir güvenlik açığı mı buldunuz? Lütfen özel olarak bildirin — bkz. [`SECURITY.md`](SECURITY.md).
 

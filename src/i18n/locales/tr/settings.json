@@ -191,9 +191,20 @@
         "icon": "settings",
         "heading": "Genel Sekmesi",
         "paragraphs": [
-          "Firma adı, sidebar kısaltması, logo, e-posta bildirim gönderici adı, izin verilen giriş domaini ve uygulama dili buradan ayarlanır."
+          "Firma adı, sidebar kısaltması, logo, e-posta bildirim gönderici adı, izin verilen giriş domaini ve uygulama dili buradan ayarlanır. Güvenlik kartı (ana parola ve otomatik kilit) da bu sekmededir; ayrıntı için aşağıdaki <b>Ana Parola ve Güvenlik</b> bölümüne bakın."
         ],
         "callout": { "tone": "info", "text": "Marka bilgileri değiştirildiğinde sidebar ve header <b>anında</b> güncellenir; aynı uygulama farklı kurumlara bu sekmeden uyarlanır." }
+      },
+      {
+        "icon": "shield",
+        "heading": "Ana Parola ve Güvenlik",
+        "paragraphs": [
+          "GoWorks hassas anahtarlarınızı (Service Account anahtarı ve Google oturumu) bir <b>ana parola kasasında</b> şifreli tutar. Bu anahtarlar yalnızca bu cihazda saklanır ve kasa, ilk kurulumda belirlediğiniz ana parolayla açılır.",
+          "<b>Otomatik kilit:</b> Belirlenen süre boyunca işlem yapılmazsa kasa kilitlenir ve devam etmek için ana parola istenir. Süreyi Güvenlik kartından seçersiniz: 15 dakika, 30 dakika, 1 saat veya Kapalı.",
+          "<b>Kilit, çıkış değildir:</b> Kilitliyken Google oturumunuz korunur — parolayı girince hiçbir şey kaybetmeden kaldığınız yerden devam edersiniz. <b>Çıkış</b> yaptığınızda ise oturum token'ı silinir ve yeniden Google girişi gerekir. Kilit sırasında çalışan bir toplu iş varsa iş tamamlanana kadar devam eder (nazik kilit).",
+          "<b>Ana parolayı değiştir:</b> Güvenlik kartındaki düğmeyle parolanızı yerinde değiştirebilirsiniz. Şifreli anahtarlarınız korunur — Service Account'u yeniden yüklemeniz veya Google'a yeniden giriş yapmanız gerekmez."
+        ],
+        "callout": { "tone": "warning", "text": "<b>Ana parolanızı unutursanız kurtarılamaz.</b> Tek yol kasayı sıfırlamaktır; bu işlem saklanan Service Account anahtarını ve Google oturumunu siler. Ardından Service Account'u yeniden yüklemeniz ve Google'a yeniden giriş yapmanız gerekir." }
       },
       {
         "icon": "zap",

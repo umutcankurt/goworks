@@ -17,10 +17,19 @@ npm run dev      # Vite dev server + Electron with hot reload
 ```
 
 No `.env` is required to start: on first launch the onboarding wizard collects
-your Google Cloud OAuth Client ID/Secret and stores the secret encrypted via the
-OS keychain (`safeStorage`). For local development you may optionally place
-`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in a `.env` file — it is git-ignored
-and auto-migrated on first run. **Never commit credentials.**
+your Google Cloud OAuth Client ID/Secret and stores them as plain config in the
+SQLite `app_config` table (a desktop app is a "public client" — the secret is
+not a true secret and must be readable before the vault is unlocked). The
+genuinely sensitive secrets — the Service Account key and the OAuth refresh
+token — are encrypted in a master-password vault (`vault.enc`, Argon2id +
+AES-256-GCM) that you create during onboarding. For local development you may
+optionally place `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in a `.env` file —
+it is git-ignored and auto-migrated on first run. **Never commit credentials.**
+
+> **Vault during development.** The first run walks you through a master-password
+> setup step, and the vault locks on idle (configurable in Settings → Genel). To
+> start from a clean slate while testing, use the lock screen's "forgot password
+> → reset" flow or a factory reset — both wipe `vault.enc`.
 
 See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference (process split,
 IPC channels, services, the local DB, and the job queue).

@@ -20,6 +20,7 @@ import {
     Ruler,
     FileText,
     Image as ImageIcon,
+    ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -75,6 +76,7 @@ const GUIDE_ICONS: Record<string, LucideIcon> = {
     ruler: Ruler,
     file: FileText,
     image: ImageIcon,
+    shield: ShieldCheck,
 };
 const resolveIcon = (name?: string): LucideIcon => (name && GUIDE_ICONS[name]) || Info;
 

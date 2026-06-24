@@ -41,11 +41,16 @@ is released.
 
 Especially relevant areas:
 
-- **Credential storage** — OAuth tokens and the Service Account key are
-  encrypted at rest via Electron `safeStorage` (Keychain on macOS, DPAPI on
-  Windows). Issues that could expose these in plaintext are in scope.
+- **Credential storage** — the sensitive secrets (the Service Account key and
+  the OAuth refresh token) are encrypted at rest in a master-password vault
+  (`vault.enc`): an Argon2id-derived key-encryption key wrapping an AES-256-GCM
+  data-encryption key (KEK/DEK). The OAuth Client ID/Secret are plain config
+  (a desktop app is a "public client"), and the access token lives in memory
+  only. Electron `safeStorage` is retired and read only once to migrate older
+  installs. Issues that could expose vault contents in plaintext are in scope.
 - **OAuth / authentication flow** — domain and admin-role verification, the
-  loopback OAuth flow, and idle auto-logout.
+  loopback OAuth flow, idle auto-lock and the vault unlock/session-restore path,
+  and the brute-force lockout (exponential back-off on repeated wrong unlocks).
 - **IPC surface** — the `electron/preload.ts` context bridge and the
   `ipcMain.handle` channels in `electron/main.ts`.
 - **Process isolation** — context isolation, external-link handling, and any
@@ -57,9 +62,12 @@ compromised local machine.
 
 ## Handling Credentials (for users)
 
-- Never commit your `.env` or `service-account.json` — both are git-ignored by
-  default.
+- Never commit your `.env` — it is git-ignored by default.
 - Service Account keys grant domain-wide delegation; treat them like
   passwords and rotate them if you suspect exposure.
-- GoWorks stores secrets in your OS user-data directory; protect that account
-  accordingly.
+- Choose a strong master password and keep it safe — it is the only key to the
+  vault. **There is no recovery if you forget it**: the only path forward is
+  resetting the vault, which wipes the stored Service Account key and Google
+  session (you then re-upload the key and sign in again).
+- GoWorks stores the encrypted vault in your OS user-data directory; protect
+  that account accordingly.

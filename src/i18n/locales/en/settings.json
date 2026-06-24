@@ -191,9 +191,20 @@
         "icon": "settings",
         "heading": "General Tab",
         "paragraphs": [
-          "Company name, sidebar abbreviation, logo, email notification sender name, allowed sign-in domain and the app language are set here."
+          "Company name, sidebar abbreviation, logo, email notification sender name, allowed sign-in domain and the app language are set here. The Security card (master password and auto-lock) also lives on this tab; see the <b>Master Password &amp; Security</b> section below for details."
         ],
         "callout": { "tone": "info", "text": "When branding info is changed, the sidebar and header update <b>instantly</b>; the same app is adapted to different organizations from this tab." }
+      },
+      {
+        "icon": "shield",
+        "heading": "Master Password & Security",
+        "paragraphs": [
+          "GoWorks keeps your sensitive keys (the Service Account key and the Google session) encrypted in a <b>master-password vault</b>. These keys are stored only on this device and the vault is unlocked with the master password you set during initial setup.",
+          "<b>Auto-lock:</b> If there's no activity for the configured period, the vault locks and asks for the master password to continue. You pick the timeout on the Security card: 15 minutes, 30 minutes, 1 hour, or Off.",
+          "<b>Locking is not logging out:</b> While locked your Google session is preserved — enter the password and you continue right where you left off, losing nothing. <b>Logging out</b>, by contrast, deletes the session token and requires a fresh Google sign-in. If a bulk job is running when you lock, it keeps going until it finishes (graceful lock).",
+          "<b>Change the master password:</b> Use the button on the Security card to change your password in place. Your encrypted keys are preserved — no need to re-upload the Service Account or sign in to Google again."
+        ],
+        "callout": { "tone": "warning", "text": "<b>If you forget your master password it cannot be recovered.</b> The only path forward is resetting the vault, which deletes the stored Service Account key and Google session. You then have to re-upload the Service Account and sign in to Google again." }
       },
       {
         "icon": "zap",

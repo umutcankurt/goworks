@@ -40,6 +40,7 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 ## Features
 
 - **🔐 Secure Google OAuth2 sign-in** — loopback OAuth flow with domain and admin-role verification. Only Workspace admins from your configured domain can sign in.
+- **🔒 Master-password vault** — sensitive secrets (the Service Account key and the Google session/refresh token) are encrypted at rest with Argon2id + AES-256-GCM and unlocked by a master password you set during onboarding. Configurable idle auto-lock, in-app password change (no re-upload or re-login), graceful lock that lets running jobs finish, and brute-force lockout with exponential back-off.
 - **👥 User management** — search, view, and edit user profiles and group memberships; suspend, delete, and restore accounts; manage aliases and email forwarding.
 - **📦 Bulk operations** — drive suspend / delete / signature-push jobs from a CSV file, with a guided wizard, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
 - **🚪 Offboarding wizard** — a guided multi-step flow to safely deprovision a departing employee: suspend, set email forwarding, remove from groups, and more.
@@ -106,7 +107,7 @@ GoWorks does not ship with credentials — each deployment uses its own Google C
 3. Configure the **OAuth consent screen** — choose the **Internal** user type (recommended for a single organization; no Google verification required).
 4. Create an **OAuth client ID** with application type **Desktop app**. Keep the Client ID and Secret handy — the onboarding wizard will ask for them on first launch.
 
-   > **No `.env` required.** The OAuth Client ID/Secret are collected via the onboarding wizard's "Google Cloud project" step and stored locally — Client ID in the SQLite `app_config` table and the secret encrypted in the OS keychain (Keychain on macOS, DPAPI on Windows). You can rotate them later from Settings → Genel → "Google OAuth Bilgileri".
+   > **No `.env` required.** The OAuth Client ID/Secret are collected via the onboarding wizard's "Google Cloud project" step and stored locally in the SQLite `app_config` table as plain config. For a desktop app the client secret is a "public client" credential (RFC 8252), not a true secret — and it must be readable before the master-password vault is unlocked, in order to refresh the access token. The genuinely sensitive secrets (Service Account key and refresh token) are encrypted in the vault instead. You can rotate the OAuth values later from Settings → Genel → "Google OAuth Bilgileri".
    >
    > For local development you can still drop the values into `.env` (copy `.env.example`); on first launch they are auto-migrated to encrypted storage and the file is renamed to `.env.migrated` in production builds (kept untouched in dev).
 
@@ -127,7 +128,7 @@ Gmail signature deployment and job-completion emails require a **Service Account
 
 1. In your Google Cloud project, create a Service Account and generate a JSON key.
 2. In the [Google Admin Console](https://admin.google.com/) → **Security → API controls → Domain-wide delegation**, authorize the Service Account's client ID for the [DWD scopes](#oauth-scopes).
-3. In GoWorks, open **Settings → Service Account** and upload the JSON key. It is stored at `app.getPath('userData')/secrets/service-account.json` with `0600` permissions and never leaves your machine.
+3. In GoWorks, open **Settings → Service Account** and upload the JSON key. It is written encrypted into the master-password vault (`vault.enc`) and never leaves your machine. (Older installs that kept the key as a `0600` file under `…/secrets/` are migrated into the vault on first unlock and the plaintext file is removed.)
 
 ## Building Installers
 
@@ -196,11 +197,13 @@ See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference.
 
 ## Security & Privacy
 
-- **Your credentials, your project** — GoWorks ships no API keys. You create the OAuth client; tokens are stored locally in your OS user-data directory.
+- **Your credentials, your project** — GoWorks ships no API keys. You create the OAuth client; everything is stored locally in your OS user-data directory.
 - **Admin-only** — sign-in is rejected unless the account is a Workspace admin on your configured domain.
-- **Local-only data** — the SQLite database, OAuth tokens, and the Service Account key never leave your machine. There is no telemetry and no GoWorks backend.
-- **Idle auto-logout** — the session ends after 2 hours of inactivity.
-- Never commit your `.env` or `service-account.json` — both are git-ignored by default.
+- **Master-password vault** — the truly sensitive secrets (Service Account key and the Google refresh token) live encrypted in a master-password vault (`vault.enc`, Argon2id + AES-256-GCM) and never leave your machine. The access token stays in memory only; the OAuth Client ID/Secret are stored as plain config (a desktop app is a "public client" — the secret is not a true secret). Electron `safeStorage` is retired and read only once to migrate older installs.
+- **Local-only data** — the SQLite database and all secrets stay on your machine. There is no telemetry and no GoWorks backend.
+- **Idle auto-lock** — after a configurable idle period (default 1 hour; set in Settings → Genel → Güvenlik, `0` = off) the vault **locks** rather than logging out: in-memory credentials are dropped but the refresh token survives in the vault, so unlocking with the master password silently restores the Google session.
+- **Forgetting the master password is unrecoverable** — the only path forward is resetting the vault, which wipes the stored Service Account key and session; you then re-upload the key and sign in to Google again.
+- Never commit your `.env` — it is git-ignored by default.
 
 Found a vulnerability? Please report it privately — see [`SECURITY.md`](SECURITY.md).
 
