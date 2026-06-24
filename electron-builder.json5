@@ -28,6 +28,10 @@
     "node_modules/bindings/**",
     "node_modules/file-uri-to-path/**"
   ],
+  // Auto-update is fully removed (no electron-updater, manual distribution).
+  // Explicit null disables electron-builder's GitHub auto-detect (from the
+  // package.json `repository` field), so no latest*.yml update metadata is written.
+  "publish": null,
   "mac": {
     "target": [
       "dmg"
@@ -55,7 +59,13 @@
   "nsis": {
     "oneClick": true,
     "perMachine": false,
-    "deleteAppDataOnUninstall": false
+    "deleteAppDataOnUninstall": false,
+    // No differential updates → no Windows .blockmap.
+    "differentialPackage": false
+  },
+  "dmg": {
+    // No differential updates → no Mac .blockmap (also skips latest-mac.yml).
+    "writeUpdateInfo": false
   },
   "linux": {
     "target": [
