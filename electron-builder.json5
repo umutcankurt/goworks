@@ -59,7 +59,10 @@
   "nsis": {
     "oneClick": true,
     "perMachine": false,
+    // Uninstall prompts the user whether to also wipe userData (vault + DB + logs);
+    // see build/installer.nsh (customUnInstall). Kept false so the wipe is opt-in.
     "deleteAppDataOnUninstall": false,
+    "include": "build/installer.nsh",
     // No differential updates → no Windows .blockmap.
     "differentialPackage": false
   },
