@@ -1491,11 +1491,9 @@ app.whenReady().then(async () => {
         return { success: false, error: 'Client ID ve Secret boş olamaz.' };
       }
       const { OAuth2Client } = await import('google-auth-library');
-      const client = new OAuth2Client(
-        trimmedId,
-        trimmedSecret,
-        'http://localhost:3000/callback',
-      );
+      // No redirect URI: the real flow binds an ephemeral loopback port per login
+      // (see auth-service.ts). This is only a format/init check.
+      const client = new OAuth2Client(trimmedId, trimmedSecret);
       // generateAuthUrl throws on bad parameters; a successful return = init OK.
       const url = client.generateAuthUrl({
         access_type: 'offline',

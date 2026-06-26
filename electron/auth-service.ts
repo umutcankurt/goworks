@@ -8,7 +8,6 @@ import fs from 'fs';
 import { appConfigService } from './services/app-config-service';
 import { vaultManager } from './services/vault-manager';
 
-const REDIRECT_URI = 'http://localhost:3000/callback';
 const SCOPES = [
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
@@ -48,7 +47,13 @@ export class AuthService {
 
     /**
      * Lazily create the OAuth2 client. Credentials are read at runtime from
-     * app_config (clientId) + safeStorage (clientSecret) — not from env.
+     * app_config (clientId + clientSecret) — not from env.
+     *
+     * No redirect URI is baked in here: as a desktop ("installed") app this is a
+     * public client and the loopback redirect is bound to an ephemeral port per
+     * login (see `login()`), so the redirect URI is supplied dynamically to
+     * `generateAuthUrl` / `getToken`. `restoreSession()` only refreshes via the
+     * refresh token and never uses a redirect URI.
      *
      * When credentials are updated via the onboarding wizard or Settings,
      * `invalidateCredentials()` is called to invalidate the cache.
@@ -63,7 +68,7 @@ export class AuthService {
         }
 
         const google = getGoogle();
-        this.oauth2Client = new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
+        this.oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
         return this.oauth2Client;
     }
 
@@ -136,19 +141,16 @@ export class AuthService {
         return new Promise((resolve, reject) => {
             const allowedDomain = appConfigService.get('allowedDomain');
 
-            const authUrl = oauth2Client.generateAuthUrl({
-                access_type: 'offline',
-                scope: SCOPES,
-                prompt: 'select_account consent',
-                ...(allowedDomain ? { hd: allowedDomain } : {}),
-            });
+            // The loopback redirect URI is bound to an ephemeral port (see
+            // server.listen(0) below) and filled in once the OS assigns the port.
+            // A desktop OAuth client auto-allows any loopback port, so nothing has
+            // to be registered in Cloud Console.
+            let redirectUri = '';
 
-            shell.openExternal(authUrl);
-
-            this.server = http.createServer(async (req, res) => {
+            const server = http.createServer(async (req, res) => {
                 try {
                     if (req.url!.indexOf('/callback') > -1) {
-                        const qs = new url.URL(req.url!, 'http://localhost:3000').searchParams;
+                        const qs = new url.URL(req.url!, 'http://localhost').searchParams;
                         const code = qs.get('code');
 
                         res.end('Authentication successful! You can close this window now.');
@@ -159,7 +161,7 @@ export class AuthService {
                         }
 
                         if (code) {
-                            const { tokens } = await oauth2Client.getToken(code);
+                            const { tokens } = await oauth2Client.getToken({ code, redirect_uri: redirectUri });
                             oauth2Client.setCredentials(tokens);
                             this.saveTokens(tokens);
 
@@ -210,7 +212,29 @@ export class AuthService {
                 } catch (e) {
                     reject(e);
                 }
-            }).listen(3000);
+            });
+
+            this.server = server;
+            server.on('error', reject);
+
+            // Bind to an ephemeral port (0 = OS-assigned) so login never fails
+            // because a fixed port is already taken. Only once the port is known
+            // can we build the redirect URI and the auth URL.
+            server.listen(0, () => {
+                const addr = server.address();
+                const port = addr && typeof addr === 'object' ? addr.port : 0;
+                redirectUri = `http://localhost:${port}/callback`;
+
+                const authUrl = oauth2Client.generateAuthUrl({
+                    access_type: 'offline',
+                    scope: SCOPES,
+                    prompt: 'select_account consent',
+                    redirect_uri: redirectUri,
+                    ...(allowedDomain ? { hd: allowedDomain } : {}),
+                });
+
+                shell.openExternal(authUrl);
+            });
         });
     }
 
