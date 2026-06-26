@@ -325,6 +325,16 @@ class VaultManager {
         this.googleReauthNeeded = needed;
     }
 
+    /**
+     * Whether the last silent session restore (after an unlock) failed and a full
+     * Google re-login is required. Used by the IPC auth guard so admin/group calls
+     * fail with a clear "session expired" message instead of a cryptic
+     * google-auth-library error from an empty OAuth client.
+     */
+    getGoogleReauthNeeded(): boolean {
+        return this.googleReauthNeeded;
+    }
+
     // --- Secret accessors (gated on the LIVE DEK so running jobs work during a
     //     pending hard-lock; throw once the DEK is actually zeroized). ---
 

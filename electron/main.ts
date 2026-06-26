@@ -32,6 +32,7 @@ import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
 import { toUserMessage } from './lib/error-utils';
+import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
@@ -52,13 +53,30 @@ let cancelBulkOperation = false
 // truth for the timeout — the renderer SessionContext only reflects/warns.
 
 /**
+ * Guard for IPC handlers that hit Google APIs. When the vault is unlocked but the
+ * silent session restore failed (refresh token revoked/expired/invalid_grant —
+ * e.g. after switching the OAuth client type), the in-memory OAuth client has no
+ * credentials. Without this, calls fail deep inside google-auth-library with the
+ * cryptic "No access, refresh token, API key or refresh handler callback is set."
+ * Throwing a UserFacingError here surfaces a clear "log in again" message instead.
+ */
+function requireGoogleAuth(): void {
+  if (!authService?.isAuthenticated() || vaultManager.getGoogleReauthNeeded()) {
+    throw new UserFacingError('Google oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
+  }
+}
+
+/**
  * adminService accessor — throws MissingOAuthCredentialsError when there are no
- * credentials (via authService.getClient()). The IPC handler's try/catch catches
- * it and turns it into a user-friendly message for the renderer. After a credential
- * reset (invalidateCredentials), adminService is set to null so the next call
- * recreates it with a fresh client.
+ * credentials (via authService.getClient()), or UserFacingError when the Google
+ * session needs a re-login. The IPC handler's try/catch turns either into a
+ * user-friendly message for the renderer. After a credential reset
+ * (invalidateCredentials) OR a vault lock (dropAuthCredentials hook), adminService
+ * is set to null so the next call recreates it with the LIVE OAuth client — never
+ * a stale reference to a client whose credentials were blanked on lock.
  */
 function ensureAdminService(): AdminService {
+  requireGoogleAuth();
   if (!adminService) {
     adminService = new AdminService(authService.getClient());
   }
@@ -352,8 +370,12 @@ app.whenReady().then(async () => {
       try { return jobQueue.listByStatus(['PENDING']).length; } catch { return 0; }
     },
     // Lock (not logout): drop in-memory OAuth creds WITHOUT revoking; the vault
-    // keeps the refresh token for a silent restore on the next unlock.
-    dropAuthCredentials: () => authService?.dropInMemoryCredentials(),
+    // keeps the refresh token for a silent restore on the next unlock. Also drop
+    // the cached adminService — it froze a reference to the OAuth client that
+    // dropInMemoryCredentials() just blanked, so reusing it after unlock would fail
+    // with "No access, refresh token...". Nulling it forces a rebuild with the LIVE
+    // client (the one restoreSession refreshes) on the next ensureAdminService().
+    dropAuthCredentials: () => { authService?.dropInMemoryCredentials(); adminService = null; },
     // Clear cached GoogleAuth clients that may hold the Service Account key.
     clearSecretCaches: () => {
       void (async () => {
@@ -413,6 +435,10 @@ app.whenReady().then(async () => {
     if (!win) return null;
     try {
       const result = await authService.login();
+      // A fresh login produces a valid refresh token bound to the current OAuth
+      // client, so any prior "needs re-auth" state from a failed silent restore is
+      // now resolved. Clear it BEFORE ensureAdminService() so the auth guard passes.
+      vaultManager.setGoogleReauthNeeded(false);
       // Login succeeded; if adminService doesn't exist yet (first setup, credentials
       // just entered), lazily init it so it's ready for subsequent admin calls.
       ensureAdminService();

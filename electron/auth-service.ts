@@ -7,6 +7,8 @@ import path from 'path';
 import fs from 'fs';
 import { appConfigService } from './services/app-config-service';
 import { vaultManager } from './services/vault-manager';
+import { logger } from './services/logger';
+import { withRetry } from './services/retry';
 
 const SCOPES = [
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -284,7 +286,13 @@ export class AuthService {
         }
         client.setCredentials({ refresh_token: refreshToken });
         try {
-            const { token } = await client.getAccessToken();
+            // Retry transient failures (503/ECONNRESET) so a momentary network blip
+            // during unlock doesn't drop the user into a full re-login.
+            const { token } = await withRetry(
+                () => client.getAccessToken(),
+                logger,
+                'restoreSession.getAccessToken',
+            );
             if (!token) throw new Error('No access token from refresh');
             // Best-effort: restore the signed-in admin email.
             try {
@@ -296,8 +304,12 @@ export class AuthService {
                 // email is best-effort; the session is still authenticated
             }
             return { authenticated: true, reauthNeeded: false };
-        } catch {
+        } catch (err: any) {
             // invalid_grant / revoked / expired / scope change → full re-login.
+            // Log the real reason — this path used to be silent, which made
+            // post-unlock "session expired" states impossible to diagnose from logs.
+            const reason = err?.response?.data?.error ?? err?.message ?? String(err);
+            logger.warn(`[restoreSession] silent refresh failed → re-login needed: ${reason}`);
             client.setCredentials({});
             this.oauth2Client = null;
             return { authenticated: false, reauthNeeded: true };
