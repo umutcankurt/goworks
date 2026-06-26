@@ -133,10 +133,12 @@ describe('AuthService', () => {
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
             expect(() => svc.getClient()).not.toThrow();
+            // No redirect URI is baked into the constructor: as a desktop ("installed")
+            // public client the loopback redirect is bound to an ephemeral port per
+            // login and supplied dynamically to generateAuthUrl/getToken.
             expect(OAuth2Constructor).toHaveBeenCalledWith(
                 'test-client-id',
                 'test-secret',
-                expect.stringContaining('/callback'),
             );
         });
 
