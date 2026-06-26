@@ -34,6 +34,7 @@ import {
     openSync,
     readFileSync,
     renameSync,
+    statSync,
     unlinkSync,
     writeSync,
 } from 'node:fs';
@@ -366,9 +367,31 @@ export function readVaultFile(filePath: string): Buffer | null {
     return readFileSync(filePath);
 }
 
-/** Delete the vault file (and any leftover temp). Used by factory reset / vault reset. */
+/** Delete the vault file (and any leftover temp). Used by factory reset / vault reset.
+ * Best-effort secure delete: overwrite the bytes with random data before unlinking so
+ * the encrypted Service Account key / refresh token don't linger in a recoverable form.
+ * (On SSDs with wear-levelling this is not a guarantee, but it raises the bar over a
+ * plain unlink — and the payload is already encrypted at rest.) */
 export function deleteVaultFile(filePath: string): void {
-    if (existsSync(filePath)) unlinkSync(filePath);
-    const tmp = `${filePath}.tmp`;
-    if (existsSync(tmp)) unlinkSync(tmp);
+    secureUnlink(filePath);
+    secureUnlink(`${filePath}.tmp`);
+}
+
+function secureUnlink(filePath: string): void {
+    if (!existsSync(filePath)) return;
+    try {
+        const size = statSync(filePath).size;
+        if (size > 0) {
+            const fd = openSync(filePath, 'r+');
+            try {
+                writeSync(fd, randomBytes(size), 0, size, 0);
+                fsyncSync(fd);
+            } finally {
+                closeSync(fd);
+            }
+        }
+    } catch {
+        /* overwrite is best-effort; fall through to the unlink below */
+    }
+    unlinkSync(filePath);
 }

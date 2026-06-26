@@ -140,7 +140,7 @@
     "factoryReset": {
       "button": "Reset GoWorks",
       "modalTitle": "Reset GoWorks",
-      "warning": "All your data (company details, user/signature data, OAuth credentials, Service Account, and session) will be permanently deleted and you'll set up from scratch. This action CANNOT be undone.",
+      "warning": "All your data (company details, institution/signature data, OAuth credentials, Service Account, session) and logs are permanently wiped from disk, and the database file is rebuilt empty. This action CANNOT be undone — ideal to run before handing off the machine or uninstalling the app.",
       "confirmPrompt": "Type {{keyword}} to confirm:",
       "confirmKeyword": "RESET",
       "confirmButton": "Reset and reinstall",

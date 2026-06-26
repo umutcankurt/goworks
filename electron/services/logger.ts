@@ -168,3 +168,24 @@ export function getLogger() {
 export function getLogsDir(): string {
     return ensureLogsDir();
 }
+
+/**
+ * Delete ALL log files (factory reset / pre-disposal wipe). Removes every app-*.log
+ * in the logs dir and resets the rotation state so the next write starts fresh.
+ * Never throws — logging must never crash the app.
+ */
+export function clearAllLogs(): void {
+    try {
+        const dir = ensureLogsDir();
+        for (const f of fs.readdirSync(dir)) {
+            if (/^app-\d{4}-\d{2}-\d{2}(?:-\d+)?\.log$/.test(f)) {
+                try { fs.unlinkSync(path.join(dir, f)); } catch { /* ignore */ }
+            }
+        }
+    } catch {
+        /* logger never throws */
+    }
+    currentFile = null;
+    currentDate = null;
+    currentSeq = 0;
+}

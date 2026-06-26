@@ -29,7 +29,7 @@ import { secureStorage } from './services/secure-storage';
 import { CacheService } from './services/cache-service';
 import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
-import { logger, getLogsDir } from './services/logger';
+import { logger, getLogsDir, clearAllLogs } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
 import { toUserMessage } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
@@ -1412,8 +1412,27 @@ app.whenReady().then(async () => {
       });
       wipe();
 
+      // 3b. Purge residue: DELETE only frees pages, leaving the old plaintext (e.g.
+      //     the OAuth client secret, institution data) recoverable in free pages /
+      //     the WAL. Truncate the WAL and VACUUM to rebuild the file so nothing
+      //     sensitive lingers on disk after a disposal wipe.
+      try {
+        db.pragma('wal_checkpoint(TRUNCATE)');
+        db.exec('VACUUM');
+      } catch (e) {
+        logger.warn('[factoryReset] VACUUM failed (best-effort residue purge):', e);
+      }
+
       // 4. Drop the dashboard cache.
       cache.clear();
+
+      // 5. Delete all logs + the legacy crash.log — operation history (admin/user
+      //    emails, errors) must not survive a disposal wipe.
+      try { clearAllLogs(); } catch { /* ignore */ }
+      try {
+        const crashPath = getCrashLogPath();
+        if (fs.existsSync(crashPath)) fs.unlinkSync(crashPath);
+      } catch { /* ignore */ }
 
       return { success: true };
     } catch (error: any) {

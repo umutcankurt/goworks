@@ -140,7 +140,7 @@
     "factoryReset": {
       "button": "GoWorks'ü sıfırla",
       "modalTitle": "GoWorks'ü sıfırla",
-      "warning": "Tüm bilgileriniz (firma bilgileri, kullanıcı/imza verileri, OAuth kimlik bilgileri, Service Account ve oturum) kalıcı olarak silinecek ve sıfırdan kurulum yapacaksınız. Bu işlem GERİ ALINAMAZ.",
+      "warning": "Tüm bilgileriniz (firma bilgileri, kurum/imza verileri, OAuth kimlik bilgileri, Service Account, oturum) ve loglar diskten kalıcı olarak silinir; veritabanı dosyası içeriğiyle birlikte boş olarak yeniden oluşturulur. Bu işlem GERİ ALINAMAZ — makineyi devretmeden veya uygulamayı kaldırmadan önce çalıştırmak için idealdir.",
       "confirmPrompt": "Onaylamak için {{keyword}} yazın:",
       "confirmKeyword": "SIFIRLA",
       "confirmButton": "Sıfırla ve yeniden kur",
