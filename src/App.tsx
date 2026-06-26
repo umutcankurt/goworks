@@ -7,6 +7,7 @@ import { VaultProvider, useVault } from './contexts/VaultContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { VaultLockScreen } from './components/vault/VaultLockScreen';
+import { GoogleReauthScreen } from './components/vault/GoogleReauthScreen';
 import { ToastContainer } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -46,6 +47,10 @@ function VaultGate({ children }: { children: ReactNode }) {
   const status = state?.status;
   if (status === 'LOCKED') return <VaultLockScreen mode="unlock" />;
   if (status === 'NEEDS_VAULT_SETUP') return <VaultLockScreen mode="setup" />;
+  // Vault is unlocked but the silent Google session restore failed (refresh token
+  // revoked/expired/issued for a different OAuth client). Gate here instead of
+  // letting the user reach pages where every Google call fails cryptically.
+  if (status === 'UNLOCKED' && state?.googleReauthNeeded) return <GoogleReauthScreen />;
   return <>{children}</>;
 }
 

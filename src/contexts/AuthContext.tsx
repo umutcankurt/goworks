@@ -48,13 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem('auth_user');
         };
 
+        // The vault lock/unlock drives the real Google session: locking drops the
+        // in-memory OAuth credentials, unlocking restores them (or flags re-auth).
+        // Re-run auth:check on both so isAuthenticated reflects reality instead of a
+        // stale localStorage user.
+        const recheckAuth = () => { checkAuth(); };
+
         if (window.ipcRenderer && window.ipcRenderer.on) {
             window.ipcRenderer.on('auth:logout-event', handleAutoLogout);
+            window.ipcRenderer.on('vault:locked', recheckAuth);
+            window.ipcRenderer.on('vault:unlocked', recheckAuth);
         }
 
         return () => {
             if (window.ipcRenderer && window.ipcRenderer.off) {
                 window.ipcRenderer.off('auth:logout-event', handleAutoLogout);
+                window.ipcRenderer.off('vault:locked', recheckAuth);
+                window.ipcRenderer.off('vault:unlocked', recheckAuth);
             }
         };
     }, []);

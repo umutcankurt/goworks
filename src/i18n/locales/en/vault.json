@@ -13,6 +13,14 @@
     "lockedOut": "Too many failed attempts. Try again in {{seconds}}s.",
     "forgot": "Forgot my password"
   },
+  "reauth": {
+    "title": "Google session couldn't be restored",
+    "subtitle": "The vault is unlocked, but your Google session couldn't be refreshed automatically. Sign in again to continue.",
+    "button": "Sign in again with Google",
+    "signingIn": "Signing in…",
+    "error": "Sign-in failed: {{error}}",
+    "note": "This usually means the stored session key (refresh token) is no longer valid — for example after the OAuth client was changed. Signing in again resolves it permanently."
+  },
   "setup": {
     "title": "Create a Master Password",
     "subtitle": "Your sensitive keys (Service Account, session) are encrypted with this password and stored only on this device. There is no recovery if you forget it.",

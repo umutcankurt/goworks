@@ -13,6 +13,14 @@
     "lockedOut": "Çok fazla hatalı deneme. {{seconds}} sn sonra tekrar deneyin.",
     "forgot": "Parolamı unuttum"
   },
+  "reauth": {
+    "title": "Google oturumu yenilenemedi",
+    "subtitle": "Kasanın kilidi açıldı, ancak Google oturumunuz otomatik yenilenemedi. Devam etmek için yeniden giriş yapın.",
+    "button": "Google ile Tekrar Giriş Yap",
+    "signingIn": "Giriş yapılıyor…",
+    "error": "Giriş başarısız: {{error}}",
+    "note": "Bu genellikle kayıtlı oturum anahtarının (refresh token) artık geçerli olmamasından kaynaklanır; örneğin OAuth istemcisi değiştirildiğinde. Yeniden giriş bunu kalıcı olarak çözer."
+  },
   "setup": {
     "title": "Ana Parola Oluşturun",
     "subtitle": "Hassas anahtarlarınız (Service Account, oturum) bu parolayla şifrelenir ve yalnızca bu cihazda saklanır. Unutursanız kurtarılamaz.",
