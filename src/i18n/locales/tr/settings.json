@@ -74,7 +74,7 @@
     },
     "googleCloud": {
       "title": "Google OAuth Bilgileri",
-      "subtitle": "Cloud Console'da oluşturduğunuz Desktop OAuth Client ID ve Secret. Secret OS anahtar deposunda şifreli olarak saklanır; ekranda gösterilmez."
+      "subtitle": "Cloud Console'da oluşturduğunuz Desktop OAuth Client ID ve Secret. Secret yalnızca bu cihazda yerel olarak saklanır; ekranda gösterilmez."
     },
     "requiredApis": {
       "title": "Gerekli Google API'leri",

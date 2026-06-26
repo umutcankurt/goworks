@@ -74,7 +74,7 @@
     },
     "googleCloud": {
       "title": "Google OAuth Credentials",
-      "subtitle": "The Desktop OAuth Client ID and Secret you created in Cloud Console. The secret is stored encrypted in the OS keychain and is never shown on screen."
+      "subtitle": "The Desktop OAuth Client ID and Secret you created in Cloud Console. The secret is stored locally on this device and is never shown on screen."
     },
     "requiredApis": {
       "title": "Required Google APIs",
