@@ -273,6 +273,9 @@ function applyContentSecurityPolicy() {
   const csp = isDev
     ? [
         "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: https:",
@@ -281,6 +284,9 @@ function applyContentSecurityPolicy() {
       ].join('; ')
     : [
         "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
         "script-src 'self'",
         // The signature editor's WYSIWYG produces inline styles — 'unsafe-inline'
         // style is required even in production. Eval and inline script stay disabled.
