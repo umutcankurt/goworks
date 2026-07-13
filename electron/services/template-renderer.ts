@@ -70,6 +70,24 @@ const VARIABLE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedAttributes: {},
 };
 
+// --- Inline-CSS allowlist for sanitizeHtml (defense-in-depth) ---
+// Without an explicit `allowedStyles`, sanitize-html lets every inline style
+// through unparsed. We instead permit only presentational CSS whose value
+// patterns cannot carry an injection (no url(), expression(), or free text —
+// only bounded shapes). This list MUST cover every property the app itself
+// emits — notably the `display/max-width/word-wrap/vertical-align` span from
+// applyModifiers() — otherwise legitimate signature formatting is stripped.
+const CSS_COLOR = [
+    /^#(0x)?[0-9a-f]{3,8}$/i,
+    /^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/i,
+    /^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)$/i,
+    /^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)$/i,
+    /^[a-z]+$/i, // named colors (red, transparent, …)
+];
+const CSS_LEN = [/^-?\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
+const CSS_LEN_POS = [/^\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
+const CSS_SHORTHAND_LEN = [/^(?:-?\d+(?:\.\d+)?(?:px|em|rem|%|pt)?\s*){1,4}$/i];
+
 const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedTags: [
         'table', 'tr', 'td', 'th', 'tbody', 'thead',
@@ -85,6 +103,47 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
         table: ['cellpadding', 'cellspacing', 'border', 'width'],
     },
     allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+    allowedStyles: {
+        '*': {
+            color: CSS_COLOR,
+            'background-color': CSS_COLOR,
+            background: CSS_COLOR,
+            'border-color': CSS_COLOR,
+            'font-size': [/^\d+(?:\.\d+)?(?:px|em|rem|%|pt)$/i],
+            'font-family': [/^[\w\s,"'-]+$/],
+            'font-weight': [/^(?:normal|bold|bolder|lighter|[1-9]00)$/i],
+            'font-style': [/^(?:normal|italic|oblique)$/i],
+            'line-height': [/^\d+(?:\.\d+)?(?:px|em|rem|%)?$/i],
+            'letter-spacing': [/^-?\d+(?:\.\d+)?(?:px|em|rem)$/i],
+            'text-align': [/^(?:left|right|center|justify)$/i],
+            'text-decoration': [/^(?:none|underline|overline|line-through)(?:\s+(?:solid|double|dotted|dashed|wavy|#[0-9a-f]{3,8}|[a-z]+))*$/i],
+            'text-transform': [/^(?:none|uppercase|lowercase|capitalize)$/i],
+            'white-space': [/^(?:normal|nowrap|pre|pre-wrap|pre-line)$/i],
+            'word-wrap': [/^(?:normal|break-word)$/i],
+            'word-break': [/^(?:normal|break-all|break-word|keep-all)$/i],
+            'vertical-align': [/^(?:baseline|top|middle|bottom|sub|super|text-top|text-bottom)$/i],
+            display: [/^(?:inline|inline-block|block|none|table|table-cell|table-row|flex)$/i],
+            width: [/^(?:auto|\d+(?:\.\d+)?(?:px|em|rem|%|pt))$/i],
+            height: [/^(?:auto|\d+(?:\.\d+)?(?:px|em|rem|%|pt))$/i],
+            'max-width': CSS_LEN_POS,
+            'min-width': CSS_LEN_POS,
+            'max-height': CSS_LEN_POS,
+            'min-height': CSS_LEN_POS,
+            padding: CSS_SHORTHAND_LEN,
+            'padding-top': CSS_LEN,
+            'padding-right': CSS_LEN,
+            'padding-bottom': CSS_LEN,
+            'padding-left': CSS_LEN,
+            margin: CSS_SHORTHAND_LEN,
+            'margin-top': CSS_LEN,
+            'margin-right': CSS_LEN,
+            'margin-bottom': CSS_LEN,
+            'margin-left': CSS_LEN,
+            border: [/^\d+(?:\.\d+)?(?:px|em|rem)?\s+(?:solid|dashed|dotted|double|none|hidden)(?:\s+(?:#[0-9a-f]{3,8}|[a-z]+))?$/i],
+            'border-radius': [/^(?:\d+(?:\.\d+)?(?:px|em|rem|%)?\s*){1,4}$/i],
+            'border-collapse': [/^(?:collapse|separate)$/i],
+        },
+    },
 };
 
 export function renderTemplate(html: string, variables: TemplateVariables): string {
