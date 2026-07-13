@@ -33,10 +33,6 @@ When reporting, please include:
 - Steps to reproduce, or a proof of concept.
 - The GoWorks version and your OS (macOS / Windows / Linux).
 
-We aim to acknowledge a report within a few days and to provide a remediation
-timeline after triage. We will credit reporters who wish to be named once a fix
-is released.
-
 ## Scope
 
 Especially relevant areas:
