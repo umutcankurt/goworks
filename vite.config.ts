@@ -3,10 +3,11 @@ import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
-import dotenv from 'dotenv'
 
-// Load .env at build time (for the developer environment)
-dotenv.config()
+// Note: .env is intentionally NOT loaded at build time. OAuth credentials are
+// entered at onboarding and read from the app_config table at runtime
+// (auth-service.ts), never inlined into the bundle. Keeping dotenv out of the
+// build guarantees no secret can ever be baked into a shipped artifact.
 
 // Build-time constants surfaced to the renderer (Login footer, About tab).
 // Version tracks package.json; build date is stamped at the build moment, so
