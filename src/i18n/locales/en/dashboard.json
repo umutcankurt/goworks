@@ -9,7 +9,7 @@
     "daysAgo": "{{count}} days ago"
   },
   "loadFailed": "Failed to load data.",
-  "authError": "You don't have permission to access this data. Please <b>sign out</b> and sign in again.",
+  "authError": "Your session may have expired or you don't have permission to access this data. Please <b>sign out</b> and sign in again.",
   "storage": {
     "title": "Storage Usage",
     "totalUsed": "Total used space",

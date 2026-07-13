@@ -9,7 +9,7 @@
     "daysAgo": "{{count}} gün önce"
   },
   "loadFailed": "Veri alınamadı.",
-  "authError": "Bu veriye erişim yetkiniz bulunmuyor. Lütfen <b>Çıkış Yap</b> yapıp tekrar giriş yapın.",
+  "authError": "Oturumunuz sona ermiş veya bu veriye erişim yetkiniz bulunmuyor olabilir. Lütfen <b>Çıkış Yap</b> yapıp tekrar giriş yapın.",
   "storage": {
     "title": "Depolama Kullanımı",
     "totalUsed": "Toplam kullanılan alan",

@@ -42,10 +42,15 @@ import { registerBulkGroupAddWorker } from './jobs/bulk-group-add-worker';
 import { setAuthClientProvider } from './services/auth-context';
 import { vaultManager, TooManyAttemptsError } from './services/vault-manager';
 import { WrongPasswordError, VaultCorruptError } from './services/vault-service';
+import type { OAuth2Client } from 'google-auth-library';
 
 let win: BrowserWindow | null
 let authService: AuthService
 let adminService: AdminService | null = null
+// The OAuth client instance adminService froze at construction time. Tracked so
+// ensureAdminService() can rebuild when the live client is swapped out from under
+// it (e.g. a fresh login after a failed silent restoreSession mints a NEW client).
+let adminServiceClient: OAuth2Client | null = null
 let cache: CacheService
 let cancelBulkOperation = false
 
@@ -77,8 +82,16 @@ function requireGoogleAuth(): void {
  */
 function ensureAdminService(): AdminService {
   requireGoogleAuth();
-  if (!adminService) {
-    adminService = new AdminService(authService.getClient());
+  // Rebuild when missing OR when the cached AdminService froze a stale OAuth client.
+  // AdminService binds its directory/reports clients to the exact OAuth2Client object
+  // passed in; if that instance was replaced (a fresh login after a failed silent
+  // restore mints a brand-new client) reusing the old AdminService would call the
+  // blanked client and throw "No access, refresh token...". Comparing instances here
+  // closes that class of bug regardless of which mutating path forgot to reset it.
+  const liveClient = authService.getClient();
+  if (!adminService || adminServiceClient !== liveClient) {
+    adminService = new AdminService(liveClient);
+    adminServiceClient = liveClient;
   }
   return adminService;
 }
@@ -353,10 +366,13 @@ app.whenReady().then(async () => {
   // config:setOAuthCredentials call.
   if (authService.hasCredentials()) {
     try {
-      adminService = new AdminService(authService.getClient());
+      const client = authService.getClient();
+      adminService = new AdminService(client);
+      adminServiceClient = client;
     } catch (err) {
       writeLog('ADMIN SERVICE INIT FAILED', err);
       adminService = null;
+      adminServiceClient = null;
     }
   }
   cache = new CacheService();
@@ -375,7 +391,7 @@ app.whenReady().then(async () => {
     // dropInMemoryCredentials() just blanked, so reusing it after unlock would fail
     // with "No access, refresh token...". Nulling it forces a rebuild with the LIVE
     // client (the one restoreSession refreshes) on the next ensureAdminService().
-    dropAuthCredentials: () => { authService?.dropInMemoryCredentials(); adminService = null; },
+    dropAuthCredentials: () => { authService?.dropInMemoryCredentials(); adminService = null; adminServiceClient = null; },
     // Clear cached GoogleAuth clients that may hold the Service Account key.
     clearSecretCaches: () => {
       void (async () => {
@@ -1390,6 +1406,7 @@ app.whenReady().then(async () => {
       try { await authService?.logout(); } catch { /* offline revoke can fail; continue */ }
       authService?.invalidateCredentials();
       adminService = null;
+      adminServiceClient = null;
       vaultManager.wipe();               // zeroize + delete vault.enc (SA + refresh token)
       secureStorage.clearClientSecret(); // defensive: clear any legacy oauth-secret.enc
       clearAuthCache();
@@ -1495,6 +1512,7 @@ app.whenReady().then(async () => {
       // null too. The next use recreates it with a fresh client.
       authService?.invalidateCredentials();
       adminService = null;
+      adminServiceClient = null;
 
       return {
         success: true,
@@ -1513,6 +1531,7 @@ app.whenReady().then(async () => {
       secureStorage.clearClientSecret(); // defensive: clear any legacy .enc too
       authService?.invalidateCredentials();
       adminService = null;
+      adminServiceClient = null;
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };

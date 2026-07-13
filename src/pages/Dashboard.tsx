@@ -59,7 +59,14 @@ function ErrorCard({ title, message }: { title: string; message: string }) {
         message.includes('403') ||
         message.includes('yetki') ||
         message.includes('Yetkisiz') ||
-        message.includes('permission');
+        message.includes('permission') ||
+        // Friendly main-process guard message ("Google oturumunuz sona erdi…").
+        message.includes('oturum') ||
+        // Raw google-auth-library error when the OAuth client has no credentials:
+        // "No access, refresh token, API key or refresh handler callback is set."
+        message.includes('refresh token') ||
+        message.includes('refresh handler') ||
+        message.includes('No access');
     return (
         <div className="bg-surface-container border border-eth-danger/40 shadow-sm rounded-xl p-6">
             <h3 className="text-lg font-semibold text-on-surface mb-3">{title}</h3>
