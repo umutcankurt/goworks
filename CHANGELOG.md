@@ -5,15 +5,33 @@ All notable changes to GoWorks are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Note on history.** GoWorks was open-sourced at **v0.7.2** with its earlier
-> development history squashed into the initial commit. Entries before v0.7.2 are
-> therefore summarized as the initial baseline. The version stayed at 0.7.2
-> throughout the public-preparation period, so **v0.7.3** bundles roughly six weeks
-> of work that shipped in a single version bump.
+> **Note on history.** GoWorks' earlier development history was squashed into the
+> initial commit, so entries before v0.7.2 are summarized as that baseline. The
+> version stayed at 0.7.2 throughout the pre-release preparation period, so
+> **v0.7.3** bundles roughly six weeks of work that shipped in a single version
+> bump. **v0.7.8 is the first public open-source release.**
 
 ## [Unreleased]
 
 _No unreleased changes yet._
+
+## [0.7.8] — 2026-07-13
+
+### Security
+- **Dependency security patch.** `sanitize-html` 2.17.3 → 2.17.6 (fixes a critical
+  stored-XSS via `xmp` raw-text passthrough, GHSA-rpr9-rxv7-x643, in the library that
+  sanitizes Gmail-signature HTML), `react-router` 7.13 → 7.18, plus
+  `minimatch`/`postcss`/`qs`/`brace-expansion`. Production dependencies now report
+  zero known vulnerabilities.
+- **Explicit inline-CSS allowlist for signature HTML.** `sanitizeTemplateHtml` now
+  defines an `allowedStyles` allowlist that keeps legitimate presentational CSS
+  (colors, fonts, box-model, borders) while stripping injection vectors such as
+  `url()`, `expression()`, and positioning.
+- **Hardened Content-Security-Policy.** Added `base-uri 'self'`, `object-src 'none'`,
+  and `frame-ancestors 'none'` to both the development and production CSP.
+- **No secret can be baked into the build.** Removed the dead build-time `dotenv`
+  load from the Vite config; OAuth credentials are only ever read from `app_config`
+  at runtime, so shipped artifacts contain no embedded secret.
 
 ## [0.7.7] — 2026-06-26
 

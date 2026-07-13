@@ -20,7 +20,20 @@ secrets/
 !electron/secrets/*.ts
 *.pem
 *.p12
+*.key
 service-account*.json
+
+# Local runtime data — encrypted vault + SQLite DB (contain client secret /
+# service-account key / branding). Runtime lives in the OS userData dir, never
+# in the repo; these globs are defense-in-depth so they can never be committed.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+goworks.db
+*.enc
+vault.enc
 
 # Editor directories and files
 .vscode/*

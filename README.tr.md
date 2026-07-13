@@ -7,7 +7,7 @@
 **Google Workspace™ yönetimi için açık kaynaklı masaüstü uygulaması — toplu kullanıcı yaşam döngüsü yönetimi, offboarding, Gmail imza dağıtımı ve grup yönetimi.**
 
 [![Lisans: Apache 2.0](https://img.shields.io/badge/Lisans-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
 [![Electron ile geliştirildi](https://img.shields.io/badge/Electron-40-47848F.svg?logo=electron&logoColor=white)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg?logo=typescript&logoColor=white)]()
 [![PR'lar memnuniyetle karşılanır](https://img.shields.io/badge/PR-memnuniyetle%20kar%C5%9F%C4%B1lan%C4%B1r-brightgreen.svg)]()
@@ -138,7 +138,7 @@ Gmail imza dağıtımı ve iş tamamlanma e-postaları, **Domain-Wide Delegation
 npm run build
 ```
 
-Platforma özel kurulum dosyalarını `release/{version}/` altında üretir — macOS `.dmg`, Windows `.exe` (NSIS) ve Linux `AppImage`. Otomatik güncelleme yoktur; yeni sürümler elle dağıtılır.
+Platforma özel kurulum dosyalarını `release/{version}/` altında üretir — macOS `.dmg` ve Windows `.exe` (NSIS). Otomatik güncelleme yoktur; yeni sürümler elle dağıtılır.
 
 ## Sorun Giderme
 

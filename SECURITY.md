@@ -47,6 +47,10 @@ Especially relevant areas:
 - **OAuth / authentication flow** — domain and admin-role verification, the
   loopback OAuth flow, idle auto-lock and the vault unlock/session-restore path,
   and the brute-force lockout (exponential back-off on repeated wrong unlocks).
+  Note: this lockout is an *online* speed bump only — it is held in memory and
+  resets on restart. An attacker with a copy of `vault.enc` can attempt an
+  offline brute force regardless, so the real barrier there is the Argon2id KDF
+  (64 MiB memory, 3 iterations) combined with the strength of your master password.
 - **IPC surface** — the `electron/preload.ts` context bridge and the
   `ipcMain.handle` channels in `electron/main.ts`.
 - **Process isolation** — context isolation, external-link handling, and any

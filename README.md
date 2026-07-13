@@ -7,7 +7,7 @@
 **Open-source desktop app for Google Workspace™ administration — bulk user lifecycle management, offboarding, Gmail signature deployment, and group management.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
 [![Built with Electron](https://img.shields.io/badge/Electron-40-47848F.svg?logo=electron&logoColor=white)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg?logo=typescript&logoColor=white)]()
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
@@ -137,7 +137,7 @@ Gmail signature deployment and job-completion emails require a **Service Account
 npm run build
 ```
 
-Produces platform installers under `release/{version}/` — macOS `.dmg`, Windows `.exe` (NSIS), and Linux `AppImage`. There is no auto-update; distribute new versions manually.
+Produces platform installers under `release/{version}/` — macOS `.dmg` and Windows `.exe` (NSIS). There is no auto-update; distribute new versions manually.
 
 ## Troubleshooting
 
