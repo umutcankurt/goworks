@@ -71,3 +71,27 @@ compromised local machine.
   session (you then re-upload the key and sign in again).
 - GoWorks stores the encrypted vault in your OS user-data directory; protect
   that account accordingly.
+
+## Data Location & Disposal
+
+All GoWorks data lives under your OS user-data directory —
+`%APPDATA%\GoWorks` on Windows, `~/Library/Application Support/GoWorks` on
+macOS:
+
+- `vault.enc` — the encrypted Service Account key and Google refresh token.
+- `goworks.db` — branding, institutions, signature templates, and the
+  plain-config OAuth client secret.
+- `logs/` and `crash.log` — operational logs that may contain email addresses.
+
+When you retire or repurpose a machine, remove this data deliberately:
+
+- **Windows** — the uninstaller offers to delete the data directory (opt-in;
+  the default is to keep it).
+- **macOS / Linux** — there is no uninstall hook, so run **Settings → Factory
+  Reset** *before* removing the app.
+
+**Factory Reset performs a secure wipe**, not a plain delete: `vault.enc` is
+overwritten before being unlinked, the database is emptied and reclaimed with
+`VACUUM` + `wal_checkpoint(TRUNCATE)` so no free-page or WAL residue remains, and
+logs (including `crash.log`) are removed. Simply uninstalling the app on macOS
+without a Factory Reset leaves the encrypted vault and database on disk.
