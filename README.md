@@ -30,6 +30,7 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Building Installers](#building-installers)
+- [Changelog](#changelog)
 - [Architecture](#architecture)
 - [OAuth Scopes](#oauth-scopes)
 - [Security & Privacy](#security--privacy)
@@ -42,13 +43,13 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 - **🔐 Secure Google OAuth2 sign-in** — loopback OAuth flow with domain and admin-role verification. Only Workspace admins from your configured domain can sign in.
 - **🔒 Master-password vault** — sensitive secrets (the Service Account key and the Google session/refresh token) are encrypted at rest with Argon2id + AES-256-GCM and unlocked by a master password you set during onboarding. Configurable idle auto-lock, in-app password change (no re-upload or re-login), graceful lock that lets running jobs finish, and brute-force lockout with exponential back-off.
 - **👥 User management** — search, view, and edit user profiles and group memberships; suspend, delete, and restore accounts; manage aliases and email forwarding.
-- **📦 Bulk operations** — drive suspend / delete / signature-push jobs from a CSV file, with a guided wizard, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
+- **📦 Bulk operations** — drive suspend / delete / signature-push / group-add jobs from a CSV file, with a guided wizard, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
 - **🚪 Offboarding wizard** — a guided multi-step flow to safely deprovision a departing employee: suspend, set email forwarding, remove from groups, and more.
 - **🧭 Onboarding wizard** — first-run setup that walks you through terms acceptance, company branding, the Google Cloud project, the Service Account, and Domain-Wide Delegation.
-- **🧹 Factory reset** — wipe all data (branding, OAuth credentials, Service Account, signatures, history) behind a type-to-confirm guard and start fresh — plus a lighter wizard restart that preserves your configuration.
+- **🧹 Factory reset** — securely wipe all data (branding, OAuth credentials, Service Account, signatures, history) behind a type-to-confirm guard: the vault file is overwritten before deletion and the database free pages / WAL are reclaimed, so nothing sensitive is left behind. A lighter wizard restart that preserves your configuration is also available.
 - **✍️ Gmail signature management** — a WYSIWYG HTML template editor with reusable tokens, a formatting toolbar, starter templates, direct image upload with auto media tokens (`{{image_N}}`), and background signature deployment across the domain via a Service Account.
 - **🔎 Signature audit** — scan the organization for signature drift, then review and apply fixes.
-- **👨‍👩‍👧 Google Groups management** — full CRUD for groups, members, roles, aliases, and access settings (Directory API + Groups Settings API).
+- **👨‍👩‍👧 Google Groups management** — full CRUD for groups, members, roles, aliases, and access settings (Directory API + Groups Settings API), plus bulk member import from a CSV file.
 - **📊 Dashboard & reports** — active job tracking, Google Admin audit log, and Workspace storage/usage reports.
 - **🗂️ Persistent local store** — templates, job titles, institutions, app config, and full job history in a local SQLite database, with crash-safe job resumption.
 - **🎨 Dynamic branding** — company name, sidebar abbreviation, logo, email sender name, and allowed login domain are all configurable in-app. GoWorks is **not tied to any single organization** — re-branding is a settings change.
@@ -94,7 +95,7 @@ _Screenshots coming soon._
 
 ### Prerequisites
 
-- **Node.js 18+** (20 recommended)
+- **Node.js 20+**
 - A **Google Workspace** account with **super-admin** privileges
 - A **Google Cloud project** you control
 
@@ -103,7 +104,7 @@ _Screenshots coming soon._
 GoWorks does not ship with credentials — each deployment uses its own Google Cloud OAuth client. This keeps your data isolated and means you control your own API quota.
 
 1. Create a project in the [Google Cloud Console](https://console.cloud.google.com/).
-2. Enable these APIs: **Admin SDK API**, **Groups Settings API**, and **Gmail API**.
+2. Enable these APIs: **Admin SDK API**, **Gmail API**, **Groups Settings API**, and **Google Drive API** (the last is required for uploading signature images).
 3. Configure the **OAuth consent screen** — choose the **Internal** user type (recommended for a single organization; no Google verification required).
 4. Create an **OAuth client ID** with application type **Desktop app**. Keep the Client ID and Secret handy — the onboarding wizard will ask for them on first launch.
 
@@ -154,6 +155,10 @@ Three independent defenses are in place:
 
 You can also run `npm run abi:check` standalone to check the binary without invoking dev.
 
+## Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the per-version release history.
+
 ## Architecture
 
 GoWorks uses Electron's standard two-process split:
@@ -184,6 +189,7 @@ See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference.
 | `admin.reports.audit.readonly` | Admin audit log |
 | `admin.reports.usage.readonly` | Storage & usage reports |
 | `apps.groups.settings` | Group access settings |
+| `drive.file` | Upload signature images to Drive (only files the app creates) |
 
 **Service Account (DWD)** — only needed for Gmail features:
 
@@ -201,7 +207,8 @@ See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference.
 - **Admin-only** — sign-in is rejected unless the account is a Workspace admin on your configured domain.
 - **Master-password vault** — the truly sensitive secrets (Service Account key and the Google refresh token) live encrypted in a master-password vault (`vault.enc`, Argon2id + AES-256-GCM) and never leave your machine. The access token stays in memory only; the OAuth Client ID/Secret are stored as plain config (a desktop app is a "public client" — the secret is not a true secret). Electron `safeStorage` is retired and read only once to migrate older installs.
 - **Local-only data** — the SQLite database and all secrets stay on your machine. There is no telemetry and no GoWorks backend.
-- **Idle auto-lock** — after a configurable idle period (default 1 hour; set in Settings → Genel → Güvenlik, `0` = off) the vault **locks** rather than logging out: in-memory credentials are dropped but the refresh token survives in the vault, so unlocking with the master password silently restores the Google session.
+- **Data location & disposal** — everything lives under your OS user-data directory (`%APPDATA%\GoWorks` on Windows, `~/Library/Application Support/GoWorks` on macOS): `vault.enc` (the encrypted Service Account key and refresh token), `goworks.db` (branding, institutions, templates, and the plain-config OAuth client secret), and `logs/` (which may contain email addresses). When you retire a machine, dispose of this data deliberately: on **Windows** the uninstaller offers to delete it (opt-in; the default is to keep it), and on **macOS** — where there is no uninstall hook — run **Settings → Factory Reset** first. Factory Reset performs a secure wipe (overwrite-then-unlink of `vault.enc`, `VACUUM` + `wal_checkpoint(TRUNCATE)` on the database, and log removal).
+- **Idle auto-lock** — after a configurable idle period (default 1 hour; set in Settings → Genel → Güvenlik, `0` = off) the vault **locks** rather than logging out: in-memory credentials are dropped but the refresh token survives in the vault, so unlocking with the master password silently restores the Google session. If the stored session can no longer be refreshed (for example the refresh token was revoked), a dedicated re-authentication screen guides you back through sign-in instead of failing silently.
 - **Forgetting the master password is unrecoverable** — the only path forward is resetting the vault, which wipes the stored Service Account key and session; you then re-upload the key and sign in to Google again.
 - Never commit your `.env` — it is git-ignored by default.
 

@@ -30,6 +30,7 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 - [Teknoloji Yığını](#teknoloji-yığını)
 - [Başlangıç](#başlangıç)
 - [Kurulum Dosyalarını Derleme](#kurulum-dosyalarını-derleme)
+- [Sürüm Geçmişi](#sürüm-geçmişi)
 - [Mimari](#mimari)
 - [OAuth İzin Kapsamları](#oauth-izin-kapsamları)
 - [Güvenlik ve Gizlilik](#güvenlik-ve-gizlilik)
@@ -42,13 +43,13 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 - **🔐 Güvenli Google OAuth2 girişi** — domain ve admin rolü doğrulamalı loopback OAuth akışı. Yalnızca yapılandırdığınız domaindeki Workspace yöneticileri giriş yapabilir.
 - **🔒 Ana parola kasası (vault)** — hassas sırlar (Service Account anahtarı ve Google oturum/refresh token'ı) Argon2id + AES-256-GCM ile şifreli saklanır ve onboarding'de belirlediğiniz bir ana parolayla açılır. Yapılandırılabilir boşta otomatik kilit, uygulama içi parola değiştirme (yeniden yükleme veya giriş gerektirmez), çalışan işlerin bitmesine izin veren nazik (graceful) kilit ve üstel geri çekilmeli kaba kuvvet kilidi.
 - **👥 Kullanıcı yönetimi** — kullanıcı profillerini ve grup üyeliklerini arama, görüntüleme ve düzenleme; hesapları askıya alma, silme ve geri yükleme; alias ve e-posta yönlendirme yönetimi.
-- **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı işlerini yürütme; rehberli sihirbaz, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
+- **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı / gruba üye ekleme işlerini yürütme; rehberli sihirbaz, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
 - **🚪 Offboarding sihirbazı** — ayrılan bir çalışanı güvenle deprovizyon etmek için rehberli, çok adımlı akış: askıya alma, e-posta yönlendirme ayarlama, gruplardan çıkarma ve daha fazlası.
 - **🧭 Onboarding sihirbazı** — ilk açılışta sizi kullanım koşulları onayı, firma markası, Google Cloud projesi, Service Account ve Domain-Wide Delegation adımlarında yönlendiren kurulum akışı.
-- **🧹 Fabrika ayarlarına sıfırlama** — tüm verileri (marka, OAuth kimlik bilgileri, Service Account, imzalar, geçmiş) yazarak-onayla korumasının ardından silip sıfırdan başlama; ayrıca yapılandırmanızı koruyan daha hafif bir sihirbaz yeniden başlatma seçeneği.
+- **🧹 Fabrika ayarlarına sıfırlama** — tüm verileri (marka, OAuth kimlik bilgileri, Service Account, imzalar, geçmiş) yazarak-onayla korumasının ardından **güvenli biçimde** silip sıfırdan başlama: kasa dosyası silinmeden önce üzerine yazılır ve veritabanının boş sayfaları / WAL'ı geri kazanılır, böylece geride hassas hiçbir şey kalmaz. Ayrıca yapılandırmanızı koruyan daha hafif bir sihirbaz yeniden başlatma seçeneği de vardır.
 - **✍️ Gmail imza yönetimi** — yeniden kullanılabilir token'lara sahip WYSIWYG HTML şablon editörü, biçimlendirme araç çubuğu, başlangıç şablonları, otomatik medya token'larıyla (`{{image_N}}`) doğrudan görsel yükleme ve Service Account üzerinden domain genelinde arka planda imza dağıtımı.
 - **🔎 İmza denetimi** — kurumdaki imza sapmalarını tarayın, ardından düzeltmeleri inceleyip uygulayın.
-- **👨‍👩‍👧 Google Groups yönetimi** — gruplar, üyeler, roller, alias'lar ve erişim ayarları için tam CRUD (Directory API + Groups Settings API).
+- **👨‍👩‍👧 Google Groups yönetimi** — gruplar, üyeler, roller, alias'lar ve erişim ayarları için tam CRUD (Directory API + Groups Settings API); ayrıca CSV dosyasından toplu üye içe aktarma.
 - **📊 Panel ve raporlar** — aktif iş takibi, Google Admin denetim günlüğü ve Workspace depolama/kullanım raporları.
 - **🗂️ Kalıcı yerel depo** — şablonlar, unvanlar, kurumlar, uygulama yapılandırması ve tüm iş geçmişi yerel bir SQLite veritabanında; çökme sonrası işler kaldığı yerden devam eder.
 - **🎨 Dinamik marka** — firma adı, sidebar kısaltması, logo, e-posta gönderici adı ve izin verilen giriş domaini uygulama içinden yapılandırılır. GoWorks **tek bir kuruma bağlı değildir** — yeniden markalama bir ayar değişikliğidir.
@@ -95,7 +96,7 @@ _Ekran görüntüleri yakında._
 
 ### Ön Gereksinimler
 
-- **Node.js 18+** (20 önerilir)
+- **Node.js 20+**
 - **Süper yönetici** yetkilerine sahip bir **Google Workspace** hesabı
 - Kontrolünüzde olan bir **Google Cloud projesi**
 
@@ -104,7 +105,7 @@ _Ekran görüntüleri yakında._
 GoWorks kimlik bilgileriyle dağıtılmaz — her kurulum kendi Google Cloud OAuth istemcisini kullanır. Bu, verilerinizi izole tutar ve kendi API kotanızı kendinizin kontrol etmesini sağlar.
 
 1. [Google Cloud Console](https://console.cloud.google.com/) üzerinde bir proje oluşturun.
-2. Şu API'leri etkinleştirin: **Admin SDK API**, **Groups Settings API** ve **Gmail API**.
+2. Şu API'leri etkinleştirin: **Admin SDK API**, **Gmail API**, **Groups Settings API** ve **Google Drive API** (sonuncusu imza görsellerini yüklemek için gereklidir).
 3. **OAuth onay ekranını** yapılandırın — **Internal (Dahili)** kullanıcı türünü seçin (tek bir kurum için önerilir; Google doğrulaması gerekmez).
 4. Uygulama türü **Desktop app (Masaüstü uygulaması)** olan bir **OAuth istemci kimliği** oluşturun. Client ID ve Secret'ı bir kenara not edin — onboarding sihirbazı ilk açılışta soracak.
 
@@ -155,6 +156,10 @@ Platforma özel kurulum dosyalarını `release/{version}/` altında üretir — 
 
 Dev'i tetiklemeden binary'yi kontrol etmek için `npm run abi:check` tek başına çalıştırılabilir.
 
+## Sürüm Geçmişi
+
+Sürüm bazında değişiklik geçmişi için [`CHANGELOG.md`](CHANGELOG.md) dosyasına bakın.
+
 ## Mimari
 
 GoWorks, Electron'un standart iki süreçli yapısını kullanır:
@@ -185,6 +190,7 @@ Daha derin bir mimari referansı için [`CLAUDE.md`](CLAUDE.md) dosyasına bakı
 | `admin.reports.audit.readonly` | Admin denetim günlüğü |
 | `admin.reports.usage.readonly` | Depolama ve kullanım raporları |
 | `apps.groups.settings` | Grup erişim ayarları |
+| `drive.file` | İmza görsellerini Drive'a yükleme (yalnızca uygulamanın oluşturduğu dosyalar) |
 
 **Service Account (DWD)** — yalnızca Gmail özellikleri için gereklidir:
 
@@ -202,7 +208,8 @@ Daha derin bir mimari referansı için [`CLAUDE.md`](CLAUDE.md) dosyasına bakı
 - **Yalnızca yönetici** — hesap, yapılandırdığınız domainde bir Workspace yöneticisi değilse giriş reddedilir.
 - **Ana parola kasası** — gerçekten hassas sırlar (Service Account anahtarı ve Google refresh token'ı) bir ana parola kasasında (`vault.enc`, Argon2id + AES-256-GCM) şifreli durur ve makinenizden asla çıkmaz. Access token yalnızca bellekte tutulur; OAuth Client ID/Secret ise düz yapılandırma olarak saklanır (masaüstü uygulaması "public client"tır — secret gerçek bir sır değildir). Electron `safeStorage` emekliye ayrıldı ve yalnızca eski kurulumları taşımak için bir kez okunur.
 - **Yalnızca yerel veri** — SQLite veritabanı ve tüm sırlar makinenizde kalır. Telemetri yoktur ve GoWorks'ün bir arka uç sunucusu yoktur.
-- **Boşta otomatik kilit** — yapılandırılabilir bir boşta süresinden sonra (varsayılan 1 saat; Ayarlar → Genel → Güvenlik'ten ayarlanır, `0` = kapalı) kasa, çıkış yapmak yerine **kilitlenir**: bellekteki kimlik bilgileri düşürülür ama refresh token kasada yaşamaya devam eder, böylece ana parolayla kilit açıldığında Google oturumu sessizce geri yüklenir.
+- **Veri konumu ve elden çıkarma** — her şey işletim sisteminizin kullanıcı verisi klasöründe durur (Windows'ta `%APPDATA%\GoWorks`, macOS'ta `~/Library/Application Support/GoWorks`): `vault.enc` (şifreli Service Account anahtarı ve refresh token), `goworks.db` (marka, kurumlar, şablonlar ve düz yapılandırma OAuth client secret) ve `logs/` (e-posta adresleri içerebilir). Bir makineyi elden çıkarırken bu veriyi bilinçli olarak silin: **Windows'ta** uninstaller silmeyi teklif eder (opt-in; varsayılan korumaktır), **macOS'ta** ise uninstall hook'u olmadığından önce **Ayarlar → Fabrika Ayarlarına Sıfırlama** çalıştırın. Fabrika sıfırlaması güvenli bir silme yapar (`vault.enc` üzerine yazıp siler, veritabanında `VACUUM` + `wal_checkpoint(TRUNCATE)` uygular ve logları kaldırır).
+- **Boşta otomatik kilit** — yapılandırılabilir bir boşta süresinden sonra (varsayılan 1 saat; Ayarlar → Genel → Güvenlik'ten ayarlanır, `0` = kapalı) kasa, çıkış yapmak yerine **kilitlenir**: bellekteki kimlik bilgileri düşürülür ama refresh token kasada yaşamaya devam eder, böylece ana parolayla kilit açıldığında Google oturumu sessizce geri yüklenir. Saklanan oturum artık yenilenemiyorsa (örneğin refresh token iptal edildiyse), sessizce hata vermek yerine özel bir yeniden kimlik doğrulama ekranı sizi tekrar girişe yönlendirir.
 - **Ana parolayı unutmak geri alınamaz** — tek yol kasayı sıfırlamaktır; bu, saklanan Service Account anahtarını ve oturumu siler. Ardından anahtarı yeniden yükler ve Google'a yeniden giriş yaparsınız.
 - `.env` dosyanızı asla commit etmeyin — varsayılan olarak git tarafından yok sayılır.
 
