@@ -9,11 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > initial commit, so entries before v0.7.2 are summarized as that baseline. The
 > version stayed at 0.7.2 throughout the pre-release preparation period, so
 > **v0.7.3** bundles roughly six weeks of work that shipped in a single version
-> bump. **v0.7.8 is the first public open-source release.**
+> bump. **v0.7.9 is the first public open-source release**; earlier builds were
+> withdrawn (see below).
 
 ## [Unreleased]
 
 _No unreleased changes yet._
+
+## [0.7.9] — 2026-07-14
+
+### Security
+
+- **Installers could ship a build-time OAuth credential; they no longer can.** Up to
+  v0.7.8, a build could pack a *stale* compiled chunk from an older generation of
+  `auth-service` that had the OAuth client ID and secret baked in as string literals.
+  The mechanism: `dotenv` loaded `.env` into `process.env` at build time and the bundler
+  folded those reads into literals — and because `dist-electron/` was never cleaned
+  between builds, such a chunk could outlive the source change that removed it and end
+  up inside `app.asar`. **The source tree never contained a secret**; only the compiled
+  artifact did. Two changes close this off:
+  - `prebuild` now wipes `dist/` and `dist-electron/` before every build, so no artifact
+    can outlive its generation.
+  - A new gate, `scripts/check-bundle-secrets.mjs`, scans the compiled output for
+    credential-shaped strings (OAuth secrets, client IDs, API keys, private-key blocks)
+    and fails the build *before* `electron-builder` packs an asar. Standalone:
+    `npm run secrets:check`.
+
+  Installers for v0.7.2–v0.7.8 have been withdrawn. **v0.7.9 is the first build verified
+  by the new gate.** If you built GoWorks yourself from an earlier tag with a populated
+  `.env`, treat that credential as exposed and rotate it.
+
+### Changed
+
+- The local database drops an orphaned `googleApiKey` row (migration v3 → v4). It came
+  from an abandoned Google Picker design and was hand-written into some installs, but no
+  code path ever read it — it is not part of the app config schema.
+- The README now states plainly that GoWorks was built with AI assistance, and asks you
+  to run your own review before pointing it at a production tenant.
 
 ## [0.7.8] — 2026-07-14
 
