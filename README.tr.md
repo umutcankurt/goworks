@@ -67,17 +67,38 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 ## Ekran Görüntüleri
 
-<!--
-  Ekran görüntülerini docs/screenshots/ klasörüne ekleyin (beklenen dosya adları
-  ve yakalama kuralları için bkz. docs/screenshots/README.md), ardından aşağıdaki
-  satırların yorumunu kaldırın.
+> Uygulamanın yerleşik demo modunda, kurgusal bir kurum (**ABC Şirketi**) üzerinde
+> alındı — gerçek müşteri verisi içermez. Bkz. [`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
 
-  ![Panel](docs/screenshots/dashboard.png)
-  ![Toplu İşlemler](docs/screenshots/bulk-operations.png)
-  ![Gmail imza editörü](docs/screenshots/signature-editor.png)
-  ![Kurulum sihirbazı](docs/screenshots/onboarding.png)
--->
-_Ekran görüntüleri yakında._
+| | |
+|---|---|
+| ![Gösterge Paneli](docs/screenshots/tr/dashboard.jpg) | ![Toplu İşlemler](docs/screenshots/tr/bulk-operations.jpg) |
+| **Gösterge Paneli** — depolama kullanımı, kullanıcı sayıları ve canlı ilerleme bildiren toplu iş | **Toplu İşlemler** — askıya alma, silme, imza gönderme veya gruba ekleme işini CSV yürütür |
+| ![Gmail imza editörü](docs/screenshots/tr/signature-editor.jpg) | ![Kullanıcı detayı](docs/screenshots/tr/user-detail.jpg) |
+| **Gmail imza editörü** — yeniden kullanılabilir token'lar, biçimlendirme araç çubuğu, canlı önizleme ve görsel kütüphanesi | **Kullanıcı detayı** — profil, alias'lar, organizasyon birimi ve son giriş |
+| ![Yeni kullanıcı](docs/screenshots/tr/new-user.jpg) | ![Grup düzenleme](docs/screenshots/tr/group-form.jpg) |
+| **Yeni kullanıcı** — hesap oluşturulurken grup ve Gmail imzası atayın | **Grup düzenleme** — üye bazında rol ve abonelik, ayrıca erişim ayarları ve alias'lar |
+| ![Ayarlar](docs/screenshots/tr/settings.jpg) | ![Giriş](docs/screenshots/tr/login.jpg) |
+| **Ayarlar** — firma adı, logo, izin verilen domain ve dil; hepsi uygulama içinden | **Giriş** — Google ile oturum açma; yalnızca yapılandırdığınız domaindeki yöneticilere açık |
+
+<details>
+<summary><b>Diğer ekranlar</b> — kurulum sihirbazı, kasa kilidi, imza gönderme</summary>
+<br>
+
+**Onboarding sihirbazı** — kullanım koşulları onayından Google Cloud projesine, Service Account'tan Domain-Wide Delegation'a kadar dokuz rehberli adım.
+
+![Kurulum sihirbazı — başlangıç](docs/screenshots/tr/onboarding.jpg)
+![Kurulum sihirbazı — hazır](docs/screenshots/tr/onboarding-complete.jpg)
+
+**Ana parola kasası** — boşta kalma süresi dolunca uygulama kilitlenir; kilidi açmak Google oturumunu yeniden giriş yapmadan geri getirir.
+
+![Kasa kilit ekranı](docs/screenshots/tr/vault-lock.jpg)
+
+**İmza gönderme** — tek bir kullanıcının Gmail imzasına şablon uygulayın.
+
+![Kullanıcı detayı — imza](docs/screenshots/tr/user-detail-signature.jpg)
+
+</details>
 
 ## Teknoloji Yığını
 

@@ -67,16 +67,38 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 ## Screenshots
 
-<!--
-  Add screenshots to docs/screenshots/ (see docs/screenshots/README.md for the
-  expected filenames and capture guidelines), then uncomment the lines below.
+> Captured in the built-in demo mode against a fictional tenant (**ACME Inc.**) — no real
+> customer data. See [`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
 
-  ![Dashboard](docs/screenshots/dashboard.png)
-  ![Bulk Operations](docs/screenshots/bulk-operations.png)
-  ![Gmail signature editor](docs/screenshots/signature-editor.png)
-  ![Onboarding wizard](docs/screenshots/onboarding.png)
--->
-_Screenshots coming soon._
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/en/dashboard.jpg) | ![Bulk Operations](docs/screenshots/en/bulk-operations.jpg) |
+| **Dashboard** — storage usage, user counts, and a bulk job reporting live progress | **Bulk Operations** — a CSV drives suspend, delete, signature push, or group add |
+| ![Gmail signature editor](docs/screenshots/en/signature-editor.jpg) | ![User detail](docs/screenshots/en/user-detail.jpg) |
+| **Gmail signature editor** — reusable tokens, a formatting toolbar, live preview, and an image library | **User detail** — profile, aliases, org unit, and last login |
+| ![New user](docs/screenshots/en/new-user.jpg) | ![Group edit](docs/screenshots/en/group-form.jpg) |
+| **New user** — assign groups and a Gmail signature as the account is created | **Group edit** — members with per-member role and subscription, plus access settings and aliases |
+| ![Settings](docs/screenshots/en/settings.jpg) | ![Login](docs/screenshots/en/login.jpg) |
+| **Settings** — company name, logo, allowed domain, and language, all configurable in-app | **Login** — Google sign-in, restricted to admins on your configured domain |
+
+<details>
+<summary><b>More screens</b> — setup wizard, vault lock, signature push</summary>
+<br>
+
+**Onboarding wizard** — nine guided steps, from terms acceptance through the Google Cloud project, the Service Account, and Domain-Wide Delegation.
+
+![Onboarding wizard — welcome](docs/screenshots/en/onboarding.jpg)
+![Onboarding wizard — ready](docs/screenshots/en/onboarding-complete.jpg)
+
+**Master-password vault** — an idle timeout locks the app; unlocking restores the Google session without a re-login.
+
+![Vault lock screen](docs/screenshots/en/vault-lock.jpg)
+
+**Signature push** — apply a template to a single user's Gmail signature.
+
+![User detail — signature](docs/screenshots/en/user-detail-signature.jpg)
+
+</details>
 
 ## Tech Stack
 
