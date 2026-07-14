@@ -15,7 +15,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes yet._
 
-## [0.7.8] — 2026-07-13
+## [0.7.8] — 2026-07-14
+
+### Added
+- **Demo mode.** A fully clickable prototype that needs no Google account, no Service
+  Account, no master password, and no internet — everything is served from an in-memory
+  fixture against a fictional tenant (`npm run demo` / `demo:en`, plus `demo:onboarding`
+  variants for the setup wizard). Only the data layer is replaced: the prototype renders
+  the real production components, so there is no duplicate UI to maintain. A coverage
+  check (`npm run demo:check`, run automatically after `npm run lint`) fails if an IPC
+  channel gains no demo handler. Nothing demo-related ships in a production build.
+  See [`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
+- **Screenshots in the README.** Twelve screens in both English and Turkish, captured in
+  demo mode so they contain no real customer data.
+
+### Fixed
+- **Percent sign was placed the Turkish way in the English UI** (`%40` instead of `40%`).
+  A new `useLocaleFormat().formatPercent()` defers to `Intl`, so the sign lands before the
+  number in Turkish and after it in English. Applied to the dashboard storage widget, the
+  bulk-operation progress bar, and the signature audit.
+- **Non-Turkish phone numbers were mangled by the Turkish input mask** — `+1 555 010 0101`
+  became `90 155 501 00 10`. Numbers written with a country code other than `+90` are now
+  left exactly as entered, while `+90` still snaps into the domestic format. The English
+  phone placeholders no longer show a Turkish-format example.
+- **Signature preview on the New User screen showed a broken image** for any template
+  containing one: the preview renders the template client-side and now resolves the
+  template's media tokens (`{{image_N}}`) itself.
 
 ### Security
 - **Dependency security patch.** `sanitize-html` 2.17.3 → 2.17.6 (fixes a critical
@@ -141,7 +166,8 @@ time of open-sourcing:
 - Boot-time config validation, file-writing logger with rotation, and a
   better-sqlite3 ABI parity guard.
 
-[Unreleased]: https://github.com/umutcankurt/goworks/compare/v0.7.7...HEAD
+[Unreleased]: https://github.com/umutcankurt/goworks/compare/v0.7.8...HEAD
+[0.7.8]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.8
 [0.7.7]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.7
 [0.7.6]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.6
 [0.7.5]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.5
