@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../services/api';
-import { titlesApi, institutionsApi, serverApi, signaturesApi, templatesApi } from '../services/server-api';
+import { titlesApi, institutionsApi, serverApi, signaturesApi, templatesApi, mediaApi } from '../services/server-api';
 import { GroupAutocomplete } from '../components/GroupAutocomplete';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { SignaturePreview } from '../components/SignaturePreview';
@@ -58,6 +58,7 @@ export const NewUser: React.FC = () => {
     const [selectedGroups, setSelectedGroups] = useState<SelectedGroup[]>([]);
     const [assignSignature, setAssignSignature] = useState(true);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+    const [templateMedia, setTemplateMedia] = useState<any[]>([]);
 
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalUserData, setModalUserData] = useState<{
@@ -167,6 +168,22 @@ export const NewUser: React.FC = () => {
         };
         fetchData();
     }, [t]);
+
+    // The preview renders the template client-side, so it has to resolve the
+    // template's media tokens ({{image_1}}) itself — without them a template
+    // that contains an image previews as a broken <img>.
+    useEffect(() => {
+        if (!selectedTemplateId) {
+            setTemplateMedia([]);
+            return;
+        }
+        let cancelled = false;
+        mediaApi
+            .getAll(Number(selectedTemplateId))
+            .then((rows) => { if (!cancelled) setTemplateMedia(rows || []); })
+            .catch(() => { if (!cancelled) setTemplateMedia([]); });
+        return () => { cancelled = true; };
+    }, [selectedTemplateId]);
 
     const validate = (): boolean => {
         const errors: ValidationErrors = {};
@@ -687,7 +704,12 @@ export const NewUser: React.FC = () => {
                                             kurum_adres: institutionOptions.find(c => c.name === buildingId.trim())?.address || '',
                                             kurum_telefon: formatPhoneForSignature(institutionOptions.find(c => c.name === buildingId.trim())?.phone || '') || '',
                                             telefon: formatPhoneForSignature(phone) || t('fields.phonePlaceholder'),
-                                            eposta: `${username || t('fields.emailPlaceholder')}@${domain}`
+                                            eposta: `${username || t('fields.emailPlaceholder')}@${domain}`,
+                                            ...Object.fromEntries(
+                                                templateMedia
+                                                    .filter(m => m.token)
+                                                    .map(m => [m.token, m.publicUrl]),
+                                            ),
                                         }}
                                     />
                                 </div>
