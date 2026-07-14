@@ -195,7 +195,7 @@ export const bulkApi = {
 // Jobs
 export interface ServerJob {
   id: string;
-  type: 'BULK_SIGNATURE_PUSH' | 'BULK_SUSPEND' | 'BULK_DELETE' | 'SIGNATURE_AUDIT';
+  type: 'BULK_SIGNATURE_PUSH' | 'BULK_SUSPEND' | 'BULK_DELETE' | 'SIGNATURE_AUDIT' | 'BULK_GROUP_ADD';
   status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   payload: any;
   result: {

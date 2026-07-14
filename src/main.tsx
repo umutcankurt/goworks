@@ -1,3 +1,6 @@
+// Must stay the first import: it swaps window.ipcRenderer for the demo bridge
+// before src/services/api.ts captures it at module scope. No-op unless VITE_DEMO=1.
+import './demo/install'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'

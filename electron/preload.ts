@@ -127,8 +127,14 @@ const receiveChannels = [
   'vault:unlocked',
 ]
 
+// Demo mode (npm run demo) runs the renderer against an in-memory mock bridge
+// installed by src/demo/install.ts. contextBridge defines window.ipcRenderer as
+// a non-writable property, so the mock could not replace it — we simply do not
+// expose the real bridge. VITE_DEMO is never set in a production build.
+const demoMode = process.env.VITE_DEMO === '1'
+
 // --------- Expose a channel-restricted IPC bridge to the renderer ---------
-contextBridge.exposeInMainWorld('ipcRenderer', {
+if (!demoMode) contextBridge.exposeInMainWorld('ipcRenderer', {
   on(...args: Parameters<typeof ipcRenderer.on>) {
     const [channel, listener] = args
     if (receiveChannels.includes(channel)) {

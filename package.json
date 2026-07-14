@@ -34,6 +34,11 @@
   "scripts": {
     "predev": "node scripts/check-native-abi.mjs",
     "dev": "vite",
+    "demo": "VITE_DEMO=1 VITE_DEMO_LANG=tr vite",
+    "demo:en": "VITE_DEMO=1 VITE_DEMO_LANG=en vite",
+    "demo:onboarding": "VITE_DEMO=1 VITE_DEMO_ONBOARDING=1 VITE_DEMO_LANG=tr vite",
+    "demo:onboarding:en": "VITE_DEMO=1 VITE_DEMO_ONBOARDING=1 VITE_DEMO_LANG=en vite",
+    "demo:check": "node scripts/check-demo-coverage.mjs",
     "build": "tsc && vite build && electron-builder -mw",
     "postbuild": "electron-rebuild -f -w better-sqlite3",
     "rebuild": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron",
@@ -44,6 +49,7 @@
     "posttest": "node scripts/sqlite-binary.mjs use electron",
     "test:prepare": "node scripts/sqlite-binary.mjs prepare-test",
     "i18n:check": "node scripts/check-i18n-parity.mjs",
+    "postlint": "node scripts/check-demo-coverage.mjs",
     "abi:check": "node scripts/check-native-abi.mjs",
     "prepare": "husky || true",
     "postinstall": "electron-rebuild -f -w better-sqlite3 && node scripts/sqlite-binary.mjs cache electron"
