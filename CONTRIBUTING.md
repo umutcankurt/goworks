@@ -31,9 +31,6 @@ it is git-ignored and auto-migrated on first run. **Never commit credentials.**
 > start from a clean slate while testing, use the lock screen's "forgot password
 > → reset" flow or a factory reset — both wipe `vault.enc`.
 
-See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference (process split,
-IPC channels, services, the local DB, and the job queue).
-
 ## Project Layout
 
 - `src/` — the React renderer. Never calls Google APIs directly.

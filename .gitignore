@@ -54,6 +54,8 @@ vault.enc
 # Agent data
 .agents/
 .claude/
+CLAUDE.md
+skills-lock.json
 
 # Internal development artifacts (not part of the public project)
 memory-bank/

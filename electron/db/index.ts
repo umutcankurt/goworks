@@ -30,6 +30,9 @@ function getSchemaPath(): string {
  *          are populated, `onboardingCompletedAt` is set so the wizard is skipped.
  * v2 → v3: media_assets.token — stable {{image_N}} token per media asset. Existing
  *          rows are backfilled image_1, image_2… per template (by created_at).
+ * v3 → v4: Drop the orphaned `googleApiKey` row. It was proposed by an abandoned
+ *          Google Picker design and hand-written into some installs, but no code
+ *          path ever read it — it is absent from the AppConfigKey union.
  */
 export function runMigrations(db: Database.Database): void {
     const version = db.pragma('user_version', { simple: true }) as number;
@@ -85,6 +88,21 @@ export function runMigrations(db: Database.Database): void {
                 }
             }
             db.pragma('user_version = 3');
+        });
+        tx();
+    }
+
+    if (version < 4) {
+        const tx = db.transaction(() => {
+            // On a fresh install app_config doesn't exist yet (schema.exec runs after)
+            // and a new DB never carried this key, so guard the table like v2 does.
+            const cfgExists = db
+                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_config'")
+                .get();
+            if (cfgExists) {
+                db.prepare("DELETE FROM app_config WHERE key = 'googleApiKey'").run();
+            }
+            db.pragma('user_version = 4');
         });
         tx();
     }

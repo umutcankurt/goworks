@@ -28,10 +28,10 @@ describe('runMigrations', () => {
         db = freshDb();
     });
 
-    it('v0 → v3: user_version pragma\'yı 3\'e yükseltir', () => {
+    it('v0 → v4: user_version pragma\'yı 4\'e yükseltir', () => {
         expect(db.pragma('user_version', { simple: true })).toBe(0);
         runMigrations(db);
-        expect(db.pragma('user_version', { simple: true })).toBe(3);
+        expect(db.pragma('user_version', { simple: true })).toBe(4);
     });
 
     it('idempotent: aynı DB üzerinde 2. çağrı yan etki yapmaz', () => {
@@ -40,7 +40,7 @@ describe('runMigrations', () => {
         runMigrations(db);
         const versionAfterSecond = db.pragma('user_version', { simple: true });
         expect(versionAfterFirst).toBe(versionAfterSecond);
-        expect(versionAfterSecond).toBe(3);
+        expect(versionAfterSecond).toBe(4);
     });
 
     it('companyName + allowedDomain dolu ise onboardingCompletedAt set edilir', () => {
@@ -96,7 +96,7 @@ describe('runMigrations', () => {
         const bareDb = new Database(':memory:');
         // Only the pragma exists, no tables
         expect(() => runMigrations(bareDb)).not.toThrow();
-        expect(bareDb.pragma('user_version', { simple: true })).toBe(3);
+        expect(bareDb.pragma('user_version', { simple: true })).toBe(4);
     });
 
     it('v2 → v3: media_assets.token kolonunu ekler ve mevcut satırları image_N ile backfill eder', () => {
@@ -132,11 +132,29 @@ describe('runMigrations', () => {
         expect(byName.a).toBe('image_1');
         expect(byName.b).toBe('image_2');
         expect(byName.c).toBe('image_1');
-        expect(legacy.pragma('user_version', { simple: true })).toBe(3);
+        expect(legacy.pragma('user_version', { simple: true })).toBe(4);
 
         // Idempotent: a second run must not add the column twice or change tokens.
         expect(() => runMigrations(legacy)).not.toThrow();
         const recheck = legacy.prepare("SELECT token FROM media_assets WHERE name = 'b'").get() as { token: string };
         expect(recheck.token).toBe('image_2');
+    });
+
+    it('v3 → v4: yetim googleApiKey satırını siler, diğer anahtarlara dokunmaz', () => {
+        // Simulate a pre-v4 install that carries the orphaned key.
+        db.prepare("INSERT INTO app_config (key, value) VALUES ('googleApiKey', 'AIzaSy-orphan')").run();
+        db.prepare("INSERT INTO app_config (key, value) VALUES ('googleClientId', 'keep-me')").run();
+        db.pragma('user_version = 3');
+
+        runMigrations(db);
+
+        const orphan = db.prepare("SELECT value FROM app_config WHERE key = 'googleApiKey'").get();
+        expect(orphan).toBeUndefined();
+
+        const kept = db
+            .prepare("SELECT value FROM app_config WHERE key = 'googleClientId'")
+            .get() as { value: string };
+        expect(kept.value).toBe('keep-me');
+        expect(db.pragma('user_version', { simple: true })).toBe(4);
     });
 });

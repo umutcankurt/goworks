@@ -37,6 +37,7 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 - [Katkıda Bulunma](#katkıda-bulunma)
 - [Lisans](#lisans)
 - [Yasal Uyarı](#yasal-uyarı)
+- [Yapay Zekâ Destekli Geliştirme](#yapay-zekâ-destekli-geliştirme)
 
 ## Özellikler
 
@@ -195,8 +196,6 @@ React (renderer) → window.electronAPI.invoke(kanal) → ipcMain.handle → ser
 
 İş kuyruğu, süreç içi bir runner ile SQLite tabanlıdır: iş türüne göre eşzamanlılık sınırları, iptal, `429 / 503 / ECONNRESET` hatalarında üstel geri çekilmeli yeniden deneme ve açılışta `RUNNING` durumdaki işlerin çökme sonrası kaldığı yerden devam etmesi.
 
-Daha derin bir mimari referansı için [`CLAUDE.md`](CLAUDE.md) dosyasına bakın.
-
 ## OAuth İzin Kapsamları
 
 **Etkileşimli yönetici girişi** (sizin OAuth istemciniz):
@@ -255,3 +254,9 @@ GoWorks işinize yarıyorsa, depoya verilen bir ⭐ başkalarının da onu bulma
 ## Yasal Uyarı
 
 GoWorks bağımsız bir açık kaynak projesidir. Google LLC ile **bağlantılı değildir, Google tarafından onaylanmamış veya desteklenmemektedir**. "Google Workspace", "Google" ve "Gmail" Google LLC'nin ticari markalarıdır. GoWorks üzerinden Google API'lerinin kullanımı [Google API'leri Hizmet Şartları'na](https://developers.google.com/terms) tabidir.
+
+## Yapay Zekâ Destekli Geliştirme
+
+Bu proje, başta Anthropic'in Claude'u olmak üzere çeşitli yapay zekâ araçları kullanılarak üretilmiştir. Kod, dokümantasyon ve testler birleştirilmeden önce gözden geçirildi; ancak hiçbir otomatik asistan yanılmaz değildir.
+
+GoWorks, Google Workspace kiracınız üzerinde yönetici yetkileriyle işlem yapar ve bazı operasyonları (askıya alma, silme, toplu değişiklikler) geri alınamaz. **Üretim ortamındaki bir kiracıya yöneltmeden önce kendi kontrollerinizi ve testlerinizi yapmayı unutmayın.**

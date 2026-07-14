@@ -37,6 +37,7 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 - [Contributing](#contributing)
 - [License](#license)
 - [Disclaimer](#disclaimer)
+- [AI-Assisted Development](#ai-assisted-development)
 
 ## Features
 
@@ -195,8 +196,6 @@ React (renderer) → window.electronAPI.invoke(channel) → ipcMain.handle → s
 
 The job queue is SQLite-backed with an in-process runner: per-job-type concurrency limits, cancellation, exponential-backoff retry on `429 / 503 / ECONNRESET`, and crash-safe resumption of `RUNNING` jobs on startup.
 
-See [`CLAUDE.md`](CLAUDE.md) for a deeper architecture reference.
-
 ## OAuth Scopes
 
 **Interactive admin sign-in** (your OAuth client):
@@ -255,3 +254,9 @@ Licensed under the [Apache License 2.0](LICENSE). You are free to use, modify, a
 ## Disclaimer
 
 GoWorks is an independent open-source project. It is **not affiliated with, endorsed by, or sponsored by Google LLC**. "Google Workspace", "Google", and "Gmail" are trademarks of Google LLC. Use of the Google APIs through GoWorks is subject to the [Google APIs Terms of Service](https://developers.google.com/terms).
+
+## AI-Assisted Development
+
+This project was built with the help of AI tools — primarily Anthropic's Claude. Code, documentation, and tests were reviewed before merging, but no automated assistant is infallible.
+
+GoWorks acts on your Google Workspace tenant with administrative privileges, and some of its operations (suspension, deletion, bulk changes) are irreversible. **Please run your own review and testing before pointing it at a production tenant.**

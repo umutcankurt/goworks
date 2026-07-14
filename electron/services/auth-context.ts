@@ -8,8 +8,7 @@ import type { OAuth2Client } from 'google-auth-library';
  * here right after creating the AuthService; workers call `getAuthClient()`.
  *
  * Group operations must run with the admin's OAuth token (not Service Account +
- * DWD) so the Admin Audit log's `actor.email` is the admin who started the job —
- * see CLAUDE.md (Google Groups section).
+ * DWD) so the Admin Audit log's `actor.email` is the admin who started the job.
  */
 let provider: (() => OAuth2Client) | null = null;
 
