@@ -36,9 +36,9 @@
   },
   "fields": {
     "firstName": "Ad",
-    "firstNamePlaceholder": "Umut",
+    "firstNamePlaceholder": "Ahmet",
     "lastName": "Soyad",
-    "lastNamePlaceholder": "KURT",
+    "lastNamePlaceholder": "YILMAZ",
     "email": "E-posta Adresi",
     "emailPlaceholder": "ad.soyad",
     "password": "Şifre",

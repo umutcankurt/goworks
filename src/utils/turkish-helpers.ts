@@ -35,7 +35,25 @@ export function generateUsername(givenName: string, familyName: string): string 
     return `${given}.${family}`;
 }
 
+/**
+ * A number written in international form for a country other than Turkey.
+ * The Turkish mask below would mangle it (+1 555 010 0101 → "90 155 501 00 10"),
+ * so it is left exactly as the user wrote it — including while they are still
+ * typing, which is why the raw string is returned rather than a normalised one.
+ *
+ * A leading "+90" still gets the Turkish mask, so typing "+90 532…" snaps back
+ * into the domestic format as soon as the country code is complete.
+ */
+function passthroughForeignNumber(raw: string): string | null {
+    if (!raw?.trimStart().startsWith('+')) return null;
+    if (raw.replace(/\D/g, '').startsWith('90')) return null; // Turkish — apply the mask
+    return raw;
+}
+
 export function formatPhoneNumber(raw: string): string {
+    const foreign = passthroughForeignNumber(raw);
+    if (foreign) return foreign;
+
     let digits = raw.replace(/\D/g, '');
 
     // Auto-correct prefixes
@@ -60,17 +78,23 @@ export function formatPhoneNumber(raw: string): string {
 }
 
 export function phoneToE164(formatted: string): string {
-    const digits = formatted.replace(/\s/g, '');
+    // Strip everything but the digits, so an already-international "+1 555 …"
+    // does not come back as "++1555…".
+    const digits = (formatted ?? '').replace(/[^0-9]/g, '');
     return digits ? `+${digits}` : '';
 }
 
 export function e164ToDisplay(e164: string): string {
-    const digits = e164.replace(/[^0-9]/g, '');
-    return formatPhoneNumber(digits);
+    // Passed through with its "+" so a foreign number can be recognised as such.
+    return formatPhoneNumber(e164 ?? '');
 }
 
 export function formatPhoneForSignature(raw: string): string {
     if (!raw) return '';
+
+    const foreign = passthroughForeignNumber(raw);
+    if (foreign) return foreign;
+
     let digits = raw.replace(/\D/g, '');
     if (digits.startsWith('0')) {
         digits = '90' + digits.slice(1);

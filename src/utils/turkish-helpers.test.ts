@@ -114,6 +114,15 @@ describe('turkish-helpers', () => {
              expect(formatPhoneNumber('5321')).toBe('90 532 1');
              expect(formatPhoneNumber('0')).toBe('90');
         });
+
+        it('should leave a non-Turkish international number untouched', () => {
+            expect(formatPhoneNumber('+1 555 010 2000')).toBe('+1 555 010 2000');
+            expect(formatPhoneNumber('+44 20 7946 0000')).toBe('+44 20 7946 0000');
+        });
+
+        it('should still apply the Turkish mask to +90 numbers', () => {
+            expect(formatPhoneNumber('+90 532 123 45 67')).toBe('90 532 123 45 67');
+        });
     });
 
     describe('phoneToE164', () => {
@@ -132,8 +141,10 @@ describe('turkish-helpers', () => {
             expect(e164ToDisplay('+905321234567')).toBe('90 532 123 45 67');
         });
 
-        it('should handle invalid E164 inputs', () => {
-            expect(e164ToDisplay('+123')).toBe('90 123');
+        it('should leave a non-Turkish number as written', () => {
+            expect(e164ToDisplay('+15550102000')).toBe('+15550102000');
+            // Not a valid country code, but still not ours to reinterpret as Turkish.
+            expect(e164ToDisplay('+123')).toBe('+123');
         });
     });
 
@@ -157,6 +168,10 @@ describe('turkish-helpers', () => {
         it('should handle short numbers', () => {
             expect(formatPhoneForSignature('0')).toBe('90'); // Auto-correct adds 90
             expect(formatPhoneForSignature('5')).toBe('905'); // Auto-correct adds 90
+        });
+
+        it('should leave a non-Turkish international number untouched', () => {
+            expect(formatPhoneForSignature('+1 555 867 5309')).toBe('+1 555 867 5309');
         });
     });
 });

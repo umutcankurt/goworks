@@ -52,6 +52,15 @@ export function useLocaleFormat() {
                 if (value === null || value === undefined || Number.isNaN(value)) return '';
                 return new Intl.NumberFormat(locale).format(value);
             },
+
+            /** Takes 0–100. The sign goes before the number in Turkish (%40) and after it in English (40%). */
+            formatPercent(value: number | null | undefined): string {
+                if (value === null || value === undefined || Number.isNaN(value)) return '';
+                return new Intl.NumberFormat(locale, {
+                    style: 'percent',
+                    maximumFractionDigits: 0,
+                }).format(value / 100);
+            },
         }),
         [locale],
     );

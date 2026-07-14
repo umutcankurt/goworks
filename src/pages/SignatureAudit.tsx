@@ -6,6 +6,7 @@ import { HelpGuide } from '../components/HelpGuide';
 import { AuditConfigStep } from '../components/signatureAudit/AuditConfigStep';
 import { AuditReviewTable } from '../components/signatureAudit/AuditReviewTable';
 import { useToast } from '../contexts/ToastContext';
+import { useLocaleFormat } from '../i18n/useLocaleFormat';
 import { ipcEvents } from '../services/api';
 import {
     signatureAuditApi,
@@ -35,6 +36,7 @@ const EMPTY_PROGRESS: JobProgress = {
 
 export function SignatureAudit() {
     const { t } = useTranslation('signatureAudit');
+    const { formatPercent } = useLocaleFormat();
     const { addToast } = useToast();
 
     const [step, setStep] = useState<AuditStep>('configure');
@@ -201,7 +203,7 @@ export function SignatureAudit() {
                                 {t(step === 'scanning' ? 'progress.scanning' : 'progress.applying')}
                             </span>
                             <span className="text-on-surface-variant text-sm bg-surface-container-high px-3 py-1 rounded-lg border border-outline-variant/30">
-                                {progress.total > 0 ? `${pct}% (${progress.current}/${progress.total})` : t('progress.preparing')}
+                                {progress.total > 0 ? `${formatPercent(pct)} (${progress.current}/${progress.total})` : t('progress.preparing')}
                             </span>
                         </div>
                         <div className="w-full bg-surface-container-highest rounded-full h-2.5 overflow-hidden">

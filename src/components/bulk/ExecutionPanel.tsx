@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ipcEvents } from '../../services/api';
 import { jobsApi, bulkApi } from '../../services/server-api';
 import { useToast } from '../../contexts/ToastContext';
+import { useLocaleFormat } from '../../i18n/useLocaleFormat';
 import type { BulkActionType, BulkProgressEvent, ValidatedRow } from '../../types/admin';
 
 interface ExecutionPanelProps {
@@ -24,6 +25,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
     const { addToast } = useToast();
     const { t } = useTranslation('bulk');
     const { t: tToast } = useTranslation('toast');
+    const { formatPercent } = useLocaleFormat();
     const [isProcessing, setIsProcessing] = useState(true);
     const [progress, setProgress] = useState<BulkProgressEvent>({
         total: rows.length,
@@ -159,7 +161,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
                 <div className="flex justify-between items-center mb-4">
                     <span className="text-on-surface font-semibold">{t('execution.progressLabel')}</span>
                     <span className="text-on-surface-variant font-medium text-sm bg-surface-container-high px-3 py-1 rounded-lg border border-outline-variant/30">
-                        {progressPercentage}% ({progress.current}/{progress.total})
+                        {formatPercent(progressPercentage)} ({progress.current}/{progress.total})
                     </span>
                 </div>
 

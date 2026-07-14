@@ -85,6 +85,7 @@ function ErrorCard({ title, message }: { title: string; message: string }) {
 
 function StorageWidget() {
     const { t } = useTranslation('dashboard');
+    const { formatPercent } = useLocaleFormat();
     const [data, setData] = useState<StorageUsageData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -154,7 +155,7 @@ function StorageWidget() {
                     </ResponsiveContainer>
                 </div>
                 <div className="flex-1">
-                    <p className="text-2xl font-bold text-on-surface">%{usedPct}</p>
+                    <p className="text-2xl font-bold text-on-surface">{formatPercent(usedPct)}</p>
                     <p className="text-sm text-on-surface-variant">
                         {formatStorage(data.usedStorageMb)} / {formatStorage(data.totalStorageMb)}
                     </p>
