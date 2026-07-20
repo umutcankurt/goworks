@@ -70,6 +70,26 @@ const VARIABLE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedAttributes: {},
 };
 
+/**
+ * Escapes the two quote characters sanitize-html leaves raw.
+ *
+ * `sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS)` strips tags and escapes
+ * `& < >` — but NOT `"` or `'`. Every token in a signature template can land
+ * inside an attribute value: buildImageEmbed() emits `src="{{image_N}}"`, and
+ * cleanTelHrefs() below exists precisely because templates carry
+ * `href="tel:{{telefon}}"`. Without this, a directory field a tenant user can
+ * edit (their own name, title, phone) closes the attribute and appends new ones
+ * to a signature we then push to their mailbox.
+ *
+ * `'` is escaped as well as `"`: templates are hand-written HTML in a plain
+ * textarea, so nothing forces double-quoted attributes. Both escapes are
+ * invisible in the delivered signature — sanitizeTemplateHtml() decodes them
+ * back in text context and normalises them in attribute context.
+ */
+function escapeQuotes(value: string): string {
+    return value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // --- Inline-CSS allowlist for sanitizeHtml (defense-in-depth) ---
 // Without an explicit `allowedStyles`, sanitize-html lets every inline style
 // through unparsed. We instead permit only presentational CSS whose value
@@ -147,16 +167,42 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
 };
 
 export function renderTemplate(html: string, variables: TemplateVariables): string {
-    const replaced = html.replace(TAG_REGEX, (match, key, modifierStr) => {
+    // Conditional blocks are resolved BEFORE substitution, so that a substituted
+    // value can never introduce a `data-condition` the engine then honours.
+    // Quote escaping already prevents that, but only as an accident of the
+    // matching regex requiring literal double quotes — evaluating conditions
+    // against the template alone makes it structural instead. It also stops the
+    // trailing sweep below from deleting the literal text `data-condition="..."`
+    // out of a legitimate value.
+    const conditioned = processConditionalBlocks(html, variables);
+    const replaced = conditioned.replace(TAG_REGEX, (match, key, modifierStr) => {
         const value = resolveVariable(key, variables);
         if (value === undefined) return match;
-        const sanitized = sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS);
+        const sanitized = escapeQuotes(sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS));
         if (!modifierStr) return sanitized;
         const modifiers = parseModifiers(modifierStr);
         return applyModifiers(sanitized, modifiers);
     });
-    const processed = processConditionalBlocks(replaced, variables);
-    return cleanTelHrefs(processed);
+    return cleanTelHrefs(replaced);
+}
+
+/**
+ * The one signature pipeline: substitute, then re-sanitise.
+ *
+ * `renderTemplate()` alone is NOT safe to hand to Gmail — it splices directory
+ * values into an HTML document, and the save-time allowlist ran before those
+ * values existed. Every path that writes a signature to a mailbox, and the audit
+ * path that fingerprints what those writes should produce, must go through this
+ * function so they cannot drift apart.
+ *
+ * This is a no-op for well-formed input: templates are stored through
+ * sanitizeTemplateHtml() (template-service.ts create/update) and the function is
+ * idempotent, so the wrap only ever removes markup a substituted value smuggled
+ * in. That property is what keeps signature_state.desired_hash stable across
+ * this change, and template-renderer.test.ts locks it.
+ */
+export function renderSignatureHtml(templateHtml: string, variables: TemplateVariables): string {
+    return sanitizeTemplateHtml(renderTemplate(templateHtml, variables));
 }
 
 function cleanTelHrefs(html: string): string {

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { renderTemplate, processConditionalBlocks, sanitizeTemplateHtml, AVAILABLE_TAGS } from './template-renderer';
+import { createHash } from 'node:crypto';
+import { renderTemplate, renderSignatureHtml, processConditionalBlocks, sanitizeTemplateHtml, AVAILABLE_TAGS } from './template-renderer';
 
 describe('renderTemplate — Kurum token rendering', () => {
     it('renders {{kurum_*}} tokens from kurum_* variables', () => {
@@ -179,3 +180,158 @@ describe('sanitizeTemplateHtml — allowedStyles regresyon kilidi (rich signatur
     });
 });
 
+
+/**
+ * Attribute names actually present on the first matching element.
+ *
+ * Injection tests must assert on the PARSED document, not on the raw string:
+ * once a quote is escaped the payload text still appears inside the attribute
+ * value (as inert data), so a substring check would give a false failure. What
+ * matters is whether the browser sees a new attribute.
+ */
+function attrsOf(html: string, selector: string): string[] {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const el = doc.querySelector(selector);
+    return el ? Array.from(el.attributes).map((a) => a.name) : [];
+}
+
+describe('renderTemplate — attribute breakout (RC-2 güvenlik kilidi)', () => {
+    it('a value cannot add an attribute to an img the template declared', () => {
+        const out = renderSignatureHtml(
+            '<img src="{{image_1}}" alt="logo" />',
+            { image_1: 'https://cdn.example/l.png" onerror="alert(1)' },
+        );
+        expect(attrsOf(out, 'img')).toEqual(['src', 'alt']);
+        expect(out).toContain('alt="logo"');
+    });
+
+    it('a value cannot break out of a single-quoted template attribute', () => {
+        const out = renderTemplate("<span title='{{unvan}}'>T</span>", { unvan: "x' onmouseover='alert(1)" });
+        expect(attrsOf(out, 'span')).toEqual(['title']);
+        expect(out).toContain('T');
+    });
+
+    it('a value cannot add an event handler to an anchor', () => {
+        const out = renderSignatureHtml(
+            '<a href="mailto:{{eposta}}">mail</a>',
+            { eposta: 'a@b.com" onclick="steal()' },
+        );
+        expect(attrsOf(out, 'a')).toEqual(['href']);
+        expect(out).toContain('mail');
+    });
+
+    it('leaves a quote in element content visually intact after the full pipeline', () => {
+        expect(renderSignatureHtml('<span>{{unvan}}</span>', { unvan: 'A"B' })).toBe('<span>A"B</span>');
+    });
+
+    it('renders Turkish apostrophes with no visible entity artefact', () => {
+        expect(renderSignatureHtml('<span>{{ad_soyad}}</span>', { ad_soyad: "O'Brien" }))
+            .toBe("<span>O'Brien</span>");
+        expect(renderSignatureHtml('<span>{{kurum_adi}}</span>', { kurum_adi: "Atatürk'ün Okulu" }))
+            .toBe("<span>Atatürk'ün Okulu</span>");
+    });
+
+    it('still escapes ampersands and strips tags from values', () => {
+        expect(renderTemplate('<span>{{kurum_adi}}</span>', { kurum_adi: 'A & B' })).toBe('<span>A &amp; B</span>');
+        expect(renderTemplate('<span>{{unvan}}</span>', { unvan: 'M<script>x</script>' })).not.toContain('<script');
+    });
+});
+
+describe('renderSignatureHtml — Gmail çıktısı her zaman sanitize edilir', () => {
+    it('is idempotent — re-running the sanitizer changes nothing', () => {
+        const once = renderSignatureHtml('<span>{{ad_soyad}}</span>', { ad_soyad: 'Ada' });
+        expect(sanitizeTemplateHtml(once)).toBe(once);
+    });
+});
+
+describe('renderTemplate — data-condition kaçakçılığı (RC-2)', () => {
+    it('a substituted value cannot delete an element via a smuggled data-condition', () => {
+        const out = renderTemplate(
+            '<div><span title="{{unvan}}">T</span><b data-condition="eposta">KEEP</b></div>',
+            { unvan: 'x" data-condition="telefon', telefon: '', eposta: 'a@b.com' },
+        );
+        const doc = new DOMParser().parseFromString(out, 'text/html');
+        // No element ends up carrying the attribute — the payload is inert text
+        // inside title="...".
+        expect(doc.querySelectorAll('[data-condition]').length).toBe(0);
+        expect(attrsOf(out, 'span')).toEqual(['title']);
+        expect(out).toContain('T');
+        expect(out).toContain('KEEP');
+    });
+
+    it('the same payload is inert through the max-width modifier path', () => {
+        const out = renderTemplate(
+            '<div><span>{{kurum_adres|max-width:350}}</span><b data-condition="eposta">KEEP</b></div>',
+            { kurum_adres: 'A" data-condition="telefon', telefon: '', eposta: 'a@b.com' },
+        );
+        const doc = new DOMParser().parseFromString(out, 'text/html');
+        expect(doc.querySelectorAll('[data-condition]').length).toBe(0);
+        expect(out).toContain('max-width:350px');
+        expect(out).toContain('KEEP');
+    });
+
+    it('conditions are evaluated before substitution, so a value is never scanned', () => {
+        // The value carries a well-formed data-condition and its variable is empty.
+        // Ordering alone must make it inert, independent of quote escaping.
+        const out = renderTemplate('<div><span>{{unvan}}</span></div>', {
+            unvan: '<span data-condition="telefon">GHOST</span>',
+            telefon: '',
+        });
+        expect(out).toContain('GHOST');
+    });
+});
+
+describe('renderTemplate — media token önceliği (F-7b)', () => {
+    it('template media wins over a caller-supplied image token', () => {
+        // Mirrors the push-path spread order: buildMediaTokenVars(...) comes last.
+        const callerVars = { image_1: 'https://evil.example/track.gif', ad_soyad: 'A' };
+        const media = { image_1: 'https://lh3.googleusercontent.com/d/REAL' };
+        const html = renderTemplate('<img src="{{image_1}}" />', { ...callerVars, ...media });
+        expect(html).toContain('lh3.googleusercontent.com/d/REAL');
+        expect(html).not.toContain('evil.example');
+    });
+});
+
+describe('renderSignatureHtml — hash kararlılığı kilidi (signature_state uyumu)', () => {
+    // signature-audit-service.computeDesired() fingerprints this function's output
+    // and compares it against signature_state.desired_hash rows written by earlier
+    // versions. This pin was captured from the pre-quote-escaping pipeline and
+    // verified byte-identical across 10 value sets (apostrophes, ampersands,
+    // embedded quotes, empty conditionals). If it moves, every already-audited
+    // user silently flips to drift/data_changed — change it only deliberately,
+    // and only alongside a plan for the existing rows.
+    const TEMPLATE = sanitizeTemplateHtml(
+        '<table style="font-family:Arial,sans-serif;font-size:13px;">'
+        + '<tr><td style="padding-left:12px;">'
+        + '<img src="{{image_1}}" width="80" height="80" alt="ABC" />'
+        + '<strong>{{ad_soyad}}</strong><br />'
+        + '<span data-condition="unvan" style="color:#555555;">{{unvan}}<br /></span>'
+        + '{{kurum_adi}}<br /><a href="tel:{{telefon}}">{{telefon}}</a><br />'
+        + '<span data-condition="kurum_adres">{{kurum_adres|max-width:350}}</span>'
+        + '</td></tr></table>',
+    );
+    const VARS = {
+        ad_soyad: 'Ayşe Yılmaz',
+        unvan: 'Müdür',
+        kurum_adi: 'Merkez Kurum',
+        kurum_adres: 'Cumhuriyet Mah. Atatürk Cad. No:12 Kat:3',
+        telefon: '0212 555 00 00',
+        eposta: 'a@b.com',
+        image_1: 'https://lh3.googleusercontent.com/d/ABC123',
+    };
+
+    it('produces the pinned signature bytes for a representative template', () => {
+        const hash = createHash('sha256').update(renderSignatureHtml(TEMPLATE, VARS)).digest('hex');
+        expect(hash).toBe('67431e67deb175a7843717c1d2c55af87ad1438b5a3be413d267876e983c4044');
+    });
+
+    it('sanitizeTemplateHtml is idempotent (the property the no-op rests on)', () => {
+        const once = sanitizeTemplateHtml(TEMPLATE);
+        expect(sanitizeTemplateHtml(once)).toBe(once);
+    });
+
+    it('template-service stores templates sanitize-stable (the other property)', () => {
+        const stored = sanitizeTemplateHtml('<table><tr><td><br /><span>{{ad_soyad}}</span></td></tr></table>');
+        expect(sanitizeTemplateHtml(stored)).toBe(stored);
+    });
+});

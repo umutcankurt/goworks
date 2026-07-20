@@ -5,7 +5,7 @@ import { withRetry } from '../services/retry';
 import { getLogger } from '../services/logger';
 import { templateService } from '../services/template-service';
 import { institutionService } from '../services/institution-service';
-import { renderTemplate } from '../services/template-renderer';
+import { renderSignatureHtml } from '../services/template-renderer';
 import { formatPhoneForSignature } from '../services/phone';
 import { getUserInfo, updateUser } from '../services/google-admin-sa';
 import { setSignature } from '../services/gmail-signature-service';
@@ -112,7 +112,7 @@ async function processJob(
                     eposta: email,
                 };
 
-                const html = renderTemplate(template.htmlContent, variables);
+                const html = renderSignatureHtml(template.htmlContent, variables);
                 await withRetry(
                     () => gmailLimiter.schedule(() => setSignature(email, html)),
                     log, `setSignature(${email})`,
@@ -152,7 +152,7 @@ async function processJob(
                     eposta: email,
                 };
 
-                const html = renderTemplate(template.htmlContent, variables);
+                const html = renderSignatureHtml(template.htmlContent, variables);
                 await withRetry(
                     () => gmailLimiter.schedule(() => setSignature(email, html)),
                     log, `setSignature(${email})`,

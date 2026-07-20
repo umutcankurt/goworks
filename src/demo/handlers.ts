@@ -673,7 +673,9 @@ export const handlers: Record<string, Handler> = {
     'templates:preview': ({ id, variables }: any, store) => {
         const template = store.data.templates.find((t) => t.id === id);
         if (!template) return { success: false, error: 'Template not found' };
-        const vars = { ...mediaVariables(store, id), ...(variables ?? {}) };
+        // Media tokens spread LAST, mirroring the main process: template assets
+        // win over caller-supplied variables.
+        const vars = { ...(variables ?? {}), ...mediaVariables(store, id) };
         return ok({ html: renderTemplate(template.htmlContent, vars), tags: Object.keys(vars) });
     },
 
@@ -735,8 +737,8 @@ export const handlers: Record<string, Handler> = {
         const user = store.findUser(email);
         const vars = {
             ...(user ? variablesFor(user, store) : {}),
-            ...mediaVariables(store, template?.id ?? 1),
             ...(variables ?? {}),
+            ...mediaVariables(store, template?.id ?? 1),
         };
         store.data.signatures[email] = html ?? renderTemplate(template?.htmlContent ?? '', vars);
         return ok({ email });

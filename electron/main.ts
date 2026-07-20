@@ -1185,11 +1185,13 @@ app.whenReady().then(async () => {
   ipcMain.handle('templates:preview', async (_, { id, variables }: { id: number; variables: Record<string, string> }) => {
     try {
       const { templateService } = await import('./services/template-service');
-      const { renderTemplate, AVAILABLE_TAGS } = await import('./services/template-renderer');
+      const { renderSignatureHtml, AVAILABLE_TAGS } = await import('./services/template-renderer');
       const { buildMediaTokenVars } = await import('./services/media-token');
       const tpl = templateService.get(id);
       if (!tpl) return { success: false, error: 'Şablon bulunamadı' };
-      const html = renderTemplate(tpl.htmlContent, { ...buildMediaTokenVars(tpl.media), ...(variables || {}) });
+      // Media tokens spread LAST, same rule as the push path: the template's own
+      // assets win over anything the renderer sends. Preview must agree with push.
+      const html = renderSignatureHtml(tpl.htmlContent, { ...(variables || {}), ...buildMediaTokenVars(tpl.media) });
       return { success: true, data: { html, tags: AVAILABLE_TAGS } };
     } catch (error: any) {
       return { success: false, error: error.message };
