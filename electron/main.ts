@@ -34,6 +34,7 @@ import { runBootCheck, type BootCheckResult } from './config/boot-check';
 import { toUserMessage } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
+import { isAllowedExternalUrl } from './lib/external-url';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -140,8 +141,14 @@ function createWindow() {
   // default browser instead of an in-app BrowserWindow — the user's Google
   // session etc. is already open there.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      shell.openExternal(url)
+    // Parse and allowlist the host. A protocol-prefix check alone would hand a
+    // compromised renderer the ability to open any http(s) URL in the user's real
+    // browser, where their live Google session already is. Every legitimate call
+    // site passes a hardcoded Google URL, so nothing needs the permissiveness.
+    if (isAllowedExternalUrl(url)) {
+      void shell.openExternal(url)
+    } else {
+      logger.warn(`[main] engellenen dış bağlantı: ${url.slice(0, 120)}`)
     }
     return { action: 'deny' }
   })
@@ -486,18 +493,6 @@ app.whenReady().then(async () => {
   ipcMain.handle('auth:check', async () => {
     try {
       return { success: true, authenticated: authService.isAuthenticated() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  });
-
-  ipcMain.handle('auth:getAccessToken', async () => {
-    try {
-      const client = authService.getClient();
-      // getAccessToken() automatically refreshes an expired token
-      const { token } = await client.getAccessToken();
-      if (!token) return { success: false, error: 'Token bulunamadı' };
-      return { success: true, token };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

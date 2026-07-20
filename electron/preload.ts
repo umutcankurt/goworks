@@ -30,7 +30,6 @@ const invokeChannels = [
   'app:getVersion',
   'app:setLocale',
   'auth:check',
-  'auth:getAccessToken',
   'auth:login',
   'auth:logout',
   'bulk:analyze',

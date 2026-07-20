@@ -145,7 +145,6 @@ export const handlers: Record<string, Handler> = {
 
     'auth:logout': () => ({ success: true }),
 
-    'auth:getAccessToken': () => ({ success: true, accessToken: 'demo-access-token' }),
 
     'window:maximize': () => undefined,
 
