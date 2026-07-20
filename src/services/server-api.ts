@@ -60,7 +60,12 @@ export const vaultApi = {
   /** Create a new vault (onboarding / legacy upgrade / post-reset). */
   setup: (password: string) => ipcInvoke<VaultState>('vault:setup', { password }),
   unlock: (password: string) => ipcInvoke<VaultState>('vault:unlock', { password }),
-  lock: () => ipcInvoke<VaultState>('vault:lock'),
+  /**
+   * 'manual' (the "Lock now" button) arms a re-auth window: unlocking after it
+   * expires opens the vault but requires a fresh Google sign-in. The idle
+   * auto-lock passes 'idle' and is never subject to it.
+   */
+  lock: (reason: 'manual' | 'idle' = 'idle') => ipcInvoke<VaultState>('vault:lock', { reason }),
   reset: () => ipcInvoke<VaultState>('vault:reset'),
   /** Re-key the vault to a new master password (Settings → Security). */
   changePassword: (current: string, next: string) =>

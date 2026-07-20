@@ -478,13 +478,23 @@ app.whenReady().then(async () => {
       })();
     },
     onUnlocked: async () => {
-      // Silently restore the Google session from the vault's refresh token.
-      try {
-        const res = await authService?.restoreSession();
-        vaultManager.setGoogleReauthNeeded(!!res && res.reauthNeeded);
-        if (res?.authenticated) ensureAdminService();
-      } catch (e) {
-        logger.warn('[vault] restoreSession başarısız:', e);
+      // A manual lock left sitting past the re-auth window does not get a silent
+      // restore: the master password opens the vault, but Google access has to be
+      // re-authorized. restoreSession() is skipped rather than undone — calling it
+      // would load working credentials and leave the re-auth screen sitting on top
+      // of a live session.
+      if (vaultManager.consumeManualLockExpiry()) {
+        logger.info('[vault] elle kilit penceresi aşıldı → Google yeniden girişi isteniyor.');
+        vaultManager.setGoogleReauthNeeded(true);
+      } else {
+        // Silently restore the Google session from the vault's refresh token.
+        try {
+          const res = await authService?.restoreSession();
+          vaultManager.setGoogleReauthNeeded(!!res && res.reauthNeeded);
+          if (res?.authenticated) ensureAdminService();
+        } catch (e) {
+          logger.warn('[vault] restoreSession başarısız:', e);
+        }
       }
       // Recompute the SA soft-warn now that the vault is readable.
       try {
@@ -515,7 +525,7 @@ app.whenReady().then(async () => {
     if (minutes <= 0) return; // auto-lock disabled
     const idleTime = powerMonitor.getSystemIdleTime();
     if (idleTime >= minutes * 60) {
-      vaultManager.requestLock();
+      vaultManager.requestLock('idle');
     }
   }, 60000); // Check every minute
 
@@ -607,10 +617,12 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Manual lock (e.g. a "Lock now" button). Graceful: running jobs finish first.
-  ipcMain.handle('vault:lock', async () => {
+  // Graceful: running jobs finish first. The reason decides whether the re-auth
+  // window is armed — only the "Lock now" button sends 'manual'. An unrecognised
+  // or absent reason falls back to 'idle', the non-disruptive default.
+  ipcMain.handle('vault:lock', async (_, args?: { reason?: string }) => {
     try {
-      vaultManager.requestLock();
+      vaultManager.requestLock(args?.reason === 'manual' ? 'manual' : 'idle');
       return { success: true, data: vaultManager.getState() };
     } catch (error: any) {
       return { success: false, error: error.message };

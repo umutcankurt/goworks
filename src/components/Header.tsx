@@ -60,7 +60,7 @@ export const Header = React.memo(function Header() {
 
                 <button
                     type="button"
-                    onClick={() => { lock().catch(() => { /* main process drives the lock */ }); }}
+                    onClick={() => { lock('manual').catch(() => { /* main process drives the lock */ }); }}
                     aria-label={t('lockNow')}
                     title={t('lockNow')}
                     className="flex h-8 w-8 items-center justify-center rounded-full border bg-surface-container-high text-on-surface-variant eth-border-ghost-soft transition-colors hover:text-on-surface"

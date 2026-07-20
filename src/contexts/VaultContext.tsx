@@ -8,7 +8,7 @@ interface VaultContextType {
     /** Create a new vault (onboarding / legacy upgrade / post-reset). */
     setup: (password: string) => Promise<VaultState>;
     unlock: (password: string) => Promise<VaultState>;
-    lock: () => Promise<void>;
+    lock: (reason?: 'manual' | 'idle') => Promise<void>;
     reset: () => Promise<VaultState>;
     /** Re-key the vault to a new master password (Settings → Security). */
     changePassword: (current: string, next: string) => Promise<void>;
@@ -63,8 +63,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         return next;
     }, []);
 
-    const lock = useCallback(async () => {
-        const next = await vaultApi.lock();
+    const lock = useCallback(async (reason: 'manual' | 'idle' = 'idle') => {
+        const next = await vaultApi.lock(reason);
         setState(next);
     }, []);
 
