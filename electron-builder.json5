@@ -14,7 +14,14 @@
   },
   "files": [
     "dist",
-    "dist-electron"
+    "dist-electron",
+    // Third-party documentation is never read at runtime, and it is full of
+    // example credentials — dotenv's README demonstrates multiline env vars with
+    // a "-----BEGIN RSA PRIVATE KEY-----" block, which the secret guard correctly
+    // refuses to let into an installer. Dropping the docs removes that whole false
+    // positive class (and shrinks the installer) rather than teaching the guard to
+    // ignore things, which would blunt it.
+    "!node_modules/**/*.{md,markdown}"
   ],
   "extraResources": [
     {
