@@ -5,6 +5,7 @@ import {
     requireArray,
     requireEmailList,
     requireBytes,
+    requireStringRecord,
     sniffImageMime,
     requireImageBytes,
 } from './validate';
@@ -116,5 +117,79 @@ describe('sniffImageMime — içerikten tip tespiti (F-10)', () => {
     it('refuses a non-image upload outright', () => {
         expect(() => requireImageBytes(Buffer.from('#!/bin/sh\nrm -rf /'), 'Görsel', 1024))
             .toThrow(/tanınan bir görsel değil/);
+    });
+});
+
+describe('requireStringRecord — düz metin sözlüğü', () => {
+    const call = (v: unknown) => requireStringRecord(v, 'Değişkenler', 8, 32);
+
+    it('treats an absent record as empty rather than invalid', () => {
+        // Every call site has the field as optional; missing is not a user error.
+        expect(call(undefined)).toEqual({});
+        expect(call(null)).toEqual({});
+    });
+
+    it('passes a well-formed record through', () => {
+        expect(call({ ad_soyad: 'Ayşe Yılmaz', unvan: 'Müdür' }))
+            .toEqual({ ad_soyad: 'Ayşe Yılmaz', unvan: 'Müdür' });
+    });
+
+    it('returns a new object, never the caller reference', () => {
+        // The handler merges media tokens over this; aliasing the caller's object
+        // would let a mutation downstream reach back into unvalidated input.
+        const input = { ad_soyad: 'Ayşe' };
+        expect(call(input)).not.toBe(input);
+    });
+
+    it('rejects an array, which is technically an object', () => {
+        expect(() => call(['a', 'b'])).toThrow(/bir nesne olmalı/);
+    });
+
+    it('rejects a non-object', () => {
+        expect(() => call('ad_soyad=Ayşe')).toThrow(/bir nesne olmalı/);
+        expect(() => call(42)).toThrow(/bir nesne olmalı/);
+    });
+
+    it('caps the number of fields', () => {
+        const tooMany = Object.fromEntries(
+            Array.from({ length: 9 }, (_, i) => [`tag${i}`, 'v']),
+        );
+        expect(() => call(tooMany)).toThrow(/çok fazla alan/);
+    });
+
+    it('caps the length of each value', () => {
+        expect(() => call({ adres: 'x'.repeat(33) })).toThrow(/çok uzun/);
+    });
+
+    it('rejects a non-string value', () => {
+        expect(() => call({ unvan: 42 })).toThrow(/metin olmalı/);
+        expect(() => call({ unvan: null })).toThrow(/metin olmalı/);
+    });
+
+    it('rejects keys a template token could never have', () => {
+        // TAG_REGEX matches \w+, so anything else can never resolve — accepting it
+        // would only widen what reaches the renderer.
+        expect(() => call({ 'ad-soyad': 'x' })).toThrow(/geçersiz alan adı/);
+        expect(() => call({ 'ad.soyad': 'x' })).toThrow(/geçersiz alan adı/);
+        expect(() => call({ '': 'x' })).toThrow(/geçersiz alan adı/);
+    });
+
+    it('rejects prototype-pollution keys explicitly', () => {
+        // Object literals swallow a literal __proto__ key, so build it deliberately.
+        const poison = Object.defineProperty({}, '__proto__', {
+            value: 'x', enumerable: true, configurable: true, writable: true,
+        });
+        expect(() => call(poison)).toThrow(/izin verilmeyen alan adı/);
+        expect(() => call({ constructor: 'x' })).toThrow(/izin verilmeyen alan adı/);
+        expect(() => call({ prototype: 'x' })).toThrow(/izin verilmeyen alan adı/);
+    });
+
+    it('does not pollute Object.prototype even when a poison key is present', () => {
+        const poison = Object.defineProperty({}, '__proto__', {
+            value: 'polluted', enumerable: true, configurable: true, writable: true,
+        });
+        try { call(poison); } catch { /* expected */ }
+        expect(({} as any).polluted).toBeUndefined();
+        expect(Object.prototype).not.toHaveProperty('polluted');
     });
 });

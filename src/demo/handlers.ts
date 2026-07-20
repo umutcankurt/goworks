@@ -28,8 +28,30 @@ function arrayBufferToDataUri(data: ArrayBuffer | Uint8Array, mimeType: string):
     return `data:${mimeType};base64,${btoa(binary)}`;
 }
 
+/**
+ * Stand-in for the main process's template-renderer. Not a full port — that would
+ * drag sanitize-html and its module graph into a screenshot harness — but it
+ * matches the two behaviours a viewer would otherwise notice:
+ *   - an unresolved token is left as-is, not blanked
+ *   - a data-condition block whose keys are all empty is removed
+ */
 function renderTemplate(html: string, variables: Record<string, string>): string {
-    return html.replace(/\{\{\s*([a-zA-Z0-9_]+)[^}]*\}\}/g, (_match, key: string) => variables[key] ?? '');
+    const replaced = html.replace(
+        /\{\{\s*([a-zA-Z0-9_]+)[^}]*\}\}/g,
+        (match, key: string) => variables[key] ?? match,
+    );
+    try {
+        const doc = new DOMParser().parseFromString(`<body>${replaced}</body>`, 'text/html');
+        doc.querySelectorAll('[data-condition]').forEach((el) => {
+            const keys = (el.getAttribute('data-condition') || '').split(',').map((k) => k.trim()).filter(Boolean);
+            if (keys.length === 0) return;
+            if (keys.every((k) => !variables[k]?.trim())) el.remove();
+            else el.removeAttribute('data-condition');
+        });
+        return doc.body.innerHTML;
+    } catch {
+        return replaced;
+    }
 }
 
 /**
@@ -679,6 +701,21 @@ export const handlers: Record<string, Handler> = {
         // win over caller-supplied variables.
         const vars = { ...(variables ?? {}), ...mediaVariables(store, id) };
         return ok({ html: renderTemplate(template.htmlContent, vars), tags: Object.keys(vars) });
+    },
+
+    // Renders an arbitrary buffer, not a saved template. 'raw' mirrors the
+    // sanitise-only push mode and must NOT substitute; 'template' mirrors the
+    // full render, with the template's own media winning over caller variables.
+    'templates:renderPreview': ({ html, mode, templateId, variables }: any, store) => {
+        if (mode === 'raw') return ok({ html: html ?? '' });
+        if (templateId !== undefined && !store.data.templates.some((t) => t.id === templateId)) {
+            return { success: false, error: 'Template not found' };
+        }
+        const vars = {
+            ...(variables ?? {}),
+            ...(templateId !== undefined ? mediaVariables(store, templateId) : {}),
+        };
+        return ok({ html: renderTemplate(html ?? '', vars) });
     },
 
     'templates:setDefault': ({ id }: any, store) => {

@@ -35,7 +35,7 @@ import { toUserMessage, fail } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
 import { isAllowedExternalUrl } from './lib/external-url';
-import { requireOneOf, requireString, requireArray, requireEmailList, requireImageBytes } from './lib/validate';
+import { requireOneOf, requireString, requireArray, requireEmailList, requireImageBytes, requireStringRecord } from './lib/validate';
 import { JOB_TYPES, type JobType } from './jobs/types';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
@@ -270,6 +270,20 @@ const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
 /** A real GCP service-account key is ~2.3 KB. */
 const MAX_SA_JSON_BYTES = 64 * 1024;
+
+/**
+ * Bounds on a preview render. A Gmail signature caps at 10,000 characters, so
+ * this is ~6x any legitimate template. The cap is about main-process latency
+ * rather than storage: processConditionalBlocks re-slices the whole string per
+ * match, and it runs on the process that also owns synchronous better-sqlite3,
+ * the job runner and the auto-lock timer. _CHARS, not _BYTES: requireString
+ * measures value.length, unlike MAX_SA_JSON_BYTES above.
+ */
+const MAX_TEMPLATE_HTML_CHARS = 64 * 1024;
+/** Seven canonical tags + English aliases + one {{image_N}} per asset. */
+const MAX_PREVIEW_VARS = 64;
+/** The longest legitimate value is an institution address, well under 200. */
+const MAX_PREVIEW_VAR_CHARS = 1024;
 
 /**
  * Shape-check a job payload against its type.
@@ -1272,6 +1286,62 @@ app.whenReady().then(async () => {
       const html = renderSignatureHtml(tpl.htmlContent, { ...(variables || {}), ...buildMediaTokenVars(tpl.media) });
       return { success: true, data: { html, tags: AVAILABLE_TAGS } };
     } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  /**
+   * Render arbitrary signature HTML the way the push path would.
+   *
+   * templates:preview only renders a SAVED template by id, which is why the
+   * renderer grew its own substitution engine for unsaved buffers — and that copy
+   * drifted (it never sanitised, and resolved conditionals in the wrong order).
+   * This channel takes the buffer directly so there is one engine again.
+   *
+   * `mode` names the pushSignature mode it mirrors, so the correspondence stays
+   * greppable:
+   *   'template' → Mode 2/3 (gmail-signature-service.ts:161-170)
+   *   'raw'      → Mode 1  (gmail-signature-service.ts:139-145)
+   * They are genuinely different: data-condition survives sanitisation, so a raw
+   * push keeps conditional blocks that a template render with empty variables
+   * would strip.
+   */
+  ipcMain.handle('templates:renderPreview', async (_, input: {
+    html?: string;
+    mode?: string;
+    templateId?: number;
+    variables?: Record<string, string>;
+  }) => {
+    try {
+      const mode = requireOneOf(input?.mode ?? 'template', ['template', 'raw'] as const, 'önizleme modu');
+      const html = requireString(input?.html, 'Şablon içeriği', MAX_TEMPLATE_HTML_CHARS);
+      const { renderSignatureHtml, sanitizeTemplateHtml } = await import('./services/template-renderer');
+
+      if (mode === 'raw') {
+        // Mirrors Mode 1 exactly: sanitise only, substitute nothing.
+        return { success: true, data: { html: sanitizeTemplateHtml(html) } };
+      }
+
+      const variables = requireStringRecord(
+        input?.variables, 'Önizleme değişkenleri', MAX_PREVIEW_VARS, MAX_PREVIEW_VAR_CHARS,
+      );
+      let mediaVars: Record<string, string> = {};
+      if (input?.templateId !== undefined) {
+        const { templateService } = await import('./services/template-service');
+        const { buildMediaTokenVars } = await import('./services/media-token');
+        const tpl = templateService.get(input.templateId);
+        if (!tpl) return { success: false, error: 'Şablon bulunamadı' };
+        mediaVars = buildMediaTokenVars(tpl.media);
+      }
+      // Media tokens spread LAST, same rule as the push path: the template's own
+      // assets win over anything the renderer sends.
+      return { success: true, data: { html: renderSignatureHtml(html, { ...variables, ...mediaVars }) } };
+    } catch (error: any) {
+      // NOT toUserMessage(): processConditionalBlocks throws a plain Error whose
+      // message ("şablon bozuk olabilir") is the only thing telling the user which
+      // block is unbalanced. That is the common case here, not an edge case —
+      // the editor is a raw textarea, so markup is unbalanced mid-keystroke.
+      logger.warn('[templates:renderPreview] render edilemedi', error);
       return { success: false, error: error.message };
     }
   });

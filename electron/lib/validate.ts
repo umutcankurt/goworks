@@ -64,6 +64,60 @@ export function requireArray<T>(value: unknown, label: string, maxLength: number
     return value as T[];
 }
 
+/** Keys a template token can actually have: TAG_REGEX matches `\w+` and nothing else. */
+const TOKEN_KEY_REGEX = /^\w{1,64}$/;
+
+/**
+ * A flat string→string map, e.g. the variables backing a signature preview.
+ *
+ * Absent means empty, not invalid — the field is genuinely optional at every
+ * call site. Returns a NEW object so a caller cannot hand the validated
+ * reference back into a mutation, and so unvalidated extra fields cannot ride
+ * along.
+ *
+ * `__proto__` and friends are rejected explicitly. Today the merge sites use
+ * object spread, whose define-semantics make a `__proto__` key a harmless own
+ * property; the day one of them becomes Object.assign it would be prototype
+ * pollution instead. The key regex would already exclude them — this is a
+ * second, deliberate line so that intent survives a future edit to the regex.
+ */
+export function requireStringRecord(
+    value: unknown,
+    label: string,
+    maxEntries: number,
+    maxValueLength: number,
+): Record<string, string> {
+    if (value === undefined || value === null) return {};
+    if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new UserFacingError(`${label} bir nesne olmalı.`);
+    }
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length > maxEntries) {
+        throw new UserFacingError(
+            `${label} çok fazla alan içeriyor (${entries.length}). En fazla ${maxEntries} alan olabilir.`,
+        );
+    }
+    const out: Record<string, string> = {};
+    for (const [key, raw] of entries) {
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+            throw new UserFacingError(`${label} içinde izin verilmeyen alan adı: ${key}`);
+        }
+        if (!TOKEN_KEY_REGEX.test(key)) {
+            throw new UserFacingError(`${label} içinde geçersiz alan adı: ${key}`);
+        }
+        if (typeof raw !== 'string') {
+            throw new UserFacingError(`${label} içindeki "${key}" alanı metin olmalı.`);
+        }
+        if (raw.length > maxValueLength) {
+            throw new UserFacingError(
+                `${label} içindeki "${key}" alanı çok uzun (en fazla ${maxValueLength} karakter).`,
+            );
+        }
+        out[key] = raw;
+    }
+    return out;
+}
+
 export function requireBytes(
     value: ArrayBuffer | Uint8Array | undefined | null,
     label: string,

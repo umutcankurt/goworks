@@ -96,6 +96,7 @@ const invokeChannels = [
   'templates:get',
   'templates:getAll',
   'templates:preview',
+  'templates:renderPreview',
   'templates:setDefault',
   'templates:update',
   'titles:create',

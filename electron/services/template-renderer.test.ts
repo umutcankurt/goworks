@@ -420,3 +420,50 @@ describe('sanitizeTemplateHtml — border stilleri (C10 regresyon kilidi)', () =
         expect(out).toContain('color:#000000');
     });
 });
+
+describe('renderPreview modları — raw ile template aynı şey DEĞİL (F-14 HR-1)', () => {
+    // The templates:renderPreview channel exposes both push modes. Collapsing them
+    // is tempting and wrong: sanitizeTemplateHtml allowlists data-condition, so a
+    // raw push delivers conditional blocks to the mailbox, while a template render
+    // with no variables deletes every one of them. Previewing an already-rendered
+    // Gmail signature through the template path would silently drop content.
+    const gmailSignature =
+        '<div>Ayşe Yılmaz</div><div data-condition="telefon">0212 555 00 00</div>';
+
+    it('raw mode (Mode 1) preserves data-condition blocks', () => {
+        const out = sanitizeTemplateHtml(gmailSignature);
+        expect(out).toContain('0212 555 00 00');
+        expect(out).toContain('data-condition');
+    });
+
+    it('template mode with empty variables strips them', () => {
+        const out = renderSignatureHtml(gmailSignature, {});
+        expect(out).not.toContain('0212 555 00 00');
+    });
+
+    it('raw mode is a fixed point — previewing twice cannot drift', () => {
+        // The preview re-renders on every keystroke; a non-idempotent raw path
+        // would mutate the buffer under the user as they type.
+        const once = sanitizeTemplateHtml(gmailSignature);
+        expect(sanitizeTemplateHtml(once)).toBe(once);
+    });
+
+    it('raw mode does not substitute tokens', () => {
+        // Mode 1 pushes the buffer verbatim, so the preview must show the token
+        // exactly as it will land in the mailbox.
+        const out = sanitizeTemplateHtml('<div>{{ad_soyad}}</div>');
+        expect(out).toContain('{{ad_soyad}}');
+    });
+});
+
+describe('renderPreview — çağıran değişkenleri medya tokenını ezemez', () => {
+    it('template media wins over a caller-supplied image token', () => {
+        // The handler spreads media LAST. This is what keeps a renderer-supplied
+        // image_1 out of an <img src> that reaches a real mailbox.
+        const caller = { image_1: 'https://attacker.example/evil.png' };
+        const media = { image_1: 'https://lh3.googleusercontent.com/legit' };
+        const out = renderSignatureHtml('<img src="{{image_1}}">', { ...caller, ...media });
+        expect(out).toContain('lh3.googleusercontent.com/legit');
+        expect(out).not.toContain('attacker.example');
+    });
+});

@@ -163,6 +163,17 @@ export const templatesApi = {
   delete: (id: number) => ipcInvoke('templates:delete', { id }),
   preview: (id: number, variables: Record<string, string>) =>
     ipcInvoke('templates:preview', { id, variables }),
+  /**
+   * Renders an arbitrary buffer through the main-process engine — the same one
+   * the push path uses. `mode` picks which push mode to mirror: 'template'
+   * substitutes and re-sanitises, 'raw' only sanitises.
+   */
+  renderPreview: (input: {
+    html: string;
+    mode?: 'template' | 'raw';
+    templateId?: number;
+    variables?: Record<string, string>;
+  }) => ipcInvoke<{ html: string }>('templates:renderPreview', input),
   setDefault: (id: number) => ipcInvoke('templates:setDefault', { id }),
 };
 
