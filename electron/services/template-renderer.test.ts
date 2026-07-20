@@ -335,3 +335,44 @@ describe('renderSignatureHtml — hash kararlılığı kilidi (signature_state u
         expect(sanitizeTemplateHtml(stored)).toBe(stored);
     });
 });
+
+describe('processConditionalBlocks — void elementler (HR-4)', () => {
+    it('removes a void element whose condition is empty', () => {
+        expect(processConditionalBlocks('<img data-condition="telefon" src="http://x" />', { telefon: '' })).toBe('');
+        expect(processConditionalBlocks('<br data-condition="telefon" />', { telefon: '' })).toBe('');
+        expect(processConditionalBlocks('<hr data-condition="telefon" />', { telefon: '' })).toBe('');
+    });
+
+    it('keeps a void element on a filled condition and drops only the attribute', () => {
+        const out = processConditionalBlocks('<img data-condition="telefon" src="http://x" />', { telefon: '0555' });
+        expect(out).toContain('src="http://x"');
+        expect(out).not.toContain('data-condition');
+    });
+
+    it('does not disturb a sibling non-void conditional', () => {
+        const out = processConditionalBlocks(
+            '<img data-condition="telefon" src="http://x" /><span data-condition="eposta">KEEP</span>',
+            { telefon: '', eposta: 'a@b.com' },
+        );
+        expect(out).toBe('<span>KEEP</span>');
+    });
+});
+
+describe('processConditionalBlocks — güvenlik sınırı fail-closed (HR-5)', () => {
+    it('processes far more than the old 200-block cap without leaking', () => {
+        const html = Array.from({ length: 400 }, (_, i) => `<span data-condition="telefon">L${i}</span>`).join('');
+        expect(processConditionalBlocks(html, { telefon: '' })).toBe('');
+    });
+
+    it('keeps all 400 when the condition is filled', () => {
+        const html = Array.from({ length: 400 }, (_, i) => `<span data-condition="telefon">L${i}</span>`).join('');
+        const out = processConditionalBlocks(html, { telefon: '0555' });
+        expect(out).toContain('L0');
+        expect(out).toContain('L399');
+        expect(out).not.toContain('data-condition');
+    });
+
+    it('throws rather than emitting a half-processed signature for an unbalanced element', () => {
+        expect(() => processConditionalBlocks('<div data-condition="telefon">no close', { telefon: 'x' })).toThrow();
+    });
+});

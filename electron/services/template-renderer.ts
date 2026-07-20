@@ -216,47 +216,77 @@ function cleanTelHrefs(html: string): string {
  * - If ALL listed variables are empty/undefined/whitespace → the element is removed entirely
  * - If at least one variable is filled → the element is kept, the data-condition attribute is removed
  */
+/**
+ * Elements with no closing tag — for these the element IS the open tag.
+ *
+ * findMatchingCloseTag() searches for a literal `</tag>`, which an img/br/hr
+ * never has, so it returned -1 and the caller's -1 branch kept the element while
+ * stripping its data-condition. The conditional failed open, and invisibly: the
+ * attribute was gone, so the output gave no sign the condition was ignored.
+ */
+const VOID_ELEMENTS = new Set([
+    'img', 'br', 'hr', 'input', 'meta', 'link',
+    'area', 'base', 'col', 'embed', 'source', 'track', 'wbr',
+]);
+
 export function processConditionalBlocks(html: string, variables: TemplateVariables): string {
     const openTagRegex = /<(\w+)(\s[^>]*?)data-condition="([^"]*)"([^>]*?)>/g;
     let result = html;
     let match: RegExpExecArray | null;
 
-    let safety = 0;
-    while ((match = openTagRegex.exec(result)) !== null && safety++ < 200) {
+    // Every iteration removes exactly one `data-condition`, so the loop is bounded
+    // by the count at entry. This is an invariant check, not a truncation limit:
+    // the old fixed cap of 200 silently let blocks 201+ through — the trailing
+    // sweep stripped their attribute and kept the element, so a template with
+    // enough conditionals leaked the very blocks it meant to hide.
+    const maxIterations = (result.match(/data-condition="/g) || []).length + 1;
+    let iterations = 0;
+
+    while ((match = openTagRegex.exec(result)) !== null) {
+        if (++iterations > maxIterations) {
+            // Fail closed. This output goes into a real mailbox, so refusing beats
+            // sending a half-processed signature. Every caller already has a
+            // per-user catch that records the failure.
+            throw new Error('processConditionalBlocks: koşullu bloklar çözümlenemedi (şablon bozuk olabilir)');
+        }
+
+        const openTag = match[0];
         const fullMatchStart = match.index;
         const tagName = match[1];
         const conditionValue = match[3];
-        const openTagEnd = fullMatchStart + match[0].length;
+        const openTagEnd = fullMatchStart + openTag.length;
+
+        const keepElement = () => {
+            result = result.slice(0, fullMatchStart)
+                + openTag.replace(/\s*data-condition="[^"]*"/, '')
+                + result.slice(openTagEnd);
+            openTagRegex.lastIndex = 0;
+        };
+        const dropRange = (end: number) => {
+            result = result.slice(0, fullMatchStart) + result.slice(end);
+            openTagRegex.lastIndex = 0;
+        };
 
         const keys = conditionValue.split(',').map((k) => k.trim()).filter(Boolean);
-        if (keys.length === 0) {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-            openTagRegex.lastIndex = 0;
+        if (keys.length === 0) { keepElement(); continue; }
+
+        const allEmpty = keys.every((k) => !(resolveVariable(k, variables) || '').trim());
+
+        if (VOID_ELEMENTS.has(tagName.toLowerCase())) {
+            if (allEmpty) dropRange(openTagEnd); else keepElement();
             continue;
         }
 
         const closingIndex = findMatchingCloseTag(result, openTagEnd, tagName);
         if (closingIndex === -1) {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-            openTagRegex.lastIndex = 0;
-            continue;
+            // Unbalanced non-void element. Templates are persisted through
+            // sanitizeTemplateHtml(), which balances tags, so this is unreachable
+            // for stored input — treat it as corruption and fail closed rather
+            // than guess at the element's extent.
+            throw new Error(`processConditionalBlocks: <${tagName}> için kapanış etiketi bulunamadı`);
         }
 
-        const closeTagEnd = closingIndex + `</${tagName}>`.length;
-        const allEmpty = keys.every((k) => !(resolveVariable(k, variables) || '').trim());
-
-        if (allEmpty) {
-            result = result.slice(0, fullMatchStart) + result.slice(closeTagEnd);
-        } else {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-        }
-        openTagRegex.lastIndex = 0;
+        if (allEmpty) dropRange(closingIndex + `</${tagName}>`.length); else keepElement();
     }
 
     return result.replace(/\s*data-condition="[^"]*"/g, '');
