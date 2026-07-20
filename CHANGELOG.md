@@ -16,6 +16,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes yet._
 
+## [0.8.0] — 2026-07-20
+
+Closes a static-analysis pass over the whole codebase, plus two bugs found while
+verifying the fixes — one of which had been silently destroying the Google session
+on every app close since long before the security work began.
+
+### Fixed
+
+- **Quitting the app deleted the stored Google session.** `before-quit` and, on macOS,
+  `window-all-closed` both called `logout()`, which deletes the refresh token from the
+  vault. Every close therefore forced a full browser OAuth round on the next launch,
+  defeating the point of storing the token encrypted at rest. A full logout now happens
+  only where it was always documented to: an explicit user logout or a factory reset.
+
+- **Unlocking the vault dropped you back at the Google sign-in screen.** The renderer
+  kept the only copy of the signed-in identity in `localStorage`, and cleared it
+  whenever `auth:check` reported `authenticated: false`. A vault lock reports exactly
+  that — locking drops the in-memory OAuth credentials on purpose while the grant stays
+  in the vault — so the lock erased the identity and the unlocked app found nothing to
+  restore, landing on `/login` over a fully authenticated main process. The main process
+  is now the authority: `auth:check` returns the profile, and the renderer's copy is a
+  cache cleared only on a real logout. It still covers one gap — a silent restore fails
+  open when Google's userinfo endpoint is unreachable, and the cached copy carries the
+  identity through.
+
+- **The signature preview did not match what Gmail received.** `SignaturePreview`
+  carried its own substitution engine that never sanitised and resolved conditional
+  blocks in the opposite order from the real renderer. Most visibly, the manual
+  signature editor substituted `{{ad_soyad}}` into a value while Save pushed the buffer
+  through the raw path, which substitutes nothing. Preview now runs through the same
+  main-process engine as the push, via a new `templates:renderPreview` IPC channel that
+  mirrors both push modes explicitly.
+
+### Security
+
+- **IPC errors no longer leak filesystem paths.** 26 handlers under `config:*`,
+  `media:*` and `jobs:*` returned `error.message` verbatim to the renderer, so a failed
+  disk operation shipped its absolute path — `ENOENT: … open '/Users/…/vault.enc'` —
+  into a toast, in production as well as development. Beyond the disclosure this was a
+  file-existence oracle: code running in a compromised renderer could call these
+  channels and tell `ENOENT` from `EACCES` to probe the filesystem. They now log the
+  full stack to the log file and return a generic message. Validation rules that the
+  operator can actually act on (invalid domain, name too long, unsupported logo format)
+  are preserved as `UserFacingError`, and an expired Google session now says so instead
+  of "an unexpected error occurred".
+
+- **A long manual lock now requires Google re-authorization.** Locking with the lock
+  button arms a 59-minute window; unlocking after it expires opens the vault with the
+  master password but does not silently restore the Google session. This bounds how long
+  a deliberately locked machine keeps working Google access if the master password is
+  obtained. The idle auto-lock is exempt — its own default is 60 minutes, so a shorter
+  window would expire the instant it fired — and closing the app does not arm it, since
+  closing is not locking.
+
+- Preview media tokens are resolved in the main process from the template's own assets
+  and applied last, so a value supplied by the renderer can no longer reach an `<img>`
+  source in a rendered signature.
+
+### Changed
+
+- `templates:renderPreview` is new. `templates:preview` is unchanged and still renders a
+  saved template by id.
+- Installers no longer carry third-party documentation. Beyond the size saving, this is
+  what let the build's secret guard pass: dotenv's README demonstrates multiline env
+  vars with a `-----BEGIN RSA PRIVATE KEY-----` block, and the guard cannot distinguish
+  a documented example from a real leak — so the docs go, rather than the check.
+- Test coverage grew from 404 to 447. New suites cover the lock/unlock identity
+  round-trip, the manual-lock window, the preview component's debounce and
+  out-of-order-response handling, and the raw/template render distinction — each of them
+  a bug that had already shipped once.
+
 ## [0.7.9] — 2026-07-14
 
 ### Security
