@@ -60,7 +60,12 @@ export const vaultApi = {
   /** Create a new vault (onboarding / legacy upgrade / post-reset). */
   setup: (password: string) => ipcInvoke<VaultState>('vault:setup', { password }),
   unlock: (password: string) => ipcInvoke<VaultState>('vault:unlock', { password }),
-  lock: () => ipcInvoke<VaultState>('vault:lock'),
+  /**
+   * 'manual' (the "Lock now" button) arms a re-auth window: unlocking after it
+   * expires opens the vault but requires a fresh Google sign-in. The idle
+   * auto-lock passes 'idle' and is never subject to it.
+   */
+  lock: (reason: 'manual' | 'idle' = 'idle') => ipcInvoke<VaultState>('vault:lock', { reason }),
   reset: () => ipcInvoke<VaultState>('vault:reset'),
   /** Re-key the vault to a new master password (Settings → Security). */
   changePassword: (current: string, next: string) =>
@@ -109,7 +114,7 @@ export const appConfigApi = {
     ipcInvoke<AppConfigDTO>('config:acceptTerms', version),
   resetOnboarding: () => ipcInvoke<AppConfigDTO>('config:resetOnboarding'),
   /** Factory reset: permanently wipes all local data and returns to a fresh install. */
-  factoryReset: () => ipcInvoke<void>('config:factoryReset'),
+  factoryReset: (password: string) => ipcInvoke<void>('config:factoryReset', { password }),
   getDwdScopes: () => ipcInvoke<string[]>('config:getDwdScopes'),
   testDwdScopes: (adminEmail?: string) =>
     ipcInvoke<DwdTestResult>('config:testDwdScopes', { adminEmail }),
@@ -158,6 +163,17 @@ export const templatesApi = {
   delete: (id: number) => ipcInvoke('templates:delete', { id }),
   preview: (id: number, variables: Record<string, string>) =>
     ipcInvoke('templates:preview', { id, variables }),
+  /**
+   * Renders an arbitrary buffer through the main-process engine — the same one
+   * the push path uses. `mode` picks which push mode to mirror: 'template'
+   * substitutes and re-sanitises, 'raw' only sanitises.
+   */
+  renderPreview: (input: {
+    html: string;
+    mode?: 'template' | 'raw';
+    templateId?: number;
+    variables?: Record<string, string>;
+  }) => ipcInvoke<{ html: string }>('templates:renderPreview', input),
   setDefault: (id: number) => ipcInvoke('templates:setDefault', { id }),
 };
 

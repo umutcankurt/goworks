@@ -1270,6 +1270,7 @@ function ResetWizardSection() {
   const [busy, setBusy] = useState(false);
   const [showFactory, setShowFactory] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
   const [resetting, setResetting] = useState(false);
 
   const handleReset = async () => {
@@ -1294,13 +1295,16 @@ function ResetWizardSection() {
     if (resetting) return;
     setShowFactory(false);
     setConfirmText('');
+    setResetPassword('');
   };
 
   const handleFactoryReset = async () => {
-    if (!confirmMatches || resetting) return;
+    if (!confirmMatches || !resetPassword || resetting) return;
     setResetting(true);
     try {
-      await appConfigApi.factoryReset();
+      // The main process re-verifies this and shows its own native confirmation.
+      // The keyword box below is a UX speed bump; the password is the real gate.
+      await appConfigApi.factoryReset(resetPassword);
       // Clear renderer-side persisted state so the reload starts truly fresh.
       try {
         localStorage.removeItem('auth_user');
@@ -1389,6 +1393,19 @@ function ResetWizardSection() {
               className="mt-2 w-full rounded-lg border eth-border-ghost bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-eth-danger/40 disabled:opacity-50"
             />
 
+            <p className="mt-4 text-sm text-on-surface">
+              {t('general.factoryReset.passwordPrompt')}
+            </p>
+            <input
+              type="password"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              spellCheck={false}
+              autoComplete="current-password"
+              disabled={resetting}
+              className="mt-2 w-full rounded-lg border eth-border-ghost bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-eth-danger/40 disabled:opacity-50"
+            />
+
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
@@ -1401,7 +1418,7 @@ function ResetWizardSection() {
               <button
                 type="button"
                 onClick={handleFactoryReset}
-                disabled={!confirmMatches || resetting}
+                disabled={!confirmMatches || !resetPassword || resetting}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-eth-danger text-white text-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resetting ? <Loader className="animate-spin" size={16} /> : <AlertTriangle size={16} />}

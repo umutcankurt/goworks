@@ -70,6 +70,26 @@ const VARIABLE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedAttributes: {},
 };
 
+/**
+ * Escapes the two quote characters sanitize-html leaves raw.
+ *
+ * `sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS)` strips tags and escapes
+ * `& < >` — but NOT `"` or `'`. Every token in a signature template can land
+ * inside an attribute value: buildImageEmbed() emits `src="{{image_N}}"`, and
+ * cleanTelHrefs() below exists precisely because templates carry
+ * `href="tel:{{telefon}}"`. Without this, a directory field a tenant user can
+ * edit (their own name, title, phone) closes the attribute and appends new ones
+ * to a signature we then push to their mailbox.
+ *
+ * `'` is escaped as well as `"`: templates are hand-written HTML in a plain
+ * textarea, so nothing forces double-quoted attributes. Both escapes are
+ * invisible in the delivered signature — sanitizeTemplateHtml() decodes them
+ * back in text context and normalises them in attribute context.
+ */
+function escapeQuotes(value: string): string {
+    return value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // --- Inline-CSS allowlist for sanitizeHtml (defense-in-depth) ---
 // Without an explicit `allowedStyles`, sanitize-html lets every inline style
 // through unparsed. We instead permit only presentational CSS whose value
@@ -87,6 +107,25 @@ const CSS_COLOR = [
 const CSS_LEN = [/^-?\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
 const CSS_LEN_POS = [/^\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
 const CSS_SHORTHAND_LEN = [/^(?:-?\d+(?:\.\d+)?(?:px|em|rem|%|pt)?\s*){1,4}$/i];
+
+// Border shorthand: `<width> <style> <color>`, plus the bare `0` / `0px` / `none`
+// forms that email HTML uses on images. The colour alternatives mirror CSS_COLOR
+// — notably rgb()/rgba(), which the previous pattern omitted, so a perfectly
+// ordinary `border-left: 4px solid rgb(...)` was dropped. Values stay bounded
+// shapes: no url(), no expression(), no free text.
+const CSS_BORDER_COLOR = '#[0-9a-f]{3,8}|rgba?\\([\\d\\s,.%]+\\)|hsla?\\([\\d\\s,.%]+\\)|[a-z]+';
+const CSS_BORDER = [
+    /^(?:0|none)$/i,
+    /^\d+(?:\.\d+)?(?:px|em|rem|pt)$/i,
+    new RegExp(
+        '^\\d+(?:\\.\\d+)?(?:px|em|rem|pt)?'
+        + '\\s+(?:solid|dashed|dotted|double|none|hidden|groove|ridge|inset|outset)'
+        + `(?:\\s+(?:${CSS_BORDER_COLOR}))?$`,
+        'i',
+    ),
+];
+const CSS_BORDER_WIDTH = [/^(?:0|(?:thin|medium|thick)|\d+(?:\.\d+)?(?:px|em|rem|pt))$/i];
+const CSS_BORDER_STYLE = [/^(?:solid|dashed|dotted|double|none|hidden|groove|ridge|inset|outset)$/i];
 
 const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedTags: [
@@ -139,7 +178,16 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
             'margin-right': CSS_LEN,
             'margin-bottom': CSS_LEN,
             'margin-left': CSS_LEN,
-            border: [/^\d+(?:\.\d+)?(?:px|em|rem)?\s+(?:solid|dashed|dotted|double|none|hidden)(?:\s+(?:#[0-9a-f]{3,8}|[a-z]+))?$/i],
+            border: CSS_BORDER,
+            // The four sides individually. Their absence silently flattened every
+            // signature that used an accent rule — a very common email-HTML idiom,
+            // and the one the bundled `logolu` / `cizgili` starters rely on.
+            'border-left': CSS_BORDER,
+            'border-right': CSS_BORDER,
+            'border-top': CSS_BORDER,
+            'border-bottom': CSS_BORDER,
+            'border-width': CSS_BORDER_WIDTH,
+            'border-style': CSS_BORDER_STYLE,
             'border-radius': [/^(?:\d+(?:\.\d+)?(?:px|em|rem|%)?\s*){1,4}$/i],
             'border-collapse': [/^(?:collapse|separate)$/i],
         },
@@ -147,16 +195,42 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
 };
 
 export function renderTemplate(html: string, variables: TemplateVariables): string {
-    const replaced = html.replace(TAG_REGEX, (match, key, modifierStr) => {
+    // Conditional blocks are resolved BEFORE substitution, so that a substituted
+    // value can never introduce a `data-condition` the engine then honours.
+    // Quote escaping already prevents that, but only as an accident of the
+    // matching regex requiring literal double quotes — evaluating conditions
+    // against the template alone makes it structural instead. It also stops the
+    // trailing sweep below from deleting the literal text `data-condition="..."`
+    // out of a legitimate value.
+    const conditioned = processConditionalBlocks(html, variables);
+    const replaced = conditioned.replace(TAG_REGEX, (match, key, modifierStr) => {
         const value = resolveVariable(key, variables);
         if (value === undefined) return match;
-        const sanitized = sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS);
+        const sanitized = escapeQuotes(sanitizeHtml(value, VARIABLE_SANITIZE_OPTIONS));
         if (!modifierStr) return sanitized;
         const modifiers = parseModifiers(modifierStr);
         return applyModifiers(sanitized, modifiers);
     });
-    const processed = processConditionalBlocks(replaced, variables);
-    return cleanTelHrefs(processed);
+    return cleanTelHrefs(replaced);
+}
+
+/**
+ * The one signature pipeline: substitute, then re-sanitise.
+ *
+ * `renderTemplate()` alone is NOT safe to hand to Gmail — it splices directory
+ * values into an HTML document, and the save-time allowlist ran before those
+ * values existed. Every path that writes a signature to a mailbox, and the audit
+ * path that fingerprints what those writes should produce, must go through this
+ * function so they cannot drift apart.
+ *
+ * This is a no-op for well-formed input: templates are stored through
+ * sanitizeTemplateHtml() (template-service.ts create/update) and the function is
+ * idempotent, so the wrap only ever removes markup a substituted value smuggled
+ * in. That property is what keeps signature_state.desired_hash stable across
+ * this change, and template-renderer.test.ts locks it.
+ */
+export function renderSignatureHtml(templateHtml: string, variables: TemplateVariables): string {
+    return sanitizeTemplateHtml(renderTemplate(templateHtml, variables));
 }
 
 function cleanTelHrefs(html: string): string {
@@ -170,47 +244,77 @@ function cleanTelHrefs(html: string): string {
  * - If ALL listed variables are empty/undefined/whitespace → the element is removed entirely
  * - If at least one variable is filled → the element is kept, the data-condition attribute is removed
  */
+/**
+ * Elements with no closing tag — for these the element IS the open tag.
+ *
+ * findMatchingCloseTag() searches for a literal `</tag>`, which an img/br/hr
+ * never has, so it returned -1 and the caller's -1 branch kept the element while
+ * stripping its data-condition. The conditional failed open, and invisibly: the
+ * attribute was gone, so the output gave no sign the condition was ignored.
+ */
+const VOID_ELEMENTS = new Set([
+    'img', 'br', 'hr', 'input', 'meta', 'link',
+    'area', 'base', 'col', 'embed', 'source', 'track', 'wbr',
+]);
+
 export function processConditionalBlocks(html: string, variables: TemplateVariables): string {
     const openTagRegex = /<(\w+)(\s[^>]*?)data-condition="([^"]*)"([^>]*?)>/g;
     let result = html;
     let match: RegExpExecArray | null;
 
-    let safety = 0;
-    while ((match = openTagRegex.exec(result)) !== null && safety++ < 200) {
+    // Every iteration removes exactly one `data-condition`, so the loop is bounded
+    // by the count at entry. This is an invariant check, not a truncation limit:
+    // the old fixed cap of 200 silently let blocks 201+ through — the trailing
+    // sweep stripped their attribute and kept the element, so a template with
+    // enough conditionals leaked the very blocks it meant to hide.
+    const maxIterations = (result.match(/data-condition="/g) || []).length + 1;
+    let iterations = 0;
+
+    while ((match = openTagRegex.exec(result)) !== null) {
+        if (++iterations > maxIterations) {
+            // Fail closed. This output goes into a real mailbox, so refusing beats
+            // sending a half-processed signature. Every caller already has a
+            // per-user catch that records the failure.
+            throw new Error('processConditionalBlocks: koşullu bloklar çözümlenemedi (şablon bozuk olabilir)');
+        }
+
+        const openTag = match[0];
         const fullMatchStart = match.index;
         const tagName = match[1];
         const conditionValue = match[3];
-        const openTagEnd = fullMatchStart + match[0].length;
+        const openTagEnd = fullMatchStart + openTag.length;
+
+        const keepElement = () => {
+            result = result.slice(0, fullMatchStart)
+                + openTag.replace(/\s*data-condition="[^"]*"/, '')
+                + result.slice(openTagEnd);
+            openTagRegex.lastIndex = 0;
+        };
+        const dropRange = (end: number) => {
+            result = result.slice(0, fullMatchStart) + result.slice(end);
+            openTagRegex.lastIndex = 0;
+        };
 
         const keys = conditionValue.split(',').map((k) => k.trim()).filter(Boolean);
-        if (keys.length === 0) {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-            openTagRegex.lastIndex = 0;
+        if (keys.length === 0) { keepElement(); continue; }
+
+        const allEmpty = keys.every((k) => !(resolveVariable(k, variables) || '').trim());
+
+        if (VOID_ELEMENTS.has(tagName.toLowerCase())) {
+            if (allEmpty) dropRange(openTagEnd); else keepElement();
             continue;
         }
 
         const closingIndex = findMatchingCloseTag(result, openTagEnd, tagName);
         if (closingIndex === -1) {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-            openTagRegex.lastIndex = 0;
-            continue;
+            // Unbalanced non-void element. Templates are persisted through
+            // sanitizeTemplateHtml(), which balances tags, so this is unreachable
+            // for stored input — treat it as corruption and fail closed rather
+            // than guess at the element's extent.
+            throw new Error(`processConditionalBlocks: <${tagName}> için kapanış etiketi bulunamadı`);
         }
 
-        const closeTagEnd = closingIndex + `</${tagName}>`.length;
-        const allEmpty = keys.every((k) => !(resolveVariable(k, variables) || '').trim());
-
-        if (allEmpty) {
-            result = result.slice(0, fullMatchStart) + result.slice(closeTagEnd);
-        } else {
-            result = result.slice(0, match.index) +
-                match[0].replace(/\s*data-condition="[^"]*"/, '') +
-                result.slice(openTagEnd);
-        }
-        openTagRegex.lastIndex = 0;
+        if (allEmpty) dropRange(closingIndex + `</${tagName}>`.length); else keepElement();
     }
 
     return result.replace(/\s*data-condition="[^"]*"/g, '');

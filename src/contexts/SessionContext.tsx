@@ -85,9 +85,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             // stays in the vault; unlocking with the master password restores the
             // Google session silently — no browser OAuth. Running bulk jobs keep
             // going until they finish (Graceful Lock in the main process).
+            //
+            // Explicitly 'idle': the manual re-auth window must not apply here.
+            // This timer's own default is 60 minutes, so a 59-minute window would
+            // already be expired the instant it fired.
             if (remaining <= 0 && !lockCalledRef.current) {
                 lockCalledRef.current = true;
-                lock().catch(() => { /* main process drives the lock; ignore */ });
+                lock('idle').catch(() => { /* main process drives the lock; ignore */ });
             }
         }, 1000);
 

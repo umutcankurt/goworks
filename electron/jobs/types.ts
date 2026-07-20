@@ -1,4 +1,21 @@
-export type JobType = 'BULK_SIGNATURE_PUSH' | 'BULK_SUSPEND' | 'BULK_DELETE' | 'SIGNATURE_AUDIT' | 'BULK_GROUP_ADD';
+/**
+ * Runtime-checkable job types.
+ *
+ * Declared as a const array, not just a union: `jobs:create` receives its type
+ * over IPC, and a type-only union is erased at build so nothing rejects an
+ * unknown value. An unregistered type is not merely ignored either — the runner
+ * logs and leaves the row PENDING forever, re-examining it on every dispatch
+ * tick, so unvalidated input is also an unbounded-growth vector.
+ */
+export const JOB_TYPES = [
+    'BULK_SIGNATURE_PUSH',
+    'BULK_SUSPEND',
+    'BULK_DELETE',
+    'SIGNATURE_AUDIT',
+    'BULK_GROUP_ADD',
+] as const;
+
+export type JobType = (typeof JOB_TYPES)[number];
 export type JobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface JobRecord {

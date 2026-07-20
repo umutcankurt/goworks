@@ -36,7 +36,7 @@ export const Header = React.memo(function Header() {
                 <div className="flex items-center space-x-3 cursor-pointer hover:bg-surface-container-high p-1.5 pr-3 rounded-full transition-colors">
                     <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-eth-primary-container/15 text-eth-primary border border-eth-primary-container/30">
                         {user?.picture ? (
-                            <img src={user.picture} alt={user.name} className="w-full h-full object-cover" />
+                            <img src={user.picture} alt={user.name ?? ''} className="w-full h-full object-cover" />
                         ) : (
                             <User size={16} strokeWidth={2.5} />
                         )}
@@ -60,7 +60,7 @@ export const Header = React.memo(function Header() {
 
                 <button
                     type="button"
-                    onClick={() => { lock().catch(() => { /* main process drives the lock */ }); }}
+                    onClick={() => { lock('manual').catch(() => { /* main process drives the lock */ }); }}
                     aria-label={t('lockNow')}
                     title={t('lockNow')}
                     className="flex h-8 w-8 items-center justify-center rounded-full border bg-surface-container-high text-on-surface-variant eth-border-ghost-soft transition-colors hover:text-on-surface"

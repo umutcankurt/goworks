@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session, shell } from 'electron'
+import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session, shell, dialog } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -31,9 +31,12 @@ import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir, clearAllLogs } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
-import { toUserMessage } from './lib/error-utils';
+import { toUserMessage, fail } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
+import { isAllowedExternalUrl } from './lib/external-url';
+import { requireOneOf, requireString, requireArray, requireEmailList, requireImageBytes, requireStringRecord } from './lib/validate';
+import { JOB_TYPES, type JobType } from './jobs/types';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -140,8 +143,14 @@ function createWindow() {
   // default browser instead of an in-app BrowserWindow — the user's Google
   // session etc. is already open there.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      shell.openExternal(url)
+    // Parse and allowlist the host. A protocol-prefix check alone would hand a
+    // compromised renderer the ability to open any http(s) URL in the user's real
+    // browser, where their live Google session already is. Every legitimate call
+    // site passes a hardcoded Google URL, so nothing needs the permissiveness.
+    if (isAllowedExternalUrl(url)) {
+      void shell.openExternal(url)
+    } else {
+      logger.warn(`[main] engellenen dış bağlantı: ${url.slice(0, 120)}`)
     }
     return { action: 'deny' }
   })
@@ -168,20 +177,27 @@ function createWindow() {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   closeDb();
-  if (process.platform === 'darwin') {
-    authService?.logout();
-  } else {
+  // Closing the window on macOS is NOT a logout: the app stays in the dock, and
+  // the documented model is that a full logout — revoke + delete the vaulted
+  // refresh token — happens only on an explicit user logout or factory reset.
+  // Calling logout() here wiped the refresh token, so the Google session could
+  // never survive to the next unlock, which is the entire point of storing it.
+  // Stepping away is covered by the idle auto-lock, not by this handler.
+  if (process.platform !== 'darwin') {
     app.quit()
     win = null
   }
 })
 
-app.on('before-quit', async (event) => {
-  if (authService?.isAuthenticated()) {
-    event.preventDefault();
-    await authService.logout();
-    app.quit();
-  }
+app.on('before-quit', () => {
+  // A login in flight leaves a bound loopback listener and an unsettled promise;
+  // neither should outlive the app.
+  authService?.closeServer(new Error('Uygulama kapatıldığı için giriş iptal edildi.'));
+  // Deliberately NOT logout(). Quitting used to revoke the grant at Google and
+  // delete the refresh token from the vault, so every restart forced a fresh
+  // browser OAuth round — defeating the silent-restore design. Nothing needs
+  // cleaning up here: the access token lives only in memory and dies with the
+  // process, and the refresh token is encrypted at rest in vault.enc.
 })
 
 app.on('activate', () => {
@@ -242,6 +258,71 @@ ipcMain.on('log:write', (_event, payload: { level: 'debug' | 'info' | 'warn' | '
 
 ipcMain.handle('log:getLogsDir', () => getLogsDir());
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** Upper bound on a single media upload. Mirrors MAX_LOGO_BYTES in spirit. */
+const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
+
+/** Upper bound on rows accepted in one bulk request. */
+const MAX_BULK_ROWS = 5000;
+
+/** Upper bound on a pasted/imported CSV. Well past any real roster. */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
+/** A real GCP service-account key is ~2.3 KB. */
+const MAX_SA_JSON_BYTES = 64 * 1024;
+
+/**
+ * Bounds on a preview render. A Gmail signature caps at 10,000 characters, so
+ * this is ~6x any legitimate template. The cap is about main-process latency
+ * rather than storage: processConditionalBlocks re-slices the whole string per
+ * match, and it runs on the process that also owns synchronous better-sqlite3,
+ * the job runner and the auto-lock timer. _CHARS, not _BYTES: requireString
+ * measures value.length, unlike MAX_SA_JSON_BYTES above.
+ */
+const MAX_TEMPLATE_HTML_CHARS = 64 * 1024;
+/** Seven canonical tags + English aliases + one {{image_N}} per asset. */
+const MAX_PREVIEW_VARS = 64;
+/** The longest legitimate value is an institution address, well under 200. */
+const MAX_PREVIEW_VAR_CHARS = 1024;
+
+/**
+ * Shape-check a job payload against its type.
+ *
+ * Workers coerce with `(job.payload || {}) as XPayload` and only discover a bad
+ * shape deep inside the run, after the row is already persisted and counted.
+ * Checking here means a malformed job is refused instead of enqueued.
+ */
+function requireCsvSize(csv: unknown): void {
+  if (typeof csv !== 'string') throw new UserFacingError('CSV içeriği okunamadı.');
+  if (Buffer.byteLength(csv, 'utf8') > MAX_CSV_BYTES) {
+    // better-sqlite3 is synchronous and the import runs in one transaction, so
+    // an oversized file is a hard main-process hang, not a slow request.
+    throw new UserFacingError('CSV dosyası çok büyük (en fazla 5 MB).');
+  }
+}
+
+function validateJobPayload(type: JobType, payload: any): any {
+  const p = payload ?? {};
+  switch (type) {
+    case 'BULK_SUSPEND':
+    case 'BULK_DELETE':
+      return { ...p, emails: requireEmailList(p.emails, 'E-posta listesi', MAX_BULK_ROWS) };
+    case 'BULK_SIGNATURE_PUSH':
+      if (p.emails !== undefined) {
+        return { ...p, emails: requireEmailList(p.emails, 'E-posta listesi', MAX_BULK_ROWS) };
+      }
+      return { ...p, rows: requireArray(p.rows, 'Satırlar', MAX_BULK_ROWS) };
+    case 'BULK_GROUP_ADD':
+      return { ...p, rows: requireArray(p.rows, 'Satırlar', MAX_BULK_ROWS) };
+    case 'SIGNATURE_AUDIT':
+      requireOneOf(p?.scope?.type, ['all', 'group', 'orgUnit'] as const, 'denetim kapsamı');
+      requireOneOf(p?.depth, ['fast', 'deep'] as const, 'denetim derinliği');
+      if (!Number.isInteger(Number(p?.templateId))) {
+        throw new UserFacingError('Denetim için geçerli bir şablon seçilmeli.');
+      }
+      return p;
+  }
+}
 
 function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): number {
   if (!payload) return 0;
@@ -411,13 +492,23 @@ app.whenReady().then(async () => {
       })();
     },
     onUnlocked: async () => {
-      // Silently restore the Google session from the vault's refresh token.
-      try {
-        const res = await authService?.restoreSession();
-        vaultManager.setGoogleReauthNeeded(!!res && res.reauthNeeded);
-        if (res?.authenticated) ensureAdminService();
-      } catch (e) {
-        logger.warn('[vault] restoreSession başarısız:', e);
+      // A manual lock left sitting past the re-auth window does not get a silent
+      // restore: the master password opens the vault, but Google access has to be
+      // re-authorized. restoreSession() is skipped rather than undone — calling it
+      // would load working credentials and leave the re-auth screen sitting on top
+      // of a live session.
+      if (vaultManager.consumeManualLockExpiry()) {
+        logger.info('[vault] elle kilit penceresi aşıldı → Google yeniden girişi isteniyor.');
+        vaultManager.setGoogleReauthNeeded(true);
+      } else {
+        // Silently restore the Google session from the vault's refresh token.
+        try {
+          const res = await authService?.restoreSession();
+          vaultManager.setGoogleReauthNeeded(!!res && res.reauthNeeded);
+          if (res?.authenticated) ensureAdminService();
+        } catch (e) {
+          logger.warn('[vault] restoreSession başarısız:', e);
+        }
       }
       // Recompute the SA soft-warn now that the vault is readable.
       try {
@@ -448,7 +539,7 @@ app.whenReady().then(async () => {
     if (minutes <= 0) return; // auto-lock disabled
     const idleTime = powerMonitor.getSystemIdleTime();
     if (idleTime >= minutes * 60) {
-      vaultManager.requestLock();
+      vaultManager.requestLock('idle');
     }
   }, 60000); // Check every minute
 
@@ -482,19 +573,16 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('auth:check', async () => {
     try {
-      return { success: true, authenticated: authService.isAuthenticated() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  });
-
-  ipcMain.handle('auth:getAccessToken', async () => {
-    try {
-      const client = authService.getClient();
-      // getAccessToken() automatically refreshes an expired token
-      const { token } = await client.getAccessToken();
-      if (!token) return { success: false, error: 'Token bulunamadı' };
-      return { success: true, token };
+      // The identity rides along so the renderer never has to treat its own
+      // localStorage as the source of truth. A vault lock legitimately reports
+      // authenticated:false, and the renderer used to react by deleting the only
+      // copy of the identity — leaving it signed out over a live main-process
+      // session once the vault was unlocked again.
+      return {
+        success: true,
+        authenticated: authService.isAuthenticated(),
+        user: authService.getCurrentUser(),
+      };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -543,10 +631,12 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Manual lock (e.g. a "Lock now" button). Graceful: running jobs finish first.
-  ipcMain.handle('vault:lock', async () => {
+  // Graceful: running jobs finish first. The reason decides whether the re-auth
+  // window is armed — only the "Lock now" button sends 'manual'. An unrecognised
+  // or absent reason falls back to 'idle', the non-disruptive default.
+  ipcMain.handle('vault:lock', async (_, args?: { reason?: string }) => {
     try {
-      vaultManager.requestLock();
+      vaultManager.requestLock(args?.reason === 'manual' ? 'manual' : 'idle');
       return { success: true, data: vaultManager.getState() };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1073,6 +1163,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('titles:importCsv', async (_, { csv }: { csv: string }) => {
     try {
+      requireCsvSize(csv);
       const { titleService } = await import('./services/title-service');
       const data = titleService.importCsv(csv, authService?.getCurrentUserEmail() ?? null);
       return { success: true, data };
@@ -1123,6 +1214,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('institutions:importCsv', async (_, { csv }: { csv: string }) => {
     try {
+      requireCsvSize(csv);
       const { institutionService } = await import('./services/institution-service');
       const data = institutionService.importCsv(csv, authService?.getCurrentUserEmail() ?? null);
       return { success: true, data };
@@ -1185,13 +1277,71 @@ app.whenReady().then(async () => {
   ipcMain.handle('templates:preview', async (_, { id, variables }: { id: number; variables: Record<string, string> }) => {
     try {
       const { templateService } = await import('./services/template-service');
-      const { renderTemplate, AVAILABLE_TAGS } = await import('./services/template-renderer');
+      const { renderSignatureHtml, AVAILABLE_TAGS } = await import('./services/template-renderer');
       const { buildMediaTokenVars } = await import('./services/media-token');
       const tpl = templateService.get(id);
       if (!tpl) return { success: false, error: 'Şablon bulunamadı' };
-      const html = renderTemplate(tpl.htmlContent, { ...buildMediaTokenVars(tpl.media), ...(variables || {}) });
+      // Media tokens spread LAST, same rule as the push path: the template's own
+      // assets win over anything the renderer sends. Preview must agree with push.
+      const html = renderSignatureHtml(tpl.htmlContent, { ...(variables || {}), ...buildMediaTokenVars(tpl.media) });
       return { success: true, data: { html, tags: AVAILABLE_TAGS } };
     } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  /**
+   * Render arbitrary signature HTML the way the push path would.
+   *
+   * templates:preview only renders a SAVED template by id, which is why the
+   * renderer grew its own substitution engine for unsaved buffers — and that copy
+   * drifted (it never sanitised, and resolved conditionals in the wrong order).
+   * This channel takes the buffer directly so there is one engine again.
+   *
+   * `mode` names the pushSignature mode it mirrors, so the correspondence stays
+   * greppable:
+   *   'template' → Mode 2/3 (gmail-signature-service.ts:161-170)
+   *   'raw'      → Mode 1  (gmail-signature-service.ts:139-145)
+   * They are genuinely different: data-condition survives sanitisation, so a raw
+   * push keeps conditional blocks that a template render with empty variables
+   * would strip.
+   */
+  ipcMain.handle('templates:renderPreview', async (_, input: {
+    html?: string;
+    mode?: string;
+    templateId?: number;
+    variables?: Record<string, string>;
+  }) => {
+    try {
+      const mode = requireOneOf(input?.mode ?? 'template', ['template', 'raw'] as const, 'önizleme modu');
+      const html = requireString(input?.html, 'Şablon içeriği', MAX_TEMPLATE_HTML_CHARS);
+      const { renderSignatureHtml, sanitizeTemplateHtml } = await import('./services/template-renderer');
+
+      if (mode === 'raw') {
+        // Mirrors Mode 1 exactly: sanitise only, substitute nothing.
+        return { success: true, data: { html: sanitizeTemplateHtml(html) } };
+      }
+
+      const variables = requireStringRecord(
+        input?.variables, 'Önizleme değişkenleri', MAX_PREVIEW_VARS, MAX_PREVIEW_VAR_CHARS,
+      );
+      let mediaVars: Record<string, string> = {};
+      if (input?.templateId !== undefined) {
+        const { templateService } = await import('./services/template-service');
+        const { buildMediaTokenVars } = await import('./services/media-token');
+        const tpl = templateService.get(input.templateId);
+        if (!tpl) return { success: false, error: 'Şablon bulunamadı' };
+        mediaVars = buildMediaTokenVars(tpl.media);
+      }
+      // Media tokens spread LAST, same rule as the push path: the template's own
+      // assets win over anything the renderer sends.
+      return { success: true, data: { html: renderSignatureHtml(html, { ...variables, ...mediaVars }) } };
+    } catch (error: any) {
+      // NOT toUserMessage(): processConditionalBlocks throws a plain Error whose
+      // message ("şablon bozuk olabilir") is the only thing telling the user which
+      // block is unbalanced. That is the common case here, not an edge case —
+      // the editor is a raw textarea, so markup is unbalanced mid-keystroke.
+      logger.warn('[templates:renderPreview] render edilemedi', error);
       return { success: false, error: error.message };
     }
   });
@@ -1211,18 +1361,33 @@ app.whenReady().then(async () => {
     try {
       const { mediaService } = await import('./services/media-service');
       return { success: true, data: mediaService.list(payload?.templateId) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:getAll] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('media:create', async (_, input: { name: string; driveUrl: string; mimeType?: string; templateId: number }) => {
     try {
       const { mediaService } = await import('./services/media-service');
-      const data = mediaService.create(input, authService?.getCurrentUserEmail() ?? null);
+      // Destructure explicitly. The service signature is WIDER than this
+      // handler's — it also accepts `fileId`, and prefers it when present,
+      // skipping the strict Drive-URL parser entirely. Forwarding `input`
+      // wholesale let the renderer pass a field this handler never mentions
+      // straight into an <img src> in a pushed signature.
+      const data = mediaService.create(
+        {
+          name: requireString(input?.name, 'Medya adı', 200),
+          driveUrl: requireString(input?.driveUrl, 'Drive URL', 2048),
+          mimeType: typeof input?.mimeType === 'string' ? input.mimeType : undefined,
+          templateId: Number(input?.templateId),
+        },
+        authService?.getCurrentUserEmail() ?? null,
+      );
       return { success: true, data };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:create] failed', error);
+      return fail(error);
     }
   });
 
@@ -1231,27 +1396,46 @@ app.whenReady().then(async () => {
     try {
       const { uploadImage, makePublic } = await import('./services/drive-upload-service');
       const { mediaService } = await import('./services/media-service');
+      requireGoogleAuth();
       const auth = authService.getClient();
-      const buffer = Buffer.from(input.data as ArrayBuffer);
-      const fileId = await uploadImage(auth, buffer, input.name, input.mimeType || 'image/png');
+      const name = requireString(input?.name, 'Dosya adı', 200);
+      // The mimeType comes from the BYTES, never from input.mimeType. What the
+      // renderer sends is the browser's guess from the file extension, and the
+      // label we pass to Drive becomes the Content-Type the public CDN serves
+      // the file with — so it has to be derived from content.
+      const { buffer, mimeType } = requireImageBytes(input?.data, 'Görsel', MAX_MEDIA_BYTES);
+      const fileId = await uploadImage(auth, buffer, name, mimeType);
       await makePublic(auth, fileId);
       const data = mediaService.create(
-        { name: input.name, fileId, mimeType: input.mimeType, templateId: input.templateId },
+        { name, fileId, mimeType, templateId: Number(input?.templateId) },
         authService?.getCurrentUserEmail() ?? null,
       );
       return { success: true, data };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:upload] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('media:delete', async (_, { id }: { id: number }) => {
     try {
       const { mediaService } = await import('./services/media-service');
-      mediaService.remove(id);
+      const { revokePublicAccess } = await import('./services/drive-upload-service');
+      const { driveFileId } = mediaService.remove(id);
+      // Revoke AFTER the row is gone, and never let a Drive failure resurrect
+      // the row: the local record is the source of truth for the UI, while the
+      // public grant is best-effort cleanup that the user can also do in Drive.
+      if (driveFileId && authService?.isAuthenticated()) {
+        try {
+          await revokePublicAccess(authService.getClient(), driveFileId);
+        } catch (err) {
+          logger.warn(`[media:delete] Drive genel erişimi kaldırılamadı (${driveFileId})`, err);
+        }
+      }
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:delete] failed', error);
+      return fail(error);
     }
   });
 
@@ -1260,13 +1444,17 @@ app.whenReady().then(async () => {
     try {
       const { getStatus } = await import('./secrets/service-account-loader');
       return { success: true, data: getStatus() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:serviceAccountStatus] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('config:uploadServiceAccount', async (_, { content }: { content: string }) => {
     try {
+      if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_SA_JSON_BYTES) {
+        throw new UserFacingError('Service Account JSON dosyası beklenenden büyük.');
+      }
       const { uploadFromContent } = await import('./secrets/service-account-loader');
       const { clearAuthCache } = await import('./services/google-admin-sa');
       const { clearGmailAuthCache } = await import('./services/gmail-signature-service');
@@ -1279,8 +1467,9 @@ app.whenReady().then(async () => {
       // ConfigWarningBanner clears immediately, without an app restart.
       bootStatus.soft.serviceAccountMissing = false;
       return { success: true, data: result };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:uploadServiceAccount] failed', error);
+      return fail(error);
     }
   });
 
@@ -1298,8 +1487,9 @@ app.whenReady().then(async () => {
       // ConfigWarningBanner reappears without an app restart.
       bootStatus.soft.serviceAccountMissing = true;
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:deleteServiceAccount] failed', error);
+      return fail(error);
     }
   });
 
@@ -1308,18 +1498,22 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getAll] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('config:set', async (_, { key, value }: { key: string; value: string | null }) => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      appConfigService.set(key as any, value);
+      // setFromRenderer(), not set(): the key arrives over IPC and must be
+      // checked against an allowlist at runtime. See RENDERER_WRITABLE_KEYS.
+      appConfigService.setFromRenderer(key, value, { vaultUnlocked: vaultManager.isUnlocked() });
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:set] failed', error);
+      return fail(error);
     }
   });
 
@@ -1329,8 +1523,9 @@ app.whenReady().then(async () => {
       const buf = Buffer.from(data instanceof Uint8Array ? data : new Uint8Array(data));
       const stored = appConfigService.uploadLogo(buf, ext);
       return { success: true, data: { logoPath: stored, config: appConfigService.getAll() } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:uploadLogo] failed', error);
+      return fail(error);
     }
   });
 
@@ -1339,23 +1534,27 @@ app.whenReady().then(async () => {
       const { appConfigService } = await import('./services/app-config-service');
       appConfigService.deleteLogo();
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:deleteLogo] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('config:getLogoDataUrl', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      const p = appConfigService.get('logoPath');
+      // resolveLogoPath(), not get(): the raw row is only trusted after it has
+      // been checked to resolve inside the branding directory.
+      const p = appConfigService.resolveLogoPath();
       if (!p || !appConfigService.logoExists()) return { success: true, data: null };
       const { readFile } = await import('node:fs/promises');
       const buf = await readFile(p);
       const ext = (p.split('.').pop() || 'png').toLowerCase();
       const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
       return { success: true, data: `data:${mime};base64,${buf.toString('base64')}` };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getLogoDataUrl] failed', error);
+      return fail(error);
     }
   });
 
@@ -1368,8 +1567,9 @@ app.whenReady().then(async () => {
         return { success: false, error: 'Ana parola belirlenmeden onboarding tamamlanamaz.' };
       }
       return { success: true, data: appConfigService.markOnboardingComplete() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:markOnboardingComplete] failed', error);
+      return fail(error);
     }
   });
 
@@ -1377,8 +1577,9 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       return { success: true, data: appConfigService.acceptTerms(version) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:acceptTerms] failed', error);
+      return fail(error);
     }
   });
 
@@ -1391,16 +1592,51 @@ app.whenReady().then(async () => {
       // re-entering credentials or signing in again. To remove credentials use
       // Settings → Google Workspace → "Clear"; to switch admin use Logout.
       return { success: true, data: appConfigService.resetOnboarding() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:resetOnboarding] failed', error);
+      return fail(error);
     }
   });
 
   // Factory reset: permanently wipe ALL local data and return to a fresh install
   // (e.g. handing the same machine to a different company / admin). Destructive
   // and irreversible — guarded by a type-to-confirm modal in the renderer.
-  ipcMain.handle('config:factoryReset', async () => {
+  ipcMain.handle('config:factoryReset', async (_, args?: { password?: string }) => {
     try {
+      // The renderer's type-to-confirm modal is a UX affordance, not a gate --
+      // it is entirely renderer-side and worth nothing against a renderer
+      // foothold. This wipes the vault (Service Account key + refresh token,
+      // irrecoverably: there is no recovery key by design), every table, and the
+      // logs, and it VACUUMs afterwards specifically so the deleted plaintext
+      // cannot be recovered. One ungated invoke() was a perfect self-destruct
+      // with anti-forensics, executed by the app's own hardening code.
+      //
+      // Two gates, both owned by main: the master password must be re-supplied
+      // and verified, and a native dialog must be confirmed.
+      if (vaultManager.fileExists()) {
+        const password = typeof args?.password === 'string' ? args.password : '';
+        if (!password) {
+          throw new UserFacingError('Fabrika ayarlarına dönmek için ana parolanızı girmelisiniz.');
+        }
+        await vaultManager.unlock(password);   // throws on a wrong password
+      }
+
+      const confirm = await dialog.showMessageBox(win!, {
+        type: 'warning',
+        buttons: ['İptal', 'Her şeyi sil'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Fabrika ayarlarına dön',
+        message: 'Tüm yerel veriler kalıcı olarak silinecek.',
+        detail:
+          'Kasa (Service Account anahtarı ve Google oturumu), kurum/şablon/marka verileri '
+          + 've loglar geri alınamaz biçimde silinir. Bu işlemin geri dönüşü yoktur.',
+        noLink: true,
+      });
+      if (confirm.response !== 1) {
+        return { success: false, error: 'İşlem iptal edildi.' };
+      }
+
       const { appConfigService } = await import('./services/app-config-service');
       const { getDb } = await import('./db');
       const { clearAuthCache } = await import('./services/google-admin-sa');
@@ -1458,8 +1694,9 @@ app.whenReady().then(async () => {
       } catch { /* ignore */ }
 
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:factoryReset] failed', error);
+      return fail(error);
     }
   });
 
@@ -1473,8 +1710,9 @@ app.whenReady().then(async () => {
           hasSecret: !!appConfigService.get('googleClientSecret'),
         },
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1524,8 +1762,9 @@ app.whenReady().then(async () => {
         success: true,
         data: { clientId: currentId, hasSecret },
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:setOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1539,8 +1778,9 @@ app.whenReady().then(async () => {
       adminService = null;
       adminServiceClient = null;
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:clearOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1570,8 +1810,9 @@ app.whenReady().then(async () => {
         scope: ['https://www.googleapis.com/auth/userinfo.email'],
       });
       return { success: true, data: { ok: !!url } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:testOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1585,8 +1826,9 @@ app.whenReady().then(async () => {
       const { testDwdScopes } = await import('./services/dwd-test-service');
       const result = await testDwdScopes(payload?.adminEmail);
       return { success: true, data: result };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:testDwdScopes] failed', error);
+      return fail(error);
     }
   });
 
@@ -1668,24 +1910,33 @@ app.whenReady().then(async () => {
   });
 
   // Jobs
-  ipcMain.handle('jobs:create', async (_, payload: { type: import('./jobs/types').JobType; payload: any }) => {
+  ipcMain.handle('jobs:create', async (_, payload: { type: string; payload: any }) => {
     try {
+      // requireGoogleAuth() rather than a bare "is an email set" check: this
+      // channel can enqueue BULK_DELETE against the whole tenant, and the job
+      // survives restarts via resumeOnStartup(), so an expired session must not
+      // be able to schedule tenant-destructive work.
+      requireGoogleAuth();
       const adminEmail = authService?.getCurrentUserEmail();
       if (!adminEmail) return { success: false, error: 'Admin oturumu bulunamadı' };
-      const total = computeJobTotal(payload.type, payload.payload);
-      const job = jobQueue.enqueue({ type: payload.type, payload: payload.payload, total, createdBy: adminEmail });
+      const type = requireOneOf(payload?.type, JOB_TYPES, 'iş tipi');
+      const jobPayload = validateJobPayload(type, payload?.payload);
+      const total = computeJobTotal(type, jobPayload);
+      const job = jobQueue.enqueue({ type, payload: jobPayload, total, createdBy: adminEmail });
       jobRunner.enqueueAndStart(job);
       return { success: true, data: { id: job.id } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:create] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('jobs:list', async (_, filters: any = {}) => {
     try {
       return { success: true, data: jobQueue.list(filters) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:list] failed', error);
+      return fail(error);
     }
   });
 
@@ -1739,8 +1990,9 @@ app.whenReady().then(async () => {
       const job = jobQueue.get(id);
       if (!job) return { success: false, error: 'Job bulunamadı' };
       return { success: true, data: job };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:get] failed', error);
+      return fail(error);
     }
   });
 
@@ -1748,8 +2000,9 @@ app.whenReady().then(async () => {
     try {
       const ok = jobRunner.cancel(id);
       return { success: ok };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:cancel] failed', error);
+      return fail(error);
     }
   });
 
@@ -1785,8 +2038,9 @@ app.whenReady().then(async () => {
       }
       await writeFile(result.filePath, content, 'utf-8');
       return { success: true, data: { path: result.filePath } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:downloadReport] failed', error);
+      return fail(error);
     }
   });
 

@@ -49,3 +49,26 @@ export async function makePublic(auth: OAuth2Client, fileId: string): Promise<vo
         `drive.permissions.create(${fileId})`,
     );
 }
+
+/**
+ * Revoke the "anyone with the link" grant on a file.
+ *
+ * Deleting a media row used to drop only the DB record, leaving the Drive file
+ * world-readable forever — and discarding the fileId, so nothing in the app
+ * could ever clean it up afterwards. 404 counts as success: the permission or
+ * the file being gone already is the desired end state.
+ */
+export async function revokePublicAccess(auth: OAuth2Client, fileId: string): Promise<void> {
+    const drive = getGoogle().drive({ version: 'v3', auth });
+    try {
+        await withRetry(
+            () => drive.permissions.delete({ fileId, permissionId: 'anyoneWithLink' }),
+            logger,
+            `drive.permissions.delete(${fileId})`,
+        );
+    } catch (err: any) {
+        const status = typeof err?.code === 'number' ? err.code : err?.response?.status;
+        if (status === 404) return;
+        throw err;
+    }
+}

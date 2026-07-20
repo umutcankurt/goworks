@@ -92,10 +92,29 @@ const LOCKOUT_BASE_MS = 15_000;
 /** Cap on the back-off window. */
 const LOCKOUT_MAX_MS = 5 * 60_000;
 
+/**
+ * How long a *deliberate* lock may sit before unlocking it stops being enough to
+ * get back into Google. Past this, the master password still opens the vault but
+ * the Google session is not silently restored — the user re-authorizes.
+ *
+ * Scoped to manual locks on purpose. The idle auto-lock is not covered because
+ * its own default is 60 minutes: a shorter window would expire the moment the
+ * idle lock fired, so every idle lock would force a browser round-trip.
+ *
+ * In-memory only, so it does not survive a restart. That is deliberate — closing
+ * the app is not a lock, and the refresh token is meant to outlive it.
+ */
+const MANUAL_LOCK_REAUTH_WINDOW_MS = 59 * 60_000;
+
+/** Which timer locked the vault. Only 'manual' arms the re-auth window above. */
+export type LockReason = 'manual' | 'idle';
+
 class VaultManager {
     private vault: Vault | null = null;
     private status: VaultStatus = 'NEEDS_ONBOARDING';
     private hardLockPending = false;
+    /** Epoch ms of the last manual lock; null after an idle lock or once consumed. */
+    private manualLockAt: number | null = null;
     private googleReauthNeeded = false;
     private corrupt = false;
     private failedAttempts = 0;
@@ -287,13 +306,29 @@ class VaultManager {
     /**
      * Soft-lock now (idle / manual). The UI locks immediately; the DEK is kept
      * while jobs are RUNNING and zeroized once they drain (Graceful Lock).
+     *
+     * Defaults to 'idle' so an unclassified caller never surprises the user with
+     * a forced Google sign-in — opting in is explicit.
      */
-    requestLock(): void {
+    requestLock(reason: LockReason = 'idle'): void {
         if (this.status !== 'UNLOCKED') return;
         this.status = 'LOCKED';
-        logger.info('[vault] Soft lock — UI kilitlendi.');
+        // Wall-clock is fine here: rolling your own clock back only extends your
+        // own session, and that already requires the master password.
+        this.manualLockAt = reason === 'manual' ? Date.now() : null;
+        logger.info(`[vault] Soft lock (${reason}) — UI kilitlendi.`);
         try { this.hooks.notify?.('vault:locked'); } catch { /* ignore */ }
         this.tryFinalizeLock();
+    }
+
+    /**
+     * True when a manual lock has been sitting longer than the re-auth window.
+     * Reading it clears the mark, so the answer is only ever acted on once.
+     */
+    consumeManualLockExpiry(): boolean {
+        const lockedAt = this.manualLockAt;
+        this.manualLockAt = null;
+        return lockedAt !== null && Date.now() - lockedAt > MANUAL_LOCK_REAUTH_WINDOW_MS;
     }
 
     private tryFinalizeLock(): void {

@@ -47,11 +47,18 @@ vi.mock('electron', () => ({
 
 vi.mock('fs', () => ({ default: fsMock, ...fsMock }));
 
+const googleApiMock = vi.hoisted(() => ({
+    userinfoGet: vi.fn(),
+    adminUsersGet: vi.fn(),
+}));
+
 vi.mock('./google-lazy', () => ({
     getGoogle: vi.fn(() => ({
         auth: {
             OAuth2: OAuth2Constructor,
         },
+        oauth2: () => ({ userinfo: { get: googleApiMock.userinfoGet } }),
+        admin: () => ({ users: { get: googleApiMock.adminUsersGet } }),
     })),
 }));
 
@@ -74,6 +81,10 @@ describe('AuthService', () => {
         fsMock.existsSync.mockReturnValue(false);
         appConfigMock.get.mockReturnValue('');
         vaultManagerMock.getRefreshToken.mockReturnValue(null);
+        // Default: the identity re-check cannot reach Google. restoreSession
+        // fails OPEN on that, which is what the pre-existing tests assume.
+        googleApiMock.userinfoGet.mockRejectedValue(new Error('offline'));
+        googleApiMock.adminUsersGet.mockRejectedValue(new Error('offline'));
     });
 
     describe('constructor', () => {
@@ -162,7 +173,7 @@ describe('AuthService', () => {
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
             const res = await svc.restoreSession();
-            expect(res).toEqual({ authenticated: false, reauthNeeded: true });
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true, reason: 'no-token' });
         });
 
         it('geçerli refresh token ile sessiz access token alır (re-login yok)', async () => {
@@ -186,7 +197,110 @@ describe('AuthService', () => {
             const { AuthService } = await import('./auth-service');
             const svc = new AuthService();
             const res = await svc.restoreSession();
-            expect(res).toEqual({ authenticated: false, reauthNeeded: true });
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true, reason: 'refresh-failed' });
+        });
+    });
+
+    describe('restoreSession — kimlik yeniden doğrulaması', () => {
+        function readyVault() {
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret', allowedDomain: 'example.com' });
+            vaultManagerMock.getRefreshToken.mockReturnValue('rt-123');
+            oauth2Instance.getAccessToken.mockResolvedValue({ token: 'access-xyz' });
+        }
+
+        it('drops the session when the stored identity is no longer an admin', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@example.com' } });
+            googleApiMock.adminUsersGet.mockResolvedValue({ data: { isAdmin: false } });
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true, reason: 'not-admin' });
+            // and the refresh token is cleared, so the next unlock cannot resurrect it
+            expect(vaultManagerMock.setRefreshToken).toHaveBeenCalledWith(null);
+        });
+
+        it('drops the session when the stored identity left the allowed domain', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@other.tld' } });
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true, reason: 'domain-mismatch' });
+            expect(vaultManagerMock.setRefreshToken).toHaveBeenCalledWith(null);
+        });
+
+        it('keeps the session when the admin check is a real admin', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@example.com' } });
+            googleApiMock.adminUsersGet.mockResolvedValue({ data: { isAdmin: true } });
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            expect(res).toEqual({ authenticated: true, reauthNeeded: false });
+            expect(vaultManagerMock.setRefreshToken).not.toHaveBeenCalledWith(null);
+        });
+
+        it('fails OPEN when the admin check cannot reach Google (offline laptop)', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@example.com' } });
+            // ETIMEDOUT rather than ENOTFOUND: retry.ts deliberately does NOT retry
+            // ETIMEDOUT, so this reaches the classifier without a 14s backoff chain.
+            googleApiMock.adminUsersGet.mockRejectedValue(Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }));
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            // A network blip must not lock a real admin out of a local-only app.
+            expect(res).toEqual({ authenticated: true, reauthNeeded: false, reason: 'authz-unverified' });
+            expect(vaultManagerMock.setRefreshToken).not.toHaveBeenCalledWith(null);
+        });
+
+        it('fails OPEN on a missing-scope 403 so a scope migration cannot log admins out', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@example.com' } });
+            googleApiMock.adminUsersGet.mockRejectedValue(Object.assign(new Error('insufficient'), {
+                code: 403,
+                response: { data: { error: { status: 'PERMISSION_DENIED', message: 'insufficient scope' } } },
+            }));
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            expect(res).toEqual({ authenticated: true, reauthNeeded: false, reason: 'authz-unverified' });
+        });
+
+        it('treats a 403 that is NOT about scope as a definitive not-admin', async () => {
+            readyVault();
+            googleApiMock.userinfoGet.mockResolvedValue({ data: { email: 'a@example.com' } });
+            googleApiMock.adminUsersGet.mockRejectedValue(Object.assign(new Error('forbidden'), {
+                code: 403,
+                response: { data: { error: { status: 'PERMISSION_DENIED', message: 'Not Authorized' } } },
+            }));
+
+            const { AuthService } = await import('./auth-service');
+            const res = await new AuthService().restoreSession();
+
+            expect(res).toEqual({ authenticated: false, reauthNeeded: true, reason: 'not-admin' });
+        });
+    });
+
+    describe('login — ön koşullar (F-2)', () => {
+        it('refuses to open a browser when no allowed domain is configured', async () => {
+            setConfig({ googleClientId: 'id', googleClientSecret: 'secret' });
+            const { shell } = await import('electron');
+
+            const { AuthService } = await import('./auth-service');
+            await expect(new AuthService().login()).rejects.toThrow(/domain/i);
+
+            // The old flow opened the browser, took a full consent, minted a refresh
+            // token and persisted it, and only then discovered the domain was unset.
+            expect(shell.openExternal).not.toHaveBeenCalled();
+            expect(vaultManagerMock.setRefreshToken).not.toHaveBeenCalled();
         });
     });
 });
+

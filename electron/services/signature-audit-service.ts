@@ -1,5 +1,5 @@
 import { getDb } from '../db';
-import { renderTemplate, sanitizeTemplateHtml, type TemplateVariables } from './template-renderer';
+import { renderSignatureHtml, sanitizeTemplateHtml, type TemplateVariables } from './template-renderer';
 import {
     buildSignatureVariables,
     profileFromGoogleUser,
@@ -103,7 +103,9 @@ export function computeDesired(
     templateId: number,
 ): DesiredSignature {
     const variables = buildSignatureVariables(profile);
-    const html = renderTemplate(templateHtml, variables);
+    // Must be the same function the push paths use, or the fingerprint describes
+    // a signature we would never actually send.
+    const html = renderSignatureHtml(templateHtml, variables);
     const hash = hashSignatureHtml(html);
     return { variables, html, hash, templateId };
 }

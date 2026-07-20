@@ -3,7 +3,7 @@ import { getGoogle } from '../google-lazy';
 import { getServiceAccountCredentials } from '../secrets/service-account-loader';
 import { institutionService } from './institution-service';
 import { templateService } from './template-service';
-import { renderTemplate, sanitizeTemplateHtml, type TemplateVariables } from './template-renderer';
+import { renderSignatureHtml, sanitizeTemplateHtml, type TemplateVariables } from './template-renderer';
 import { getUserInfo } from './google-admin-sa';
 import { formatPhoneForSignature } from './phone';
 import { signatureStateService } from './signature-state-service';
@@ -165,8 +165,9 @@ export async function pushSignature(
     }
 
     // Media tokens ({{image_N}} → CDN url) always come from the template's assets,
-    // not the caller; user vars are spread last but never collide with image_N keys.
-    const html = renderTemplate(tpl.htmlContent, { ...buildMediaTokenVars(tpl.media), ...vars });
+    // never the caller: they are spread LAST so a caller-supplied `image_1` cannot
+    // override the template's own asset and land in an <img src> we push to a mailbox.
+    const html = renderSignatureHtml(tpl.htmlContent, { ...vars, ...buildMediaTokenVars(tpl.media) });
     await setSignature(userEmail, html);
     signatureStateService.recordPush(userEmail, resolvedTemplateId, html, vars);
     return { success: true, email: userEmail };

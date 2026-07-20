@@ -2,6 +2,7 @@ import { app } from 'electron';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { getDb } from '../db';
+import { UserFacingError } from '../lib/errors';
 
 export type AppConfigKey =
     | 'companyName'
@@ -93,6 +94,55 @@ const DEFAULTS: AppConfig = {
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
 
+/** uploadLogo() is the only writer, and it always uses this exact shape. */
+const LOGO_BASENAME_RE = /^logo\.(png|jpg|jpeg|svg|webp)$/;
+
+/**
+ * Keys the renderer may write through the generic `config:set` channel.
+ *
+ * This is an ALLOWLIST on purpose. `AppConfigKey` is a TypeScript union and is
+ * erased at build time, so without an explicit runtime membership check the
+ * renderer can write ANY key — including ones the main process later reads back
+ * as a filesystem path or as a security boundary.
+ *
+ * Deliberately excluded:
+ *   logoPath              written only by uploadLogo(). It is read back and then
+ *                         opened (config:getLogoDataUrl) and unlinked
+ *                         (deleteLogo), so a renderer-controlled value is an
+ *                         arbitrary file read + delete primitive.
+ *   googleClientId,
+ *   googleClientSecret    have a dedicated, better-validated handler
+ *                         (config:setOAuthCredentials).
+ *   onboardingCompletedAt,
+ *   termsAcceptedAt,
+ *   termsVersion          set only by their own transactional helpers, which
+ *                         enforce invariants the generic setter cannot.
+ */
+const RENDERER_WRITABLE_KEYS: readonly AppConfigKey[] = [
+    'companyName',
+    'sidebarAbbr',
+    'emailSenderName',
+    'language',
+    'onboardingStep',
+    'allowedDomain',
+    'autoLockMinutes',
+];
+
+/**
+ * Writable keys that define a security control rather than a cosmetic setting.
+ *
+ * They must stay writable during onboarding — the wizard sets `allowedDomain` at
+ * the branding step, which runs before the vault exists — but once onboarding is
+ * complete they require an unlocked vault. Otherwise a renderer foothold could
+ * relocate the login tenant boundary, or disable the idle auto-lock, from the
+ * lock screen itself.
+ */
+const VAULT_GATED_KEYS: readonly AppConfigKey[] = ['allowedDomain', 'autoLockMinutes'];
+
+function isRendererWritable(key: string): key is AppConfigKey {
+    return (RENDERER_WRITABLE_KEYS as readonly string[]).includes(key);
+}
+
 function getBrandingDir(): string {
     const dir = path.join(app.getPath('userData'), 'branding');
     if (!existsSync(dir)) {
@@ -113,20 +163,20 @@ function normalizeValue(key: AppConfigKey, raw: string | null): string | null {
     if (key === 'language') {
         const v = trimmed.toLowerCase();
         if (v !== 'tr' && v !== 'en') {
-            throw new Error(`Geçersiz dil: ${trimmed}. Desteklenen değerler: tr, en`);
+            throw new UserFacingError(`Geçersiz dil: ${trimmed}. Desteklenen değerler: tr, en`);
         }
         return v;
     }
     if (key === 'onboardingStep') {
         if (!ONBOARDING_STEPS.includes(trimmed as OnboardingStep)) {
-            throw new Error(`Geçersiz onboarding adımı: ${trimmed}`);
+            throw new UserFacingError(`Geçersiz onboarding adımı: ${trimmed}`);
         }
         return trimmed;
     }
     if (key === 'autoLockMinutes') {
         const n = parseInt(trimmed, 10);
         if (!Number.isFinite(n) || n < 0 || n > 1440) {
-            throw new Error(`Geçersiz otomatik kilit süresi: ${trimmed}`);
+            throw new UserFacingError(`Geçersiz otomatik kilit süresi: ${trimmed}`);
         }
         return String(n);
     }
@@ -154,17 +204,17 @@ export const appConfigService = {
         if (key === 'allowedDomain' && normalized) {
             // Leaving it empty is allowed; but if filled, the format must be valid.
             if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(normalized)) {
-                throw new Error('Geçersiz domain formatı (örn: example.com)');
+                throw new UserFacingError('Geçersiz domain formatı (örn: example.com)');
             }
         }
         if (key === 'sidebarAbbr' && normalized && normalized.length > 5) {
-            throw new Error('Sidebar kısaltması en fazla 5 karakter olabilir');
+            throw new UserFacingError('Sidebar kısaltması en fazla 5 karakter olabilir');
         }
         if (key === 'companyName' && normalized && normalized.length > 80) {
-            throw new Error('Firma adı en fazla 80 karakter olabilir');
+            throw new UserFacingError('Firma adı en fazla 80 karakter olabilir');
         }
         if (key === 'googleClientId' && normalized && normalized.length > 256) {
-            throw new Error('Google Client ID en fazla 256 karakter olabilir');
+            throw new UserFacingError('Google Client ID en fazla 256 karakter olabilir');
         }
 
         if (normalized === null) {
@@ -177,6 +227,33 @@ export const appConfigService = {
                 )
                 .run(key, normalized, nowIso());
         }
+    },
+
+    /**
+     * Renderer-facing setter for the generic `config:set` channel.
+     *
+     * `set()` trusts its `key` because its TypeScript signature constrains it at
+     * every internal call site. Nothing constrains a value arriving over IPC, so
+     * the boundary needs its own check — see RENDERER_WRITABLE_KEYS.
+     *
+     * `vaultUnlocked` is passed in rather than read from vaultManager to keep
+     * this module free of that dependency (vault-manager already reads config,
+     * so importing it here would be circular) and to keep the rule unit-testable.
+     */
+    setFromRenderer(key: string, value: string | null, ctx: { vaultUnlocked: boolean }): void {
+        if (!isRendererWritable(key)) {
+            throw new UserFacingError(`Bu ayar bu kanaldan değiştirilemez: ${key}`);
+        }
+        if (
+            (VAULT_GATED_KEYS as readonly string[]).includes(key)
+            && this.get('onboardingCompletedAt')
+            && !ctx.vaultUnlocked
+        ) {
+            throw new UserFacingError(
+                'Bu ayarı değiştirmek için önce ana parola ile kilidi açmalısınız.',
+            );
+        }
+        this.set(key, value);
     },
 
     /**
@@ -217,12 +294,12 @@ export const appConfigService = {
         const domain = this.get('allowedDomain');
         const clientId = this.get('googleClientId');
         if (!company || !domain) {
-            throw new Error(
+            throw new UserFacingError(
                 'Onboarding tamamlanmadan önce firma adı ve izin verilen domain doldurulmalı.',
             );
         }
         if (!clientId) {
-            throw new Error(
+            throw new UserFacingError(
                 'Onboarding tamamlanmadan önce Google OAuth Client ID kaydedilmiş olmalı.',
             );
         }
@@ -280,10 +357,10 @@ export const appConfigService = {
     uploadLogo(buffer: Buffer | Uint8Array, ext: string): string {
         const cleanExt = ext.toLowerCase().replace(/^\./, '');
         if (!ALLOWED_LOGO_EXTS.includes(cleanExt as (typeof ALLOWED_LOGO_EXTS)[number])) {
-            throw new Error(`İzin verilmeyen dosya formatı: ${cleanExt}. İzin verilenler: ${ALLOWED_LOGO_EXTS.join(', ')}`);
+            throw new UserFacingError(`İzin verilmeyen dosya formatı: ${cleanExt}. İzin verilenler: ${ALLOWED_LOGO_EXTS.join(', ')}`);
         }
         if (buffer.byteLength > MAX_LOGO_BYTES) {
-            throw new Error(`Logo dosyası çok büyük (max ${MAX_LOGO_BYTES / 1024} KB)`);
+            throw new UserFacingError(`Logo dosyası çok büyük (max ${MAX_LOGO_BYTES / 1024} KB)`);
         }
         // Clean up old logo files (so old uploads with a different extension don't remain)
         const dir = getBrandingDir();
@@ -298,8 +375,30 @@ export const appConfigService = {
         return dest;
     },
 
+    /**
+     * The stored logoPath, but only if it still denotes a real logo file.
+     *
+     * Defence in depth behind the config:set allowlist. That allowlist stops a
+     * renderer WRITING this row, but a row planted by an older build survives an
+     * upgrade — and the two consumers of this value open it and unlink it. So
+     * the value is re-validated at the point of use: it must resolve inside the
+     * branding directory AND have a `logo.<allowed-ext>` basename. Anything else
+     * is treated as absent rather than trusted.
+     */
+    resolveLogoPath(): string | null {
+        const stored = this.get('logoPath');
+        if (!stored) return null;
+        const dir = getBrandingDir();
+        // Accept a bare filename or an absolute path; normalise both, then
+        // require containment. path.resolve collapses any `..` first.
+        const resolved = path.resolve(dir, stored);
+        if (path.dirname(resolved) !== path.resolve(dir)) return null;
+        if (!LOGO_BASENAME_RE.test(path.basename(resolved))) return null;
+        return resolved;
+    },
+
     deleteLogo(): void {
-        const current = this.get('logoPath');
+        const current = this.resolveLogoPath();
         if (current && existsSync(current)) {
             try { unlinkSync(current); } catch { /* ignore */ }
         }
@@ -308,7 +407,7 @@ export const appConfigService = {
     },
 
     logoExists(): boolean {
-        const p = this.get('logoPath');
+        const p = this.resolveLogoPath();
         if (!p) return false;
         try {
             return statSync(p).isFile();

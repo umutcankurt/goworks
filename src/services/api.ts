@@ -75,10 +75,6 @@ export const dashboardApi = {
     getRecentUsers: () => ipc.invoke('dashboard:getRecentUsers').then(trackActivity),
 };
 
-export const authApi = {
-    getAccessToken: () => ipc.invoke('auth:getAccessToken'),
-};
-
 export const ipcEvents = {
     on: (channel: string, listener: (...args: unknown[]) => void) =>
         ipc.on(channel, listener),

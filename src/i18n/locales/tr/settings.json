@@ -142,6 +142,7 @@
       "modalTitle": "GoWorks'ü sıfırla",
       "warning": "Tüm bilgileriniz (firma bilgileri, kurum/imza verileri, OAuth kimlik bilgileri, Service Account, oturum) ve loglar diskten kalıcı olarak silinir; veritabanı dosyası içeriğiyle birlikte boş olarak yeniden oluşturulur. Bu işlem GERİ ALINAMAZ — makineyi devretmeden veya uygulamayı kaldırmadan önce çalıştırmak için idealdir.",
       "confirmPrompt": "Onaylamak için {{keyword}} yazın:",
+      "passwordPrompt": "Onaylamak için ana parolanızı girin:",
       "confirmKeyword": "SIFIRLA",
       "confirmButton": "Sıfırla ve yeniden kur",
       "inProgress": "Sıfırlanıyor…",
