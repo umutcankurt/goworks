@@ -75,3 +75,45 @@ describe('error-utils', () => {
         });
     });
 });
+
+describe('toUserMessage — Google oturum hatası eyleme dönüştürülür', () => {
+    const SESSION = 'Google oturumunuz sona erdi. Lütfen tekrar giriş yapın.';
+
+    it('maps the exact error the Directory API returns for a dead token', () => {
+        // Verbatim from a real app-2026-07-20.log entry: the user searched the
+        // Users page and got "Beklenmeyen hata oluştu" for this.
+        const err = new Error(
+            'Request had invalid authentication credentials. Expected OAuth 2 access token, '
+            + 'login cookie or other valid authentication credential.',
+        );
+        expect(toUserMessage(err)).toBe(SESSION);
+    });
+
+    it('maps a 401 regardless of wording', () => {
+        expect(toUserMessage(Object.assign(new Error('boom'), { code: 401 }))).toBe(SESSION);
+        expect(toUserMessage(Object.assign(new Error('boom'), { response: { status: 401 } }))).toBe(SESSION);
+    });
+
+    it('maps a revoked refresh token and an empty client', () => {
+        expect(toUserMessage(new Error('invalid_grant'))).toBe(SESSION);
+        expect(toUserMessage(new Error('No access, refresh token, API key or refresh handler callback is set.')))
+            .toBe(SESSION);
+    });
+
+    it('leaves a 403 generic — that is authorization, not authentication', () => {
+        // Telling a demoted admin to sign in again sends them round a loop that
+        // cannot help. Different problem, different remedy.
+        const err = Object.assign(new Error('Not Authorized to access this resource/api'), { code: 403 });
+        expect(toUserMessage(err)).toBe('Beklenmeyen hata oluştu. Detaylar log dosyasındadır.');
+    });
+
+    it('still genericises an unrelated system error', () => {
+        expect(toUserMessage(new Error("ENOENT: no such file or directory, open '/Users/x/vault.enc'")))
+            .toBe('Beklenmeyen hata oluştu. Detaylar log dosyasındadır.');
+    });
+
+    it('does not crash on non-objects', () => {
+        expect(toUserMessage('invalid_grant')).toBe('Beklenmeyen hata oluştu. Detaylar log dosyasındadır.');
+        expect(toUserMessage(null)).toBe('Beklenmeyen hata oluştu. Detaylar log dosyasındadır.');
+    });
+});
