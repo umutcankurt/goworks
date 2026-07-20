@@ -177,23 +177,27 @@ function createWindow() {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   closeDb();
-  if (process.platform === 'darwin') {
-    authService?.logout();
-  } else {
+  // Closing the window on macOS is NOT a logout: the app stays in the dock, and
+  // the documented model is that a full logout — revoke + delete the vaulted
+  // refresh token — happens only on an explicit user logout or factory reset.
+  // Calling logout() here wiped the refresh token, so the Google session could
+  // never survive to the next unlock, which is the entire point of storing it.
+  // Stepping away is covered by the idle auto-lock, not by this handler.
+  if (process.platform !== 'darwin') {
     app.quit()
     win = null
   }
 })
 
-app.on('before-quit', async (event) => {
+app.on('before-quit', () => {
   // A login in flight leaves a bound loopback listener and an unsettled promise;
   // neither should outlive the app.
   authService?.closeServer(new Error('Uygulama kapatıldığı için giriş iptal edildi.'));
-  if (authService?.isAuthenticated()) {
-    event.preventDefault();
-    await authService.logout();
-    app.quit();
-  }
+  // Deliberately NOT logout(). Quitting used to revoke the grant at Google and
+  // delete the refresh token from the vault, so every restart forced a fresh
+  // browser OAuth round — defeating the silent-restore design. Nothing needs
+  // cleaning up here: the access token lives only in memory and dies with the
+  // process, and the refresh token is encrypted at rest in vault.enc.
 })
 
 app.on('activate', () => {

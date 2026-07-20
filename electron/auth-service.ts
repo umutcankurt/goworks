@@ -592,20 +592,27 @@ export class AuthService {
      * re-login is required (refresh token missing/invalid/revoked).
      */
     async restoreSession(): Promise<RestoreSessionResult> {
+        logger.info('[restoreSession] başlıyor…');
         let client: OAuth2Client;
         try {
             client = this.ensureOAuth2Client();
         } catch {
             // No OAuth credentials configured yet (fresh onboarding).
+            logger.warn('[restoreSession] OAuth istemci bilgileri yok → giriş gerekli.');
             return { authenticated: false, reauthNeeded: true, reason: 'no-credentials' };
         }
         let refreshToken: string | null = null;
         try {
             refreshToken = vaultManager.getRefreshToken();
-        } catch {
+        } catch (e) {
+            // Distinguish "vault could not be read" from "vault holds nothing":
+            // both used to collapse into a silent `no-token`, which made a failed
+            // silent restore impossible to diagnose from the log.
+            logger.warn(`[restoreSession] kasadan refresh token okunamadı: ${(e as Error)?.message}`);
             refreshToken = null;
         }
         if (!refreshToken) {
+            logger.warn('[restoreSession] kasada refresh token yok → giriş gerekli.');
             return { authenticated: false, reauthNeeded: true, reason: 'no-token' };
         }
         client.setCredentials({ refresh_token: refreshToken });
@@ -669,13 +676,14 @@ export class AuthService {
                 }
             }
 
+            logger.info('[restoreSession] oturum sessizce geri yüklendi.');
             return { authenticated: true, reauthNeeded: false };
         } catch (err: any) {
             // invalid_grant / revoked / expired / scope change → full re-login.
             // Log the real reason — this path used to be silent, which made
             // post-unlock "session expired" states impossible to diagnose from logs.
             const reason = err?.response?.data?.error ?? err?.message ?? String(err);
-            logger.warn(`[restoreSession] silent refresh failed → re-login needed: ${reason}`);
+            logger.warn(`[restoreSession] sessiz yenileme başarısız → yeniden giriş gerekli: ${reason}`);
             client.setCredentials({});
             this.oauth2Client = null;
             return { authenticated: false, reauthNeeded: true, reason: 'refresh-failed' };
