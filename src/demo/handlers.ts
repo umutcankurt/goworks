@@ -383,6 +383,15 @@ export const handlers: Record<string, Handler> = {
     'config:getAll': (_args, store) => ok(store.data.config),
 
     'config:set': ({ key, value }: any, store) => {
+        // Mirrors RENDERER_WRITABLE_KEYS in electron/services/app-config-service.ts.
+        // Kept in sync by hand: the demo store has no main process to enforce it.
+        const writable = [
+            'companyName', 'sidebarAbbr', 'emailSenderName',
+            'language', 'onboardingStep', 'allowedDomain', 'autoLockMinutes',
+        ];
+        if (!writable.includes(key)) {
+            return { success: false, error: `Bu ayar bu kanaldan değiştirilemez: ${key}` };
+        }
         const config = store.data.config as any;
         const normalized = typeof value === 'string' ? value.trim() : value;
         config[key] = normalized === '' ? null : normalized;

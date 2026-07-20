@@ -2,6 +2,7 @@ import { app } from 'electron';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { getDb } from '../db';
+import { UserFacingError } from '../lib/errors';
 
 export type AppConfigKey =
     | 'companyName'
@@ -93,6 +94,52 @@ const DEFAULTS: AppConfig = {
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
 
+/**
+ * Keys the renderer may write through the generic `config:set` channel.
+ *
+ * This is an ALLOWLIST on purpose. `AppConfigKey` is a TypeScript union and is
+ * erased at build time, so without an explicit runtime membership check the
+ * renderer can write ANY key — including ones the main process later reads back
+ * as a filesystem path or as a security boundary.
+ *
+ * Deliberately excluded:
+ *   logoPath              written only by uploadLogo(). It is read back and then
+ *                         opened (config:getLogoDataUrl) and unlinked
+ *                         (deleteLogo), so a renderer-controlled value is an
+ *                         arbitrary file read + delete primitive.
+ *   googleClientId,
+ *   googleClientSecret    have a dedicated, better-validated handler
+ *                         (config:setOAuthCredentials).
+ *   onboardingCompletedAt,
+ *   termsAcceptedAt,
+ *   termsVersion          set only by their own transactional helpers, which
+ *                         enforce invariants the generic setter cannot.
+ */
+const RENDERER_WRITABLE_KEYS: readonly AppConfigKey[] = [
+    'companyName',
+    'sidebarAbbr',
+    'emailSenderName',
+    'language',
+    'onboardingStep',
+    'allowedDomain',
+    'autoLockMinutes',
+];
+
+/**
+ * Writable keys that define a security control rather than a cosmetic setting.
+ *
+ * They must stay writable during onboarding — the wizard sets `allowedDomain` at
+ * the branding step, which runs before the vault exists — but once onboarding is
+ * complete they require an unlocked vault. Otherwise a renderer foothold could
+ * relocate the login tenant boundary, or disable the idle auto-lock, from the
+ * lock screen itself.
+ */
+const VAULT_GATED_KEYS: readonly AppConfigKey[] = ['allowedDomain', 'autoLockMinutes'];
+
+function isRendererWritable(key: string): key is AppConfigKey {
+    return (RENDERER_WRITABLE_KEYS as readonly string[]).includes(key);
+}
+
 function getBrandingDir(): string {
     const dir = path.join(app.getPath('userData'), 'branding');
     if (!existsSync(dir)) {
@@ -177,6 +224,33 @@ export const appConfigService = {
                 )
                 .run(key, normalized, nowIso());
         }
+    },
+
+    /**
+     * Renderer-facing setter for the generic `config:set` channel.
+     *
+     * `set()` trusts its `key` because its TypeScript signature constrains it at
+     * every internal call site. Nothing constrains a value arriving over IPC, so
+     * the boundary needs its own check — see RENDERER_WRITABLE_KEYS.
+     *
+     * `vaultUnlocked` is passed in rather than read from vaultManager to keep
+     * this module free of that dependency (vault-manager already reads config,
+     * so importing it here would be circular) and to keep the rule unit-testable.
+     */
+    setFromRenderer(key: string, value: string | null, ctx: { vaultUnlocked: boolean }): void {
+        if (!isRendererWritable(key)) {
+            throw new UserFacingError(`Bu ayar bu kanaldan değiştirilemez: ${key}`);
+        }
+        if (
+            (VAULT_GATED_KEYS as readonly string[]).includes(key)
+            && this.get('onboardingCompletedAt')
+            && !ctx.vaultUnlocked
+        ) {
+            throw new UserFacingError(
+                'Bu ayarı değiştirmek için önce ana parola ile kilidi açmalısınız.',
+            );
+        }
+        this.set(key, value);
     },
 
     /**

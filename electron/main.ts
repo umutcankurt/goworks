@@ -1316,7 +1316,9 @@ app.whenReady().then(async () => {
   ipcMain.handle('config:set', async (_, { key, value }: { key: string; value: string | null }) => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      appConfigService.set(key as any, value);
+      // setFromRenderer(), not set(): the key arrives over IPC and must be
+      // checked against an allowlist at runtime. See RENDERER_WRITABLE_KEYS.
+      appConfigService.setFromRenderer(key, value, { vaultUnlocked: vaultManager.isUnlocked() });
       return { success: true, data: appConfigService.getAll() };
     } catch (error: any) {
       return { success: false, error: error.message };
