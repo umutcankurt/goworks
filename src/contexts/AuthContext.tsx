@@ -1,9 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
+/**
+ * Mirrors AuthUserProfile in electron/auth-service.ts. Google does not guarantee
+ * `name`/`picture` — Header.tsx already falls back on both.
+ */
 interface AuthUser {
     email: string;
-    name: string;
-    picture: string;
+    name?: string | null;
+    picture?: string | null;
 }
 
 interface AuthContextType {
@@ -29,16 +33,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 const result = await window.ipcRenderer.invoke('auth:check');
                 if (result.success && result.authenticated) {
-                    const savedUser = localStorage.getItem('auth_user');
-                    if (savedUser) setUser(JSON.parse(savedUser));
+                    if (result.user?.email) {
+                        // Main process is the authority; refresh the cache from it.
+                        setUser(result.user);
+                        localStorage.setItem('auth_user', JSON.stringify(result.user));
+                    } else {
+                        // Authenticated but no profile: restoreSession() fails open
+                        // when userinfo is unreachable (offline) and cannot repopulate
+                        // the identity. Without this fallback an offline unlock would
+                        // bounce a perfectly valid session to /login.
+                        const savedUser = localStorage.getItem('auth_user');
+                        if (savedUser) setUser(JSON.parse(savedUser));
+                    }
                 } else {
+                    // NOT a logout. A vault lock drops the in-memory credentials and
+                    // legitimately reports authenticated:false while the Google grant
+                    // is still intact in the vault. Clearing the cached identity here
+                    // is what left the renderer signed out over a live session after
+                    // an unlock. The cache is only cleared on a real logout —
+                    // handleAutoLogout below and logout() further down.
                     setUser(null);
-                    localStorage.removeItem('auth_user');
                 }
             } catch (err) {
                 console.error("Auth check failed:", err);
                 setUser(null);
-                localStorage.removeItem('auth_user');
             }
         };
         checkAuth();

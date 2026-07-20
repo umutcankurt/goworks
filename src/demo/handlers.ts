@@ -134,10 +134,13 @@ export const handlers: Record<string, Handler> = {
     // ---------------------------------------------------------------- auth
     // Raw envelope (AuthContext reads result.authenticated / result.user).
 
-    'auth:check': () => ({
-        success: true,
-        authenticated: !!window.localStorage.getItem('auth_user'),
-    }),
+    // Returns the identity alongside the flag, like the real handler: the renderer
+    // treats the main process as the authority and only falls back to its cached
+    // copy when the profile is missing.
+    'auth:check': (_args, store) => {
+        const authenticated = !!window.localStorage.getItem('auth_user');
+        return { success: true, authenticated, user: authenticated ? store.data.authUser : null };
+    },
 
     // The "Sign in with Google" button is cosmetic in the prototype: no browser
     // window, no OAuth — it resolves straight into the demo admin session.

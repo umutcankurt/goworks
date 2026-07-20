@@ -549,7 +549,16 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('auth:check', async () => {
     try {
-      return { success: true, authenticated: authService.isAuthenticated() };
+      // The identity rides along so the renderer never has to treat its own
+      // localStorage as the source of truth. A vault lock legitimately reports
+      // authenticated:false, and the renderer used to react by deleting the only
+      // copy of the identity — leaving it signed out over a live main-process
+      // session once the vault was unlocked again.
+      return {
+        success: true,
+        authenticated: authService.isAuthenticated(),
+        user: authService.getCurrentUser(),
+      };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

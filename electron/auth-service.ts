@@ -75,6 +75,17 @@ export interface RestoreSessionResult {
     reason?: RestoreFailReason;
 }
 
+/**
+ * The signed-in admin as the renderer displays them. The main process is the
+ * authority: the renderer used to keep the only copy in localStorage, which made
+ * a vault lock (a legitimate `authenticated: false`) erase the identity for good.
+ */
+export interface AuthUserProfile {
+    email: string | null;
+    name?: string | null;
+    picture?: string | null;
+}
+
 /** Three-valued: "Google said no" and "we could not ask" are different answers. */
 type AdminCheck =
     | { outcome: 'admin' }
@@ -136,7 +147,7 @@ export class MissingOAuthCredentialsError extends Error {
 export class AuthService {
     private oauth2Client: OAuth2Client | null = null;
     private pendingLogin: PendingLogin | null = null;
-    private currentUserEmail: string | null = null;
+    private currentUser: AuthUserProfile | null = null;
 
     constructor() {
         // Tokens are NO LONGER cleared on startup. The refresh token now lives in
@@ -200,7 +211,7 @@ export class AuthService {
             }
         }
         this.oauth2Client = null;
-        this.currentUserEmail = null;
+        this.currentUser = null;
     }
 
     /**
@@ -504,7 +515,7 @@ export class AuthService {
 
             // Authorized. Only now does anything reach the vault.
             this.saveTokens(tokens);
-            this.currentUserEmail = email;
+            this.currentUser = { email, name: data.name ?? null, picture: data.picture ?? null };
             sendPage(res, 200, PAGE_OK);
             succeed({ tokens, user: data });
         } catch (e) {
@@ -582,7 +593,7 @@ export class AuthService {
         if (this.oauth2Client) {
             this.oauth2Client.setCredentials({});
         }
-        this.currentUserEmail = null;
+        this.currentUser = null;
     }
 
     /**
@@ -640,24 +651,30 @@ export class AuthService {
             // Google authorizes every privileged call individually, so a demoted
             // user gets 403 on the first thing they try.
             let email: string | null = null;
+            let profile: AuthUserProfile | null = null;
             try {
                 const google = getGoogle();
                 const oauth2 = google.oauth2({ version: 'v2', auth: client });
                 const { data } = await oauth2.userinfo.get();
                 email = data.email ?? null;
+                // Keep the whole profile, not just the address: this is the only
+                // place a silent restore can repopulate the identity the renderer
+                // shows, and it is already on the wire.
+                profile = { email, name: data.name ?? null, picture: data.picture ?? null };
             } catch {
-                // Could not ask — keep the session, note it, move on.
+                // Could not ask — keep the session, note it, move on. The identity
+                // stays empty here; the renderer falls back to its cached copy.
                 logger.warn('[restoreSession] kimlik doğrulanamadı (çevrimdışı?) — oturum korunuyor.');
                 return { authenticated: true, reauthNeeded: false, reason: 'authz-unverified' };
             }
-            this.currentUserEmail = email;
+            this.currentUser = profile;
 
             const allowedDomain = appConfigService.get('allowedDomain');
             if (email && allowedDomain && !email.endsWith(`@${allowedDomain}`)) {
                 logger.warn('[restoreSession] kayıtlı kimlik izin verilen domain dışında — oturum düşürüldü.');
                 await this.discardRejectedTokens(client, token);
                 this.oauth2Client = null;
-                this.currentUserEmail = null;
+                this.currentUser = null;
                 return { authenticated: false, reauthNeeded: true, reason: 'domain-mismatch' };
             }
 
@@ -667,7 +684,7 @@ export class AuthService {
                     logger.warn('[restoreSession] kayıtlı kimlik artık superadmin değil — oturum düşürüldü.');
                     await this.discardRejectedTokens(client, token);
                     this.oauth2Client = null;
-                    this.currentUserEmail = null;
+                    this.currentUser = null;
                     return { authenticated: false, reauthNeeded: true, reason: 'not-admin' };
                 }
                 if (adminCheck.outcome === 'unknown') {
@@ -714,7 +731,17 @@ export class AuthService {
         return this.ensureOAuth2Client();
     }
 
+    /** Audit-trail attribution ("who did this"). 14 call sites in main.ts. */
     getCurrentUserEmail(): string | null {
-        return this.currentUserEmail;
+        return this.currentUser?.email ?? null;
+    }
+
+    /**
+     * The identity the renderer displays. Null while locked or signed out, and
+     * also after an offline restore that could not re-fetch the profile — the
+     * renderer keeps a cached copy for exactly that gap.
+     */
+    getCurrentUser(): AuthUserProfile | null {
+        return this.currentUser;
     }
 }
