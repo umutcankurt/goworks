@@ -376,3 +376,47 @@ describe('processConditionalBlocks — güvenlik sınırı fail-closed (HR-5)', 
         expect(() => processConditionalBlocks('<div data-condition="telefon">no close', { telefon: 'x' })).toThrow();
     });
 });
+
+describe('sanitizeTemplateHtml — border stilleri (C10 regresyon kilidi)', () => {
+    it('preserves an accent rule with an rgb() colour', () => {
+        // The exact idiom that was being flattened: a left accent bar on the
+        // outer table. rgb() was rejected by the old colour alternation.
+        const out = sanitizeTemplateHtml(
+            '<table style="border-left: 4px solid rgb(192,152,105); padding-left: 12px;"><tr><td>x</td></tr></table>',
+        );
+        expect(out).toContain('border-left:4px solid rgb(192,152,105)');
+        expect(out).toContain('padding-left:12px');
+    });
+
+    it('preserves horizontal separator rules with a hex colour', () => {
+        const out = sanitizeTemplateHtml('<div style="border-top: 1px solid #dddddd">&nbsp;</div>');
+        expect(out).toContain('border-top:1px solid #dddddd');
+    });
+
+    it('preserves the bare border:0 form used on signature images', () => {
+        const out = sanitizeTemplateHtml('<img src="https://x/a.png" style="display:block;border:0px" />');
+        expect(out).toContain('border:0px');
+        expect(out).toContain('display:block');
+    });
+
+    it('preserves all four sides and the longhand width/style', () => {
+        const out = sanitizeTemplateHtml(
+            '<td style="border-right:2px dashed navy;border-bottom:1px solid #000;border-width:thin;border-style:dotted">x</td>',
+        );
+        expect(out).toContain('border-right:2px dashed navy');
+        expect(out).toContain('border-bottom:1px solid #000');
+        expect(out).toContain('border-width:thin');
+        expect(out).toContain('border-style:dotted');
+    });
+
+    it('still rejects an injection dressed as a border value', () => {
+        const out = sanitizeTemplateHtml(
+            '<div style="border-left:url(javascript:alert(1));border-top:expression(alert(1));color:#000000">x</div>',
+        );
+        expect(out).not.toContain('javascript');
+        expect(out).not.toContain('expression');
+        expect(out).not.toContain('url(');
+        // …while a legitimate neighbour still renders
+        expect(out).toContain('color:#000000');
+    });
+});

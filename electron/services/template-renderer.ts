@@ -108,6 +108,25 @@ const CSS_LEN = [/^-?\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
 const CSS_LEN_POS = [/^\d+(?:\.\d+)?(?:px|em|rem|%|pt|vw|vh)?$/i];
 const CSS_SHORTHAND_LEN = [/^(?:-?\d+(?:\.\d+)?(?:px|em|rem|%|pt)?\s*){1,4}$/i];
 
+// Border shorthand: `<width> <style> <color>`, plus the bare `0` / `0px` / `none`
+// forms that email HTML uses on images. The colour alternatives mirror CSS_COLOR
+// — notably rgb()/rgba(), which the previous pattern omitted, so a perfectly
+// ordinary `border-left: 4px solid rgb(...)` was dropped. Values stay bounded
+// shapes: no url(), no expression(), no free text.
+const CSS_BORDER_COLOR = '#[0-9a-f]{3,8}|rgba?\\([\\d\\s,.%]+\\)|hsla?\\([\\d\\s,.%]+\\)|[a-z]+';
+const CSS_BORDER = [
+    /^(?:0|none)$/i,
+    /^\d+(?:\.\d+)?(?:px|em|rem|pt)$/i,
+    new RegExp(
+        '^\\d+(?:\\.\\d+)?(?:px|em|rem|pt)?'
+        + '\\s+(?:solid|dashed|dotted|double|none|hidden|groove|ridge|inset|outset)'
+        + `(?:\\s+(?:${CSS_BORDER_COLOR}))?$`,
+        'i',
+    ),
+];
+const CSS_BORDER_WIDTH = [/^(?:0|(?:thin|medium|thick)|\d+(?:\.\d+)?(?:px|em|rem|pt))$/i];
+const CSS_BORDER_STYLE = [/^(?:solid|dashed|dotted|double|none|hidden|groove|ridge|inset|outset)$/i];
+
 const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     allowedTags: [
         'table', 'tr', 'td', 'th', 'tbody', 'thead',
@@ -159,7 +178,16 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
             'margin-right': CSS_LEN,
             'margin-bottom': CSS_LEN,
             'margin-left': CSS_LEN,
-            border: [/^\d+(?:\.\d+)?(?:px|em|rem)?\s+(?:solid|dashed|dotted|double|none|hidden)(?:\s+(?:#[0-9a-f]{3,8}|[a-z]+))?$/i],
+            border: CSS_BORDER,
+            // The four sides individually. Their absence silently flattened every
+            // signature that used an accent rule — a very common email-HTML idiom,
+            // and the one the bundled `logolu` / `cizgili` starters rely on.
+            'border-left': CSS_BORDER,
+            'border-right': CSS_BORDER,
+            'border-top': CSS_BORDER,
+            'border-bottom': CSS_BORDER,
+            'border-width': CSS_BORDER_WIDTH,
+            'border-style': CSS_BORDER_STYLE,
             'border-radius': [/^(?:\d+(?:\.\d+)?(?:px|em|rem|%)?\s*){1,4}$/i],
             'border-collapse': [/^(?:collapse|separate)$/i],
         },
