@@ -1,6 +1,7 @@
 {
   "preview": {
     "heading": "Live Preview",
+    "renderFailed": "Preview could not be rendered — the template may be malformed.",
     "sample": {
       "fullName": "John Smith",
       "title": "IT Manager",

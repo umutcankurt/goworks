@@ -49,15 +49,15 @@ export function SignatureTemplates() {
     };
   }, [t, i18n.language, config.allowedDomain]);
 
-  // Sample vars + media tokens ({{image_1}} → public CDN url) so the preview
-  // resolves uploaded images the same way the push worker does.
-  const previewVariables = useMemo<Record<string, string>>(() => {
-    const imageVars: Record<string, string> = {};
-    for (const m of media) {
-      if (m.token) imageVars[m.token] = m.publicUrl;
-    }
-    return { ...SAMPLE_VARIABLES, ...imageVars };
-  }, [SAMPLE_VARIABLES, media]);
+  // Media tokens are no longer merged in here: the main process resolves them
+  // from templateId and spreads them last, exactly as the push worker does, so
+  // the preview cannot disagree with what gets sent. What is left is a
+  // cache-buster — media lives outside `htmlContent`, so uploading an image
+  // changes nothing the render effect depends on unless we say so.
+  const mediaRevision = useMemo(
+    () => media.map((m) => `${m.token}:${m.publicUrl}`).join('|'),
+    [media],
+  );
 
   // Insert at the editor caret (not appended at the end) so images land where
   // the user is editing — the editor exposes this via its ref handle.
@@ -264,7 +264,12 @@ export function SignatureTemplates() {
         </div>
 
         <div className="col-span-4">
-          <SignaturePreview html={htmlContent} variables={previewVariables} />
+          <SignaturePreview
+            html={htmlContent}
+            templateId={selectedId ?? undefined}
+            variables={SAMPLE_VARIABLES}
+            revision={mediaRevision}
+          />
         </div>
       </div>
     </motion.div>

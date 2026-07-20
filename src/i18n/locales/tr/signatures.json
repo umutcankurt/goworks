@@ -1,6 +1,7 @@
 {
   "preview": {
     "heading": "Canlı Önizleme",
+    "renderFailed": "Önizleme oluşturulamadı — şablon bozuk olabilir.",
     "sample": {
       "fullName": "Ahmet Yılmaz",
       "title": "Bilgi Teknolojileri Müdürü",

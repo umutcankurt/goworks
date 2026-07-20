@@ -1133,7 +1133,12 @@ export const UserDetail: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-on-surface mb-1">{t('signature.livePreview')}</label>
-                                                    <SignaturePreview html={editedHtml} variables={extractUserVariables()} />
+                                                    {/* mode="raw" mirrors what Save actually does: handleSaveEditedSignature
+                                                        pushes this buffer through pushSignature Mode 1, which sanitises and
+                                                        substitutes nothing. The buffer is already-rendered HTML fetched from
+                                                        Gmail, so substituting here showed the user something the push would
+                                                        never produce. */}
+                                                    <SignaturePreview html={editedHtml} mode="raw" />
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
