@@ -3,6 +3,10 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.goworks.app",
   "asar": true,
+  // Secret guard runs as part of packaging, so `npx electron-builder` cannot
+  // skip it the way the npm-script-only wiring could.
+  "beforePack": "./build/secret-guard.cjs",
+  "afterPack": "./build/secret-guard.cjs",
   "afterSign": "./afterSign.cjs",
   "productName": "GoWorks",
   "directories": {
