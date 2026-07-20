@@ -177,6 +177,9 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', async (event) => {
+  // A login in flight leaves a bound loopback listener and an unsettled promise;
+  // neither should outlive the app.
+  authService?.closeServer(new Error('Uygulama kapatıldığı için giriş iptal edildi.'));
   if (authService?.isAuthenticated()) {
     event.preventDefault();
     await authService.logout();
