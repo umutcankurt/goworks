@@ -35,6 +35,8 @@ import { toUserMessage } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
 import { isAllowedExternalUrl } from './lib/external-url';
+import { requireOneOf, requireString, requireArray, requireEmailList, requireImageBytes } from './lib/validate';
+import { JOB_TYPES, type JobType } from './jobs/types';
 import { jobQueue } from './jobs/queue';
 import { registerSignaturePushWorker } from './jobs/signature-push-worker';
 import { registerBulkActionWorker } from './jobs/bulk-action-worker';
@@ -252,6 +254,57 @@ ipcMain.on('log:write', (_event, payload: { level: 'debug' | 'info' | 'warn' | '
 
 ipcMain.handle('log:getLogsDir', () => getLogsDir());
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** Upper bound on a single media upload. Mirrors MAX_LOGO_BYTES in spirit. */
+const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
+
+/** Upper bound on rows accepted in one bulk request. */
+const MAX_BULK_ROWS = 5000;
+
+/** Upper bound on a pasted/imported CSV. Well past any real roster. */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
+/** A real GCP service-account key is ~2.3 KB. */
+const MAX_SA_JSON_BYTES = 64 * 1024;
+
+/**
+ * Shape-check a job payload against its type.
+ *
+ * Workers coerce with `(job.payload || {}) as XPayload` and only discover a bad
+ * shape deep inside the run, after the row is already persisted and counted.
+ * Checking here means a malformed job is refused instead of enqueued.
+ */
+function requireCsvSize(csv: unknown): void {
+  if (typeof csv !== 'string') throw new UserFacingError('CSV içeriği okunamadı.');
+  if (Buffer.byteLength(csv, 'utf8') > MAX_CSV_BYTES) {
+    // better-sqlite3 is synchronous and the import runs in one transaction, so
+    // an oversized file is a hard main-process hang, not a slow request.
+    throw new UserFacingError('CSV dosyası çok büyük (en fazla 5 MB).');
+  }
+}
+
+function validateJobPayload(type: JobType, payload: any): any {
+  const p = payload ?? {};
+  switch (type) {
+    case 'BULK_SUSPEND':
+    case 'BULK_DELETE':
+      return { ...p, emails: requireEmailList(p.emails, 'E-posta listesi', MAX_BULK_ROWS) };
+    case 'BULK_SIGNATURE_PUSH':
+      if (p.emails !== undefined) {
+        return { ...p, emails: requireEmailList(p.emails, 'E-posta listesi', MAX_BULK_ROWS) };
+      }
+      return { ...p, rows: requireArray(p.rows, 'Satırlar', MAX_BULK_ROWS) };
+    case 'BULK_GROUP_ADD':
+      return { ...p, rows: requireArray(p.rows, 'Satırlar', MAX_BULK_ROWS) };
+    case 'SIGNATURE_AUDIT':
+      requireOneOf(p?.scope?.type, ['all', 'group', 'orgUnit'] as const, 'denetim kapsamı');
+      requireOneOf(p?.depth, ['fast', 'deep'] as const, 'denetim derinliği');
+      if (!Number.isInteger(Number(p?.templateId))) {
+        throw new UserFacingError('Denetim için geçerli bir şablon seçilmeli.');
+      }
+      return p;
+  }
+}
 
 function computeJobTotal(_type: import('./jobs/types').JobType, payload: any): number {
   if (!payload) return 0;
@@ -1071,6 +1124,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('titles:importCsv', async (_, { csv }: { csv: string }) => {
     try {
+      requireCsvSize(csv);
       const { titleService } = await import('./services/title-service');
       const data = titleService.importCsv(csv, authService?.getCurrentUserEmail() ?? null);
       return { success: true, data };
@@ -1121,6 +1175,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('institutions:importCsv', async (_, { csv }: { csv: string }) => {
     try {
+      requireCsvSize(csv);
       const { institutionService } = await import('./services/institution-service');
       const data = institutionService.importCsv(csv, authService?.getCurrentUserEmail() ?? null);
       return { success: true, data };
@@ -1219,7 +1274,20 @@ app.whenReady().then(async () => {
   ipcMain.handle('media:create', async (_, input: { name: string; driveUrl: string; mimeType?: string; templateId: number }) => {
     try {
       const { mediaService } = await import('./services/media-service');
-      const data = mediaService.create(input, authService?.getCurrentUserEmail() ?? null);
+      // Destructure explicitly. The service signature is WIDER than this
+      // handler's — it also accepts `fileId`, and prefers it when present,
+      // skipping the strict Drive-URL parser entirely. Forwarding `input`
+      // wholesale let the renderer pass a field this handler never mentions
+      // straight into an <img src> in a pushed signature.
+      const data = mediaService.create(
+        {
+          name: requireString(input?.name, 'Medya adı', 200),
+          driveUrl: requireString(input?.driveUrl, 'Drive URL', 2048),
+          mimeType: typeof input?.mimeType === 'string' ? input.mimeType : undefined,
+          templateId: Number(input?.templateId),
+        },
+        authService?.getCurrentUserEmail() ?? null,
+      );
       return { success: true, data };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1231,12 +1299,18 @@ app.whenReady().then(async () => {
     try {
       const { uploadImage, makePublic } = await import('./services/drive-upload-service');
       const { mediaService } = await import('./services/media-service');
+      requireGoogleAuth();
       const auth = authService.getClient();
-      const buffer = Buffer.from(input.data as ArrayBuffer);
-      const fileId = await uploadImage(auth, buffer, input.name, input.mimeType || 'image/png');
+      const name = requireString(input?.name, 'Dosya adı', 200);
+      // The mimeType comes from the BYTES, never from input.mimeType. What the
+      // renderer sends is the browser's guess from the file extension, and the
+      // label we pass to Drive becomes the Content-Type the public CDN serves
+      // the file with — so it has to be derived from content.
+      const { buffer, mimeType } = requireImageBytes(input?.data, 'Görsel', MAX_MEDIA_BYTES);
+      const fileId = await uploadImage(auth, buffer, name, mimeType);
       await makePublic(auth, fileId);
       const data = mediaService.create(
-        { name: input.name, fileId, mimeType: input.mimeType, templateId: input.templateId },
+        { name, fileId, mimeType, templateId: Number(input?.templateId) },
         authService?.getCurrentUserEmail() ?? null,
       );
       return { success: true, data };
@@ -1248,7 +1322,18 @@ app.whenReady().then(async () => {
   ipcMain.handle('media:delete', async (_, { id }: { id: number }) => {
     try {
       const { mediaService } = await import('./services/media-service');
-      mediaService.remove(id);
+      const { revokePublicAccess } = await import('./services/drive-upload-service');
+      const { driveFileId } = mediaService.remove(id);
+      // Revoke AFTER the row is gone, and never let a Drive failure resurrect
+      // the row: the local record is the source of truth for the UI, while the
+      // public grant is best-effort cleanup that the user can also do in Drive.
+      if (driveFileId && authService?.isAuthenticated()) {
+        try {
+          await revokePublicAccess(authService.getClient(), driveFileId);
+        } catch (err) {
+          logger.warn(`[media:delete] Drive genel erişimi kaldırılamadı (${driveFileId})`, err);
+        }
+      }
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -1267,6 +1352,9 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('config:uploadServiceAccount', async (_, { content }: { content: string }) => {
     try {
+      if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_SA_JSON_BYTES) {
+        throw new UserFacingError('Service Account JSON dosyası beklenenden büyük.');
+      }
       const { uploadFromContent } = await import('./secrets/service-account-loader');
       const { clearAuthCache } = await import('./services/google-admin-sa');
       const { clearGmailAuthCache } = await import('./services/gmail-signature-service');
@@ -1670,12 +1758,19 @@ app.whenReady().then(async () => {
   });
 
   // Jobs
-  ipcMain.handle('jobs:create', async (_, payload: { type: import('./jobs/types').JobType; payload: any }) => {
+  ipcMain.handle('jobs:create', async (_, payload: { type: string; payload: any }) => {
     try {
+      // requireGoogleAuth() rather than a bare "is an email set" check: this
+      // channel can enqueue BULK_DELETE against the whole tenant, and the job
+      // survives restarts via resumeOnStartup(), so an expired session must not
+      // be able to schedule tenant-destructive work.
+      requireGoogleAuth();
       const adminEmail = authService?.getCurrentUserEmail();
       if (!adminEmail) return { success: false, error: 'Admin oturumu bulunamadı' };
-      const total = computeJobTotal(payload.type, payload.payload);
-      const job = jobQueue.enqueue({ type: payload.type, payload: payload.payload, total, createdBy: adminEmail });
+      const type = requireOneOf(payload?.type, JOB_TYPES, 'iş tipi');
+      const jobPayload = validateJobPayload(type, payload?.payload);
+      const total = computeJobTotal(type, jobPayload);
+      const job = jobQueue.enqueue({ type, payload: jobPayload, total, createdBy: adminEmail });
       jobRunner.enqueueAndStart(job);
       return { success: true, data: { id: job.id } };
     } catch (error: any) {

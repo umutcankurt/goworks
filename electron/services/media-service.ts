@@ -88,8 +88,19 @@ export const mediaService = {
         return toApi(row);
     },
 
-    remove(id: number): void {
+    /**
+     * Look up the Drive file id before deleting the row.
+     *
+     * Callers must revoke the public grant with this id; once the row is gone
+     * the app has no record of the file and the world-readable copy on Drive
+     * becomes permanent and untrackable.
+     */
+    remove(id: number): { driveFileId: string | null } {
+        const row = getDb()
+            .prepare('SELECT drive_file_id FROM media_assets WHERE id = ?')
+            .get(id) as { drive_file_id: string } | undefined;
         const result = getDb().prepare('DELETE FROM media_assets WHERE id = ?').run(id);
         if (result.changes === 0) throw new Error('Medya bulunamadı');
+        return { driveFileId: row?.drive_file_id ?? null };
     },
 };
