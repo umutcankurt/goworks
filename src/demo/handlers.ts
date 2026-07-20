@@ -440,7 +440,7 @@ export const handlers: Record<string, Handler> = {
     },
 
     // Nothing to wipe — a reload rebuilds the fixture from scratch anyway.
-    'config:factoryReset': () => {
+    'config:factoryReset': (_args: any) => {
         window.setTimeout(() => window.location.reload(), 200);
         return ok(undefined);
     },

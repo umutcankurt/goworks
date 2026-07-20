@@ -118,3 +118,42 @@ describe('appConfigService.setFromRenderer — mevcut değer doğrulaması korun
         expect(() => appConfigService.setFromRenderer('autoLockMinutes', '99999', UNLOCKED)).toThrow();
     });
 });
+
+describe('appConfigService.resolveLogoPath — yol sınırlaması (F-1/F-3 savunma derinliği)', () => {
+    it('rejects an absolute path outside the branding directory', () => {
+        // Simulates a row planted by a pre-allowlist build: the writer is closed
+        // now, but an upgraded install can still carry the poisoned value.
+        appConfigService.set('logoPath', '/etc/passwd');
+        expect(appConfigService.resolveLogoPath()).toBeNull();
+        expect(appConfigService.logoExists()).toBe(false);
+    });
+
+    it('rejects traversal out of the branding directory', () => {
+        appConfigService.set('logoPath', '../../../../etc/passwd');
+        expect(appConfigService.resolveLogoPath()).toBeNull();
+    });
+
+    it('rejects a file inside branding that is not a logo', () => {
+        appConfigService.set('logoPath', 'notes.txt');
+        expect(appConfigService.resolveLogoPath()).toBeNull();
+    });
+
+    it('rejects a disallowed extension', () => {
+        appConfigService.set('logoPath', 'logo.exe');
+        expect(appConfigService.resolveLogoPath()).toBeNull();
+    });
+
+    it('accepts the shape uploadLogo actually writes', () => {
+        appConfigService.set('logoPath', '/tmp/goworks-test/branding/logo.png');
+        expect(appConfigService.resolveLogoPath()).toBe('/tmp/goworks-test/branding/logo.png');
+    });
+
+    it('accepts a bare filename, joined to the branding directory', () => {
+        appConfigService.set('logoPath', 'logo.svg');
+        expect(appConfigService.resolveLogoPath()).toBe('/tmp/goworks-test/branding/logo.svg');
+    });
+
+    it('returns null when nothing is stored', () => {
+        expect(appConfigService.resolveLogoPath()).toBeNull();
+    });
+});

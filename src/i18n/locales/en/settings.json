@@ -142,6 +142,7 @@
       "modalTitle": "Reset GoWorks",
       "warning": "All your data (company details, institution/signature data, OAuth credentials, Service Account, session) and logs are permanently wiped from disk, and the database file is rebuilt empty. This action CANNOT be undone — ideal to run before handing off the machine or uninstalling the app.",
       "confirmPrompt": "Type {{keyword}} to confirm:",
+      "passwordPrompt": "Enter your master password to confirm:",
       "confirmKeyword": "RESET",
       "confirmButton": "Reset and reinstall",
       "inProgress": "Resetting…",

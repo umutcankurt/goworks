@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session, shell } from 'electron'
+import { app, BrowserWindow, powerMonitor, ipcMain, crashReporter, session, shell, dialog } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -1437,7 +1437,9 @@ app.whenReady().then(async () => {
   ipcMain.handle('config:getLogoDataUrl', async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
-      const p = appConfigService.get('logoPath');
+      // resolveLogoPath(), not get(): the raw row is only trusted after it has
+      // been checked to resolve inside the branding directory.
+      const p = appConfigService.resolveLogoPath();
       if (!p || !appConfigService.logoExists()) return { success: true, data: null };
       const { readFile } = await import('node:fs/promises');
       const buf = await readFile(p);
@@ -1489,8 +1491,42 @@ app.whenReady().then(async () => {
   // Factory reset: permanently wipe ALL local data and return to a fresh install
   // (e.g. handing the same machine to a different company / admin). Destructive
   // and irreversible — guarded by a type-to-confirm modal in the renderer.
-  ipcMain.handle('config:factoryReset', async () => {
+  ipcMain.handle('config:factoryReset', async (_, args?: { password?: string }) => {
     try {
+      // The renderer's type-to-confirm modal is a UX affordance, not a gate --
+      // it is entirely renderer-side and worth nothing against a renderer
+      // foothold. This wipes the vault (Service Account key + refresh token,
+      // irrecoverably: there is no recovery key by design), every table, and the
+      // logs, and it VACUUMs afterwards specifically so the deleted plaintext
+      // cannot be recovered. One ungated invoke() was a perfect self-destruct
+      // with anti-forensics, executed by the app's own hardening code.
+      //
+      // Two gates, both owned by main: the master password must be re-supplied
+      // and verified, and a native dialog must be confirmed.
+      if (vaultManager.fileExists()) {
+        const password = typeof args?.password === 'string' ? args.password : '';
+        if (!password) {
+          throw new UserFacingError('Fabrika ayarlarına dönmek için ana parolanızı girmelisiniz.');
+        }
+        await vaultManager.unlock(password);   // throws on a wrong password
+      }
+
+      const confirm = await dialog.showMessageBox(win!, {
+        type: 'warning',
+        buttons: ['İptal', 'Her şeyi sil'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Fabrika ayarlarına dön',
+        message: 'Tüm yerel veriler kalıcı olarak silinecek.',
+        detail:
+          'Kasa (Service Account anahtarı ve Google oturumu), kurum/şablon/marka verileri '
+          + 've loglar geri alınamaz biçimde silinir. Bu işlemin geri dönüşü yoktur.',
+        noLink: true,
+      });
+      if (confirm.response !== 1) {
+        return { success: false, error: 'İşlem iptal edildi.' };
+      }
+
       const { appConfigService } = await import('./services/app-config-service');
       const { getDb } = await import('./db');
       const { clearAuthCache } = await import('./services/google-admin-sa');

@@ -94,6 +94,9 @@ const DEFAULTS: AppConfig = {
 const ALLOWED_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'] as const;
 const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
 
+/** uploadLogo() is the only writer, and it always uses this exact shape. */
+const LOGO_BASENAME_RE = /^logo\.(png|jpg|jpeg|svg|webp)$/;
+
 /**
  * Keys the renderer may write through the generic `config:set` channel.
  *
@@ -372,8 +375,30 @@ export const appConfigService = {
         return dest;
     },
 
+    /**
+     * The stored logoPath, but only if it still denotes a real logo file.
+     *
+     * Defence in depth behind the config:set allowlist. That allowlist stops a
+     * renderer WRITING this row, but a row planted by an older build survives an
+     * upgrade — and the two consumers of this value open it and unlink it. So
+     * the value is re-validated at the point of use: it must resolve inside the
+     * branding directory AND have a `logo.<allowed-ext>` basename. Anything else
+     * is treated as absent rather than trusted.
+     */
+    resolveLogoPath(): string | null {
+        const stored = this.get('logoPath');
+        if (!stored) return null;
+        const dir = getBrandingDir();
+        // Accept a bare filename or an absolute path; normalise both, then
+        // require containment. path.resolve collapses any `..` first.
+        const resolved = path.resolve(dir, stored);
+        if (path.dirname(resolved) !== path.resolve(dir)) return null;
+        if (!LOGO_BASENAME_RE.test(path.basename(resolved))) return null;
+        return resolved;
+    },
+
     deleteLogo(): void {
-        const current = this.get('logoPath');
+        const current = this.resolveLogoPath();
         if (current && existsSync(current)) {
             try { unlinkSync(current); } catch { /* ignore */ }
         }
@@ -382,7 +407,7 @@ export const appConfigService = {
     },
 
     logoExists(): boolean {
-        const p = this.get('logoPath');
+        const p = this.resolveLogoPath();
         if (!p) return false;
         try {
             return statSync(p).isFile();

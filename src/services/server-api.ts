@@ -109,7 +109,7 @@ export const appConfigApi = {
     ipcInvoke<AppConfigDTO>('config:acceptTerms', version),
   resetOnboarding: () => ipcInvoke<AppConfigDTO>('config:resetOnboarding'),
   /** Factory reset: permanently wipes all local data and returns to a fresh install. */
-  factoryReset: () => ipcInvoke<void>('config:factoryReset'),
+  factoryReset: (password: string) => ipcInvoke<void>('config:factoryReset', { password }),
   getDwdScopes: () => ipcInvoke<string[]>('config:getDwdScopes'),
   testDwdScopes: (adminEmail?: string) =>
     ipcInvoke<DwdTestResult>('config:testDwdScopes', { adminEmail }),
