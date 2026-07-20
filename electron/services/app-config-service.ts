@@ -163,20 +163,20 @@ function normalizeValue(key: AppConfigKey, raw: string | null): string | null {
     if (key === 'language') {
         const v = trimmed.toLowerCase();
         if (v !== 'tr' && v !== 'en') {
-            throw new Error(`Geçersiz dil: ${trimmed}. Desteklenen değerler: tr, en`);
+            throw new UserFacingError(`Geçersiz dil: ${trimmed}. Desteklenen değerler: tr, en`);
         }
         return v;
     }
     if (key === 'onboardingStep') {
         if (!ONBOARDING_STEPS.includes(trimmed as OnboardingStep)) {
-            throw new Error(`Geçersiz onboarding adımı: ${trimmed}`);
+            throw new UserFacingError(`Geçersiz onboarding adımı: ${trimmed}`);
         }
         return trimmed;
     }
     if (key === 'autoLockMinutes') {
         const n = parseInt(trimmed, 10);
         if (!Number.isFinite(n) || n < 0 || n > 1440) {
-            throw new Error(`Geçersiz otomatik kilit süresi: ${trimmed}`);
+            throw new UserFacingError(`Geçersiz otomatik kilit süresi: ${trimmed}`);
         }
         return String(n);
     }
@@ -204,17 +204,17 @@ export const appConfigService = {
         if (key === 'allowedDomain' && normalized) {
             // Leaving it empty is allowed; but if filled, the format must be valid.
             if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(normalized)) {
-                throw new Error('Geçersiz domain formatı (örn: example.com)');
+                throw new UserFacingError('Geçersiz domain formatı (örn: example.com)');
             }
         }
         if (key === 'sidebarAbbr' && normalized && normalized.length > 5) {
-            throw new Error('Sidebar kısaltması en fazla 5 karakter olabilir');
+            throw new UserFacingError('Sidebar kısaltması en fazla 5 karakter olabilir');
         }
         if (key === 'companyName' && normalized && normalized.length > 80) {
-            throw new Error('Firma adı en fazla 80 karakter olabilir');
+            throw new UserFacingError('Firma adı en fazla 80 karakter olabilir');
         }
         if (key === 'googleClientId' && normalized && normalized.length > 256) {
-            throw new Error('Google Client ID en fazla 256 karakter olabilir');
+            throw new UserFacingError('Google Client ID en fazla 256 karakter olabilir');
         }
 
         if (normalized === null) {
@@ -294,12 +294,12 @@ export const appConfigService = {
         const domain = this.get('allowedDomain');
         const clientId = this.get('googleClientId');
         if (!company || !domain) {
-            throw new Error(
+            throw new UserFacingError(
                 'Onboarding tamamlanmadan önce firma adı ve izin verilen domain doldurulmalı.',
             );
         }
         if (!clientId) {
-            throw new Error(
+            throw new UserFacingError(
                 'Onboarding tamamlanmadan önce Google OAuth Client ID kaydedilmiş olmalı.',
             );
         }
@@ -357,10 +357,10 @@ export const appConfigService = {
     uploadLogo(buffer: Buffer | Uint8Array, ext: string): string {
         const cleanExt = ext.toLowerCase().replace(/^\./, '');
         if (!ALLOWED_LOGO_EXTS.includes(cleanExt as (typeof ALLOWED_LOGO_EXTS)[number])) {
-            throw new Error(`İzin verilmeyen dosya formatı: ${cleanExt}. İzin verilenler: ${ALLOWED_LOGO_EXTS.join(', ')}`);
+            throw new UserFacingError(`İzin verilmeyen dosya formatı: ${cleanExt}. İzin verilenler: ${ALLOWED_LOGO_EXTS.join(', ')}`);
         }
         if (buffer.byteLength > MAX_LOGO_BYTES) {
-            throw new Error(`Logo dosyası çok büyük (max ${MAX_LOGO_BYTES / 1024} KB)`);
+            throw new UserFacingError(`Logo dosyası çok büyük (max ${MAX_LOGO_BYTES / 1024} KB)`);
         }
         // Clean up old logo files (so old uploads with a different extension don't remain)
         const dir = getBrandingDir();

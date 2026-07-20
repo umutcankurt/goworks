@@ -31,7 +31,7 @@ import { getDb, closeDb } from './db';
 import { jobRunner } from './jobs/runner';
 import { logger, getLogsDir, clearAllLogs } from './services/logger';
 import { runBootCheck, type BootCheckResult } from './config/boot-check';
-import { toUserMessage } from './lib/error-utils';
+import { toUserMessage, fail } from './lib/error-utils';
 import { UserFacingError } from './lib/errors';
 import { throttle } from './lib/throttle';
 import { isAllowedExternalUrl } from './lib/external-url';
@@ -1291,8 +1291,9 @@ app.whenReady().then(async () => {
     try {
       const { mediaService } = await import('./services/media-service');
       return { success: true, data: mediaService.list(payload?.templateId) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:getAll] failed', error);
+      return fail(error);
     }
   });
 
@@ -1314,8 +1315,9 @@ app.whenReady().then(async () => {
         authService?.getCurrentUserEmail() ?? null,
       );
       return { success: true, data };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:create] failed', error);
+      return fail(error);
     }
   });
 
@@ -1339,8 +1341,9 @@ app.whenReady().then(async () => {
         authService?.getCurrentUserEmail() ?? null,
       );
       return { success: true, data };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:upload] failed', error);
+      return fail(error);
     }
   });
 
@@ -1360,8 +1363,9 @@ app.whenReady().then(async () => {
         }
       }
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[media:delete] failed', error);
+      return fail(error);
     }
   });
 
@@ -1370,8 +1374,9 @@ app.whenReady().then(async () => {
     try {
       const { getStatus } = await import('./secrets/service-account-loader');
       return { success: true, data: getStatus() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:serviceAccountStatus] failed', error);
+      return fail(error);
     }
   });
 
@@ -1392,8 +1397,9 @@ app.whenReady().then(async () => {
       // ConfigWarningBanner clears immediately, without an app restart.
       bootStatus.soft.serviceAccountMissing = false;
       return { success: true, data: result };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:uploadServiceAccount] failed', error);
+      return fail(error);
     }
   });
 
@@ -1411,8 +1417,9 @@ app.whenReady().then(async () => {
       // ConfigWarningBanner reappears without an app restart.
       bootStatus.soft.serviceAccountMissing = true;
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:deleteServiceAccount] failed', error);
+      return fail(error);
     }
   });
 
@@ -1421,8 +1428,9 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getAll] failed', error);
+      return fail(error);
     }
   });
 
@@ -1433,8 +1441,9 @@ app.whenReady().then(async () => {
       // checked against an allowlist at runtime. See RENDERER_WRITABLE_KEYS.
       appConfigService.setFromRenderer(key, value, { vaultUnlocked: vaultManager.isUnlocked() });
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:set] failed', error);
+      return fail(error);
     }
   });
 
@@ -1444,8 +1453,9 @@ app.whenReady().then(async () => {
       const buf = Buffer.from(data instanceof Uint8Array ? data : new Uint8Array(data));
       const stored = appConfigService.uploadLogo(buf, ext);
       return { success: true, data: { logoPath: stored, config: appConfigService.getAll() } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:uploadLogo] failed', error);
+      return fail(error);
     }
   });
 
@@ -1454,8 +1464,9 @@ app.whenReady().then(async () => {
       const { appConfigService } = await import('./services/app-config-service');
       appConfigService.deleteLogo();
       return { success: true, data: appConfigService.getAll() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:deleteLogo] failed', error);
+      return fail(error);
     }
   });
 
@@ -1471,8 +1482,9 @@ app.whenReady().then(async () => {
       const ext = (p.split('.').pop() || 'png').toLowerCase();
       const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
       return { success: true, data: `data:${mime};base64,${buf.toString('base64')}` };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getLogoDataUrl] failed', error);
+      return fail(error);
     }
   });
 
@@ -1485,8 +1497,9 @@ app.whenReady().then(async () => {
         return { success: false, error: 'Ana parola belirlenmeden onboarding tamamlanamaz.' };
       }
       return { success: true, data: appConfigService.markOnboardingComplete() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:markOnboardingComplete] failed', error);
+      return fail(error);
     }
   });
 
@@ -1494,8 +1507,9 @@ app.whenReady().then(async () => {
     try {
       const { appConfigService } = await import('./services/app-config-service');
       return { success: true, data: appConfigService.acceptTerms(version) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:acceptTerms] failed', error);
+      return fail(error);
     }
   });
 
@@ -1508,8 +1522,9 @@ app.whenReady().then(async () => {
       // re-entering credentials or signing in again. To remove credentials use
       // Settings → Google Workspace → "Clear"; to switch admin use Logout.
       return { success: true, data: appConfigService.resetOnboarding() };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:resetOnboarding] failed', error);
+      return fail(error);
     }
   });
 
@@ -1609,8 +1624,9 @@ app.whenReady().then(async () => {
       } catch { /* ignore */ }
 
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:factoryReset] failed', error);
+      return fail(error);
     }
   });
 
@@ -1624,8 +1640,9 @@ app.whenReady().then(async () => {
           hasSecret: !!appConfigService.get('googleClientSecret'),
         },
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:getOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1675,8 +1692,9 @@ app.whenReady().then(async () => {
         success: true,
         data: { clientId: currentId, hasSecret },
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:setOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1690,8 +1708,9 @@ app.whenReady().then(async () => {
       adminService = null;
       adminServiceClient = null;
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:clearOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1721,8 +1740,9 @@ app.whenReady().then(async () => {
         scope: ['https://www.googleapis.com/auth/userinfo.email'],
       });
       return { success: true, data: { ok: !!url } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:testOAuthCredentials] failed', error);
+      return fail(error);
     }
   });
 
@@ -1736,8 +1756,9 @@ app.whenReady().then(async () => {
       const { testDwdScopes } = await import('./services/dwd-test-service');
       const result = await testDwdScopes(payload?.adminEmail);
       return { success: true, data: result };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[config:testDwdScopes] failed', error);
+      return fail(error);
     }
   });
 
@@ -1834,16 +1855,18 @@ app.whenReady().then(async () => {
       const job = jobQueue.enqueue({ type, payload: jobPayload, total, createdBy: adminEmail });
       jobRunner.enqueueAndStart(job);
       return { success: true, data: { id: job.id } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:create] failed', error);
+      return fail(error);
     }
   });
 
   ipcMain.handle('jobs:list', async (_, filters: any = {}) => {
     try {
       return { success: true, data: jobQueue.list(filters) };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:list] failed', error);
+      return fail(error);
     }
   });
 
@@ -1897,8 +1920,9 @@ app.whenReady().then(async () => {
       const job = jobQueue.get(id);
       if (!job) return { success: false, error: 'Job bulunamadı' };
       return { success: true, data: job };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:get] failed', error);
+      return fail(error);
     }
   });
 
@@ -1906,8 +1930,9 @@ app.whenReady().then(async () => {
     try {
       const ok = jobRunner.cancel(id);
       return { success: ok };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:cancel] failed', error);
+      return fail(error);
     }
   });
 
@@ -1943,8 +1968,9 @@ app.whenReady().then(async () => {
       }
       await writeFile(result.filePath, content, 'utf-8');
       return { success: true, data: { path: result.filePath } };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      logger.error('[jobs:downloadReport] failed', error);
+      return fail(error);
     }
   });
 
