@@ -183,8 +183,12 @@ function buildResultsCsv(job: JobRecord): string {
 
 function buildMimeMessage(params: { to: string; from: string; subject: string; html: string; csvContent: string }): string {
     const { to, from, subject, html, csvContent } = params;
+    /* eslint-disable no-restricted-properties -- MIME boundaries, not secrets: they only
+       have to avoid colliding with the body, and every part below is base64-encoded, so
+       a collision is unreachable regardless of how predictable the string is. */
     const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const altBoundary = `alt_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    /* eslint-enable no-restricted-properties */
     const encodedSubject = `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`;
     const htmlBase64 = Buffer.from(html).toString('base64');
     const csvBase64 = Buffer.from(csvContent).toString('base64');

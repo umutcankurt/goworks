@@ -5,6 +5,7 @@ import { adminApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAppConfig } from '../contexts/AppConfigContext';
 import { SearchableSelect } from '../components/SearchableSelect';
+import { generatePassword } from '../utils/generatePassword';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpGuide } from '../components/HelpGuide';
 import {
@@ -120,8 +121,7 @@ export const Offboard: React.FC = () => {
                     break;
                 }
                 case 'reset_pwd': {
-                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-                    const password = Array.from({ length: 24 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+                    const password = generatePassword();
                     const res = await adminApi.updateUser(activeUser.primaryEmail, {
                         password, changePasswordAtNextLogin: true,
                     } as any);

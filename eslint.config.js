@@ -80,6 +80,23 @@ export default defineConfig([
             // autoFocus to focus the first input when a modal opens is standard UX — disabled.
             'jsx-a11y/no-autofocus': 'off',
 
+            // Math.random() is not a CSPRNG — V8 implements it with xorshift128+,
+            // whose state is recoverable from a couple of outputs. It generated a
+            // live Google Workspace account password in src/pages/Offboard.tsx until
+            // CodeQL caught it (js/insecure-randomness); this rule is the regression
+            // guard. Renderer: generatePassword() from src/utils/generatePassword.ts.
+            // Main process: randomBytes() from node:crypto. Non-secret values (list
+            // keys, MIME boundaries) may disable the rule inline with a reason.
+            'no-restricted-properties': [
+                'error',
+                {
+                    object: 'Math',
+                    property: 'random',
+                    message:
+                        'Math.random() is not cryptographically secure. Use generatePassword() from src/utils/generatePassword.ts in the renderer, or randomBytes() from node:crypto in the main process. If the value is genuinely not a secret, disable this rule on the line and say why.',
+                },
+            ],
+
             // `_name` prefix convention: intentionally unused parameter/variable
             // (mock signature compatibility, destructuring, etc.).
             // Note: @typescript-eslint v8 flipped the `caughtErrors` default from
