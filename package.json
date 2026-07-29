@@ -111,6 +111,6 @@
   "main": "dist-electron/main.js",
   "engines": {
     "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "npm": ">=11.0.0"
   }
 }
