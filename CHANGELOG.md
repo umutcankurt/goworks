@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > bump. **v0.7.9 is the first public open-source release**; earlier builds were
 > withdrawn (see below).
 
-## [Unreleased]
+## [0.8.1] — 2026-07-29
 
 A four-step dependency modernisation, ordered so that each step could only break
 one thing and the next step started from a green baseline. Nothing about the
@@ -64,6 +64,11 @@ app's behaviour changes; the toolchain underneath it moves forward substantially
   126 MB → 135 MB, Windows 93 MB → 96 MB. The four Linux prebuilds are excluded
   from packaging since GoWorks targets macOS and Windows.
 
+- `README.md` and `README.tr.md` now state the current toolchain — Electron 43,
+  Vite 8 on Rolldown, better-sqlite3 13 on N-API — in both languages. Every
+  version claim was checked against `package.json` rather than written from
+  memory.
+
 ### Added
 
 - `scripts/check-lucide-icons.mjs` (`npm run icons:check`, and part of
@@ -89,6 +94,47 @@ app's behaviour changes; the toolchain underneath it moves forward substantially
   in Settings → About: `@noble/hashes` (the Argon2id implementation behind the
   master-password vault) and `clsx`. Both are credited now, and the check above
   keeps the list from drifting again.
+
+- **A `useRef` call with no initial value** in `JobHistory.tsx` — the only
+  argument-less one of the eight call sites in the codebase. React 19 drops that
+  overload, so the call stops type-checking (`TS2554`) against React 19's types.
+  The fix is safe on the current major rather than a forward-port that breaks the
+  present: passing `undefined` explicitly resolves to React 18's own
+  `useRef<T = undefined>(initialValue?: undefined)` overload, so the ref keeps
+  its existing type and nothing about today's build changes.
+
+### Security
+
+- **A stale lockfile entry was still pinning a vulnerable `brace-expansion`.**
+  Closes Dependabot alert #8 (GHSA-3jxr-9vmj-r5cp / CVE-2026-13149, high,
+  development scope) — exponential-time expansion in `expand()`, where roughly
+  90 bytes of input can stall a single-threaded consumer indefinitely. Nine of
+  the ten copies in the tree were already patched by the upgrades above; the
+  exception was a lockfile entry pinning 1.1.14 under `eslint-plugin-jsx-a11y`'s
+  nested `minimatch@3.1.5`, which declares `brace-expansion: ^1.1.7` and had
+  therefore accepted the patched release all along. Nothing was holding it back
+  but the lockfile, so this is a lockfile-only change.
+
+- **Two further advisories were assessed and deliberately left unpatched**, both
+  unreachable here and neither carrying a fix that is not itself a regression:
+
+  - `brace-expansion` GHSA-mh99-v99m-4gvg / CVE-2026-14257 (high, published
+    24 July) — a second, separate DoS in the same package. The advisory names
+    5.0.8 as its only patched release while declaring everything `<= 5.0.7`
+    vulnerable, so npm also flags the 1.x and 2.x maintenance lines even though
+    their backports have shipped. All 20 matches are development-only — the
+    ESLint and electron-builder chains — and none reaches the packaged app.
+    `npm audit fix --force` resolves them by *downgrading*
+    `eslint-plugin-jsx-a11y` 6.10.2 → 6.4.1, which is not a patch.
+
+  - `react-router` GHSA-qwww-vcr4-c8h2 (high) — a CSRF bypass that, by the
+    advisory's own text, "only affects your application if you are using the
+    unstable RSC APIs". GoWorks uses `HashRouter` with navigation hooks, has no
+    server and no RSC call site. The patched release is 8.3.0, a major, with no
+    7.x backport.
+
+  `npm audit --omit=dev` reports the react-router pair and nothing else;
+  production dependencies are otherwise clean.
 
 ### Removed
 
@@ -363,7 +409,10 @@ time of open-sourcing:
 - Boot-time config validation, file-writing logger with rotation, and a
   better-sqlite3 ABI parity guard.
 
-[Unreleased]: https://github.com/umutcankurt/goworks/compare/v0.7.8...HEAD
+[Unreleased]: https://github.com/umutcankurt/goworks/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/umutcankurt/goworks/releases/tag/v0.8.1
+[0.8.0]: https://github.com/umutcankurt/goworks/releases/tag/v0.8.0
+[0.7.9]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.9
 [0.7.8]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.8
 [0.7.7]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.7
 [0.7.6]: https://github.com/umutcankurt/goworks/releases/tag/v0.7.6
