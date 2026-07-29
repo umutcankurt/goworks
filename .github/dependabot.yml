@@ -1,14 +1,63 @@
 version: 2
 updates:
-  # npm dependencies — weekly, dev deps grouped to reduce PR noise
+  # npm dependencies — weekly.
+  #
+  # Grouping here is not about PR noise, it is about correctness. Dependabot
+  # bumps each package independently unless told otherwise, and for packages
+  # that peer-depend on each other that produces PRs which are broken the
+  # moment they are opened. Both of these actually happened:
+  #
+  #   - react-dom was moved to 19 while react stayed at 18, so the lockfile
+  #     carried react@18.3.1 next to react-dom@19.2.7 whose peer range is
+  #     ^19.2.7 (PR #4).
+  #   - react-i18next was moved to 17, which requires i18next >= 26.2.0, while
+  #     i18next stayed pinned at ^23.16.8 (PR #5).
+  #
+  # A dependency lands in the FIRST group whose patterns match, so the
+  # peer-coupled groups are listed before the catch-all dev-dependencies group.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
     groups:
+      # react and react-dom share internals and must move together; the types
+      # and testing-library ride along or the tests stop type-checking.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "@testing-library/react"
+
+      # react-i18next declares a hard peer range on i18next.
+      i18n:
+        patterns:
+          - "i18next"
+          - "i18next-*"
+          - "react-i18next"
+
+      # The Vite/Electron build chain: a Vite major that leaves
+      # vite-plugin-electron behind cannot build the app (PR #8).
+      build-toolchain:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "vite-plugin-electron"
+          - "vite-plugin-electron-renderer"
+          - "electron"
+          - "electron-builder"
+
+      # Everything else in devDependencies, minor and patch only. Majors are
+      # deliberately excluded so they arrive as individual, reviewable PRs
+      # instead of an 18-package pile-up that breaks lint, build and tests at
+      # once with no way to tell which package did it (PR #10).
       dev-dependencies:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Keep GitHub Actions (CI) pinned versions fresh
   - package-ecosystem: "github-actions"
