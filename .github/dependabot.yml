@@ -49,10 +49,32 @@ updates:
           - "electron"
           - "electron-builder"
 
+      # eslint-plugin-react-refresh 0.5+ requires eslint ^9 || ^10, so the
+      # plugin cannot advance until eslint does. Grouping them states that
+      # coupling: the family moves as one migration instead of a single plugin
+      # arriving alone and failing `npm ci` with ERESOLVE (PR #17).
+      #
+      # update-types is deliberately unset — majors are the entire point here.
+      # The resulting PR will install cleanly but fail `npm run lint`, because
+      # eslint 9 dropped the legacy .eslintrc.cjs this repo still uses. That is
+      # expected: the PR is the flat-config migration ticket, and it fails at
+      # one clear step instead of an opaque dependency-resolution error.
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-config-*"
+          - "eslint-plugin-*"
+          - "@typescript-eslint/*"
+
       # Everything else in devDependencies, minor and patch only. Majors are
       # deliberately excluded so they arrive as individual, reviewable PRs
       # instead of an 18-package pile-up that breaks lint, build and tests at
       # once with no way to tell which package did it (PR #10).
+      #
+      # NOTE: update-types does not protect against 0.x packages. Semver calls
+      # 0.4 -> 0.5 a "minor", but by convention that range is where breaking
+      # changes live. That is exactly how eslint-plugin-react-refresh reached
+      # #17 and broke it; it now belongs to the eslint group above.
       dev-dependencies:
         dependency-type: "development"
         update-types:
