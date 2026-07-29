@@ -78,7 +78,9 @@ export default defineConfig({
         entry: 'electron/main.ts',
         vite: {
           build: {
-            rollupOptions: {
+            // Vite 8 renamed this to rolldownOptions and keeps `rollupOptions`
+            // only as a deprecated alias.
+            rolldownOptions: {
               external: MAIN_EXTERNALS,
             },
           },
@@ -87,9 +89,7 @@ export default defineConfig({
       preload: {
         input: path.join(__dirname, 'electron/preload.ts'),
       },
-      renderer: process.env.NODE_ENV === 'test'
-        ? undefined
-        : {},
+      renderer: {},
     }),
   ],
 })

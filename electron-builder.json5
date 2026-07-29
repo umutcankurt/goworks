@@ -3,6 +3,12 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.goworks.app",
   "asar": true,
+  // better-sqlite3 13 is an N-API addon and ships prebuilt binaries for every
+  // target in `prebuilds/`; its loader (lib/binding.js) reads that directory and
+  // never looks at `build/Release`. A rebuild here would compile from source for
+  // minutes and produce a binary nothing loads. It is the only native runtime
+  // dependency, so the rebuild step has nothing left to do.
+  "npmRebuild": false,
   // Secret guard runs as part of packaging, so `npx electron-builder` cannot
   // skip it the way the npm-script-only wiring could.
   "beforePack": "./build/secret-guard.cjs",
@@ -21,7 +27,15 @@
     // refuses to let into an installer. Dropping the docs removes that whole false
     // positive class (and shrinks the installer) rather than teaching the guard to
     // ignore things, which would blunt it.
-    "!node_modules/**/*.{md,markdown}"
+    "!node_modules/**/*.{md,markdown}",
+    // better-sqlite3 13 ships a prebuilt N-API binary for all eight targets
+    // (~16 MB). Only the one matching the build is ever loaded, and GoWorks
+    // targets macOS and Windows, so the four Linux builds (~9 MB) are pure dead
+    // weight. The remaining cross-OS pair (~4 MB) stays: dropping it needs a
+    // per-platform `files` array, and a platform-specific `files` REPLACES this
+    // list rather than merging with it — losing the dist/dist-electron allowlist
+    // and pulling all of node_modules into app.asar (measured: 2.0 GB).
+    "!node_modules/better-sqlite3/prebuilds/linux*"
   ],
   "extraResources": [
     {
