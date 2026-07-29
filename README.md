@@ -118,7 +118,7 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 ### Prerequisites
 
-- **Node.js 20+**
+- **Node.js 22.12+**
 - A **Google Workspace** account with **super-admin** privileges
 - A **Google Cloud project** you control
 
