@@ -1,5 +1,5 @@
 
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
 // Mock window.ipcRenderer for tests (Electron preload is not available in jsdom)
