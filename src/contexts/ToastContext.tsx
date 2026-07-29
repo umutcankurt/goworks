@@ -20,6 +20,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
     const addToast = useCallback((message: string, type: ToastType = 'info') => {
+        // eslint-disable-next-line no-restricted-properties -- React list key for a toast that disappears in 4s, not a secret
         const id = Math.random().toString(36).slice(2);
         setToasts((prev) => [...prev, { id, message, type }]);
         setTimeout(() => {
