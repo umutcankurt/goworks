@@ -27,7 +27,10 @@ export const JobHistory: React.FC = () => {
     const [typeFilter, setTypeFilter] = useState('');
     const [creatorFilter, setCreatorFilter] = useState('');
     const [creatorInput, setCreatorInput] = useState('');
-    const creatorDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+    // The initial value is passed explicitly: React 19's useRef dropped the
+    // zero-argument overload. React 18 resolves this to the same
+    // `initialValue?: undefined` overload, so the ref's type is unchanged.
+    const creatorDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [loading, setLoading] = useState(true);
     const [selectedJob, setSelectedJob] = useState<ServerJob | null>(null);
 
