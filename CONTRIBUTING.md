@@ -6,7 +6,7 @@ environment running and what we expect in a pull request.
 
 ## Getting Started
 
-GoWorks is an Electron + React + TypeScript desktop app. You need **Node.js 20+**
+GoWorks is an Electron + React + TypeScript desktop app. You need **Node.js 22.12+**
 (see [`.nvmrc`](.nvmrc)) and npm.
 
 ```bash

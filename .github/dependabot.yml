@@ -55,16 +55,24 @@ updates:
       # arriving alone and failing `npm ci` with ERESOLVE (PR #17).
       #
       # update-types is deliberately unset — majors are the entire point here.
-      # The resulting PR will install cleanly but fail `npm run lint`, because
-      # eslint 9 dropped the legacy .eslintrc.cjs this repo still uses. That is
-      # expected: the PR is the flat-config migration ticket, and it fails at
-      # one clear step instead of an opaque dependency-resolution error.
+      #
+      # The flat-config migration is done (eslint.config.js), so an eslint major
+      # no longer implies a config rewrite. One coupling remains: eslint 10 needs
+      # eslint-plugin-jsx-a11y to widen its peer range past ^9. Until it does,
+      # an eslint 10 PR installs with an ERESOLVE *warning* rather than an error.
+      #
+      # @eslint/js, typescript-eslint and globals are flat-config requirements
+      # and must move with the family — none of them match the patterns above
+      # ("@typescript-eslint/*" does not match the unscoped "typescript-eslint").
       eslint:
         patterns:
           - "eslint"
           - "eslint-config-*"
           - "eslint-plugin-*"
+          - "@eslint/*"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
+          - "globals"
 
       # Everything else in devDependencies, minor and patch only. Majors are
       # deliberately excluded so they arrive as individual, reviewable PRs

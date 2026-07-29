@@ -118,7 +118,7 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 ### Ön Gereksinimler
 
-- **Node.js 20+**
+- **Node.js 22.12+**
 - **Süper yönetici** yetkilerine sahip bir **Google Workspace** hesabı
 - Kontrolünüzde olan bir **Google Cloud projesi**
 

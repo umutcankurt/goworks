@@ -11,7 +11,7 @@
  * - If `app.getPath('userData')` is not available, it falls back to /tmp/goworks-logs
  *   (for test/early-init scenarios).
  * - Console output is preserved (once no-console: warn is enabled in Phase C2,
- *   an eslintrc override will be added for this file).
+ *   a flat-config override will be added for this file).
  */
 import { app } from 'electron';
 import * as fs from 'node:fs';
