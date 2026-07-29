@@ -24,6 +24,9 @@ const LEVELS: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const RETENTION_DAYS = 7;
 
+/** Cap on a single formatted argument once it reaches the log file. */
+const MAX_ARG_LENGTH = 8192;
+
 let logsDir: string | null = null;
 let currentDate: string | null = null;
 let currentFile: string | null = null;
@@ -128,6 +131,33 @@ function formatArg(a: unknown): string {
     return String(a);
 }
 
+/**
+ * Keep one log record on exactly one line.
+ *
+ * Untrusted strings reach the log file: OAuth callback query parameters, Google
+ * API error text, and — widest of all — raw CSV cells from bulk jobs, whose row
+ * contents `validateJobPayload` never inspects (it applies `requireArray` alone
+ * for BULK_GROUP_ADD and BULK_SIGNATURE_PUSH). A newline inside any of them used
+ * to forge a second, fully-formed `[timestamp] [ERROR] …` record, which is enough
+ * to make the log worthless as evidence after an incident.
+ *
+ * Control characters are escaped rather than dropped, so nothing is silently
+ * lost, and ANSI sequences (ESC = 0x1B) are neutralised on the way through.
+ */
+function sanitizeForFile(value: string): string {
+    // eslint-disable-next-line no-control-regex -- escaping control characters is the point
+    const escaped = value.replace(/[\u0000-\u001F\u007F]/g, (ch) => {
+        if (ch === '\n') return '\\n';
+        if (ch === '\r') return '\\r';
+        if (ch === '\t') return '\\t';
+        return `\\x${ch.charCodeAt(0).toString(16).padStart(2, '0')}`;
+    });
+
+    if (escaped.length <= MAX_ARG_LENGTH) return escaped;
+    // Say what was dropped — a silent truncation reads as a complete record.
+    return `${escaped.slice(0, MAX_ARG_LENGTH)}…[${escaped.length - MAX_ARG_LENGTH} chars truncated]`;
+}
+
 function write(level: LogLevel, args: unknown[]): void {
     if (LEVELS[level] < LEVELS[readLevelOnce()]) return;
 
@@ -136,7 +166,10 @@ function write(level: LogLevel, args: unknown[]): void {
     const ts = new Date().toISOString();
     const prefix = `[${ts}] [${level.toUpperCase()}]`;
 
-    // Console output (for terminal and devtools)
+    // Console output (for terminal and devtools). Deliberately NOT run through
+    // sanitizeForFile: this stream is ephemeral developer output and multi-line
+    // stack traces are worth more here than the one-record-per-line invariant,
+    // which only matters for the file the app keeps.
     if (level === 'debug') console.debug(prefix, ...args);
     else if (level === 'info') console.info(prefix, ...args);
     else if (level === 'warn') console.warn(prefix, ...args);
@@ -144,7 +177,7 @@ function write(level: LogLevel, args: unknown[]): void {
 
     // Write to file
     try {
-        const formatted = args.map(formatArg).join(' ');
+        const formatted = args.map(formatArg).map(sanitizeForFile).join(' ');
         const line = `${prefix} ${formatted}\n`;
         const file = selectFile();
         fs.appendFileSync(file, line, 'utf-8');
