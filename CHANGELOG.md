@@ -14,7 +14,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes yet._
+A four-step dependency modernisation, ordered so that each step could only break
+one thing and the next step started from a green baseline. Nothing about the
+app's behaviour changes; the toolchain underneath it moves forward substantially.
+
+### Changed
+
+- **Electron 40 → 43** (Chromium 150, Node 24.17, V8 15). Electron 40 had reached
+  end-of-support. Startup is faster: the main process now boots from an embedded
+  Node startup snapshot, and preload scripts are cached as compiled V8 bytecode.
+
+- **Vite 5 → 8**, the rolldown-vite merge — Rolldown and Oxc replace Rollup and
+  esbuild. Moved with `@vitejs/plugin-react` 4 → 6, `vite-plugin-electron`
+  0.28 → 1.1 and `vite-plugin-electron-renderer` 0.14 → 1.0, because
+  `@vitejs/plugin-react@6` pins `vite: ^8` and no release bridges the two.
+  The main-process externals move from `build.rollupOptions` to
+  `build.rolldownOptions`.
+
+- **better-sqlite3 12 → 13**, which switches to N-API. This is the change with
+  the widest reach: v13 ships a prebuilt binary for every target and its loader
+  reads them directly, so one file now serves both Node and Electron. The
+  per-ABI compile-and-swap machinery the project had carried since the SQLite
+  migration is gone (see *Removed*), and `npm ci` drops from minutes to seconds.
+
+- **i18next 23 → 26** and **react-i18next 14 → 17** (they share a hard peer
+  range). The `<Trans>` serialisation fix in react-i18next 17 is a no-op here —
+  every locale string uses named placeholders — and there is now a test that
+  keeps it that way.
+
+- **ESLint 8 → 9** with the config format moved from `.eslintrc.cjs` to
+  `eslint.config.js`, plus `@typescript-eslint` 7 → 8,
+  `eslint-plugin-react-hooks` 4 → 7 and `eslint-plugin-react-refresh` 0.4 → 0.5.
+  The linted file set is unchanged and no rule was disabled to get there.
+  react-hooks 7's `recommended` preset now enables 14 React Compiler rules by
+  default; the two rules this project actually used are configured explicitly
+  instead, so linting behaviour is identical.
+
+- **jsdom 28 → 29**, **@testing-library/jest-dom 6 → 7**, **lucide-react 0.575 →
+  1.27** and **react-dropzone 15 → 19**. No source changes were needed for the
+  icons — 1.x keeps the old names as aliases. react-dropzone 19 does change one
+  behaviour: dropping more files than `maxFiles` used to reject all of them and
+  now accepts the ones within the limit.
+
+- **Minimum Node.js is now 22.12** (was 20). Forced by Electron 43,
+  better-sqlite3 13 and jest-dom 7; `.npmrc` sets `engine-strict=true`, so a
+  lower version fails at install rather than at runtime.
+
+- Installer size grew with Electron 43 and the bundled prebuilds — macOS
+  126 MB → 135 MB, Windows 93 MB → 96 MB. The four Linux prebuilds are excluded
+  from packaging since GoWorks targets macOS and Windows.
+
+### Added
+
+- `scripts/check-lucide-icons.mjs` (`npm run icons:check`, and part of
+  `postlint`): asserts every lucide icon imported under `src/` exists in the
+  installed package. A missing named export from an ESM barrel is not a build
+  error — it resolves to `undefined` and only throws when that screen renders —
+  so an icon rename could otherwise pass lint, type-check, tests and build, then
+  break one page.
+
+- A `<Trans>` regression test covering the five shapes the app uses, including
+  the `defaults`-without-`i18nKey` form. The component had seven call sites and
+  no test.
+
+- `scripts/check-oss-attribution.mjs` (`npm run oss:check`, and part of
+  `postlint`): asserts that every runtime dependency appears in Settings →
+  About's open-source list and that each credited license matches what is
+  actually installed. Neither kind of drift is visible to lint, types or tests —
+  the list is a plain array that always renders.
+
+### Fixed
+
+- **Two shipped libraries were missing from the open-source attribution list**
+  in Settings → About: `@noble/hashes` (the Argon2id implementation behind the
+  master-password vault) and `clsx`. Both are credited now, and the check above
+  keeps the list from drifting again.
+
+### Removed
+
+- The better-sqlite3 dual-ABI apparatus, now that one binary serves both
+  runtimes: `scripts/sqlite-binary.mjs`, `scripts/check-native-abi.mjs`, the
+  `predev` / `pretest` / `posttest` / `postinstall` / `test:prepare` / `rebuild`
+  / `postbuild` hooks, and CI's native-binary preparation step. Running tests is
+  now just `npx vitest run`.
+
+  These had stopped protecting anything: v13's loader ignores the path they
+  operated on, so they reported success while doing nothing.
+
+- The magic-byte architecture sniff in the startup check. Per-target prebuilds
+  are selected by platform and architecture, so a foreign binary is unreachable,
+  and an N-API binary is not tied to an ABI version. The load probe remains — a
+  missing or corrupt prebuild is the only failure left, and only the probe sees
+  it.
+
+- `@types/react-dropzone`, a deprecated stub; react-dropzone has shipped its own
+  types since v11.
 
 ## [0.8.0] — 2026-07-20
 

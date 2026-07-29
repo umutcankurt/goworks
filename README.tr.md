@@ -8,7 +8,7 @@
 
 [![Lisans: Apache 2.0](https://img.shields.io/badge/Lisans-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
-[![Electron ile geliştirildi](https://img.shields.io/badge/Electron-40-47848F.svg?logo=electron&logoColor=white)]()
+[![Electron ile geliştirildi](https://img.shields.io/badge/Electron-43-47848F.svg?logo=electron&logoColor=white)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg?logo=typescript&logoColor=white)]()
 [![PR'lar memnuniyetle karşılanır](https://img.shields.io/badge/PR-memnuniyetle%20kar%C5%9F%C4%B1lan%C4%B1r-brightgreen.svg)]()
 
@@ -105,10 +105,10 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 | Katman | Teknoloji |
 |---|---|
-| Masaüstü kabuğu | Electron 40 |
-| Arayüz | React 18, Vite 5, TailwindCSS 4, Framer Motion, Lucide |
+| Masaüstü kabuğu | Electron 43 |
+| Arayüz | React 18, Vite 8 (Rolldown), TailwindCSS 4, Framer Motion, Lucide |
 | Dil | TypeScript (strict) |
-| Yerel veri | better-sqlite3 (SQLite), süreç içi iş kuyruğu |
+| Yerel veri | better-sqlite3 13 (SQLite, N-API), süreç içi iş kuyruğu |
 | Google API'leri | googleapis, google-auth-library (OAuth2 + Service Account / DWD) |
 | Dayanıklılık | Bottleneck (hız sınırlama), üstel geri çekilmeli yeniden deneme |
 | Çoklu dil | i18next, react-i18next |
