@@ -143,7 +143,6 @@ i18n.use(initReactI18next).init({
     defaultNS: 'common',
     ns: NAMESPACES as unknown as string[],
     interpolation: { escapeValue: false },
-    returnNull: false,
 });
 
 /**
