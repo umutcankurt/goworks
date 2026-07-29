@@ -8,7 +8,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
-[![Built with Electron](https://img.shields.io/badge/Electron-40-47848F.svg?logo=electron&logoColor=white)]()
+[![Built with Electron](https://img.shields.io/badge/Electron-43-47848F.svg?logo=electron&logoColor=white)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg?logo=typescript&logoColor=white)]()
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
@@ -105,10 +105,10 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 | Layer | Technology |
 |---|---|
-| Desktop shell | Electron 40 |
-| UI | React 18, Vite 5, TailwindCSS 4, Framer Motion, Lucide |
+| Desktop shell | Electron 43 |
+| UI | React 18, Vite 8 (Rolldown), TailwindCSS 4, Framer Motion, Lucide |
 | Language | TypeScript (strict) |
-| Local data | better-sqlite3 (SQLite), in-process job queue |
+| Local data | better-sqlite3 13 (SQLite, N-API), in-process job queue |
 | Google APIs | googleapis, google-auth-library (OAuth2 + Service Account / DWD) |
 | Reliability | Bottleneck (rate limiting), exponential-backoff retry |
 | i18n | i18next, react-i18next |

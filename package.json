@@ -45,8 +45,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "i18n:check": "node scripts/check-i18n-parity.mjs",
-    "postlint": "node scripts/check-demo-coverage.mjs && node scripts/check-lucide-icons.mjs",
+    "postlint": "node scripts/check-demo-coverage.mjs && node scripts/check-lucide-icons.mjs && node scripts/check-oss-attribution.mjs",
     "icons:check": "node scripts/check-lucide-icons.mjs",
+    "oss:check": "node scripts/check-oss-attribution.mjs",
     "prepare": "husky || true"
   },
   "dependencies": {
