@@ -164,19 +164,13 @@ Platforma özel kurulum dosyalarını `release/{version}/` altında üretir — 
 
 ## Sorun Giderme
 
-### `No handler registered for 'X'` (kurulum dosyası derleme sonrası rastgele IPC hataları)
+### `No handler registered for 'X'` (rastgele IPC hataları)
 
-`npm run build` çalıştırıp (hem `-m` hem `-w` çıktıları üretir) ardından dev makinenize geri döndüyseniz, `node_modules/` altındaki `better-sqlite3` native binary'si yanlış platform veya Electron ABI'sine derlenmiş olabilir. Belirti: renderer'da rastgele bir IPC çağrısı hata verir — `config:set`, `auth:check`, `config:getAll` vb.
+Eskiden bu, `node_modules/` altındaki `better-sqlite3` native binary'sinin yanlış platforma ya da yanlış Electron ABI'sine derlenmiş olduğu anlamına gelirdi — genellikle `npm run build` ile çapraz platform çıktısı aldıktan sonra dev makinenize döndüğünüzde. Belirti, renderer'da rastgele bir IPC çağrısının hata vermesiydi (`config:set`, `auth:check`, `config:getAll` vb.).
 
-Üç bağımsız savunma katmanı devrede:
+**better-sqlite3 13 ile bu arıza sınıfı tamamen ortadan kalktı.** Paket artık bir N-API eklentisi: her hedef için hazır derlenmiş binary taşıyor ve platform/mimariye göre seçim yapıyor, dolayısıyla yabancı bir build seçmesi mümkün değil; N-API binary'si de bir ABI sürümüne bağlı olmadığı için Node ve Electron aynı dosyayı yüklüyor. Yeniden derleme adımı, ABI takası ya da cache yok.
 
-1. **`npm run dev`** — `predev` hook'u ABI mismatch'i tespit ederse otomatik yeniden derleme tetikler. Geç açılışın nedenini bilmeniz için terminale dikkat çekici bir banner basılır (~30–60s sürer).
-2. **Boot-check** — runtime'da hâlâ bir uyumsuzluk varsa uygulama açılırken hata diyaloğu çözüm komutunu gösterir ve çıkar.
-3. **Manuel çözüm** — `npm run rebuild` (`electron-builder install-app-deps` için alias) istediğiniz zaman.
-
-**CI / strict mod**: `CHECK_NATIVE_ABI_STRICT=1` (veya GitHub Actions ve birçok CI runner'ının otomatik atadığı `CI=true`) ile predev hook'u otomatik rebuild yerine sert şekilde hata verir.
-
-Dev'i tetiklemeden binary'yi kontrol etmek için `npm run abi:check` tek başına çalıştırılabilir.
+Hâlâ mümkün olan tek şey `node_modules`'ün eksik veya bozuk olması. Uygulamanın boot-check'i veritabanına dokunmadan önce modülü yüklemeyi dener; yükleyemezse sonradan anlamsız bir hatayla düşmek yerine çözüm olarak `npm ci` komutunu gösteren bir diyalog açar.
 
 ## Sürüm Geçmişi
 

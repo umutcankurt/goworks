@@ -32,9 +32,9 @@ jobs:
           node-version: 24
           cache: npm
 
-      # npm ci runs postinstall → electron-rebuild builds better-sqlite3 for the
-      # Electron ABI. test:prepare additionally builds/caches the Node ABI binary
-      # that vitest needs (see scripts/sqlite-binary.mjs, the pretest/posttest swap).
+      # No postinstall step any more: better-sqlite3 13 is an N-API addon that
+      # ships prebuilt binaries for every target, so nothing needs compiling and
+      # the same binary serves Node and Electron alike.
       - name: Install dependencies
         run: npm ci
 
@@ -44,13 +44,8 @@ jobs:
       - name: Type-check (tsc --noEmit)
         run: npx tsc --noEmit
 
-      - name: Prepare native test binary (better-sqlite3 Node ABI)
-        run: npm run test:prepare
-
-      # `npm test`, not `npx vitest run` — the pretest/posttest hooks are what
-      # swap better-sqlite3 to the Node ABI and back. `--run` is explicit because
-      # vitest v4 dropped the implicit `run` and otherwise relies on CI detection
-      # alone to stay out of watch mode.
+      # `--run` is explicit because vitest v4 dropped the implicit `run` and
+      # otherwise relies on CI detection alone to stay out of watch mode.
       - name: Test (Vitest)
         run: npm test -- --run
 

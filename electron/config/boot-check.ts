@@ -54,124 +54,22 @@ interface FailureDetail {
 }
 
 /**
- * Native module probe — hard-fail if the better-sqlite3 binary's platform/arch
- * doesn't match the host or if `require()` blows up.
- *
- * First a magic byte sniff (~32 byte read, doesn't trigger dlopen), then an actual
- * `require()` that also catches a NODE_MODULE_VERSION mismatch. The combination of
- * the two layers: the sniff catches arch mismatch, the require catches ABI mismatch.
+ * Native module probe — hard-fail if better-sqlite3 cannot be loaded.
  *
  * This check must run BEFORE `runEnvMigration()` because the migration triggers the
- * `appConfigService.get()` → `getDb()` chain; if the native module is incompatible
- * the migration fails with an unhelpful crash.
+ * `appConfigService.get()` → `getDb()` chain; if the native module is unusable the
+ * migration fails with an unhelpful crash.
+ *
+ * This used to be two layers: a magic-byte sniff of `build/Release/better_sqlite3.node`
+ * to catch a wrong-arch binary, then a `require()` to catch a NODE_MODULE_VERSION
+ * mismatch. better-sqlite3 13 removed both failure modes. It is an N-API addon that
+ * ships a prebuilt binary for every target in `prebuilds/` and picks one by
+ * `${platform}-${arch}`, so it cannot select a foreign architecture, and an N-API
+ * binary is not tied to an ABI version, so Node and Electron load the same file.
+ * What remains possible is a missing or corrupt prebuild — which only the load
+ * probe can see.
  */
-interface BinaryInfo {
-    platform: string;
-    arch: string;
-}
-
-function parseBinaryMagic(buf: Buffer): BinaryInfo {
-    if (!buf || buf.length < 16) return { platform: 'unknown', arch: 'unknown' };
-
-    const magicLE = buf.readUInt32LE(0);
-    const magicBE = buf.readUInt32BE(0);
-
-    // Mach-O 64-bit (macOS) — magic 0xFEEDFACF (LE)
-    if (magicLE === 0xfeedfacf || magicLE === 0xcffaedfe) {
-        const cputype = buf.readUInt32LE(4);
-        const arch =
-            cputype === 0x0100000c
-                ? 'arm64'
-                : cputype === 0x01000007
-                  ? 'x64'
-                  : 'unknown';
-        return { platform: 'darwin', arch };
-    }
-
-    // Mach-O universal binary (fat) — 0xCAFEBABE (BE)
-    if (magicBE === 0xcafebabe) {
-        return { platform: 'darwin', arch: 'universal' };
-    }
-
-    // PE (Windows) — "MZ" prefix
-    if (buf.readUInt16LE(0) === 0x5a4d) {
-        return { platform: 'win32', arch: 'unknown' };
-    }
-
-    // ELF (Linux) — 0x7F 'E' 'L' 'F'
-    if (magicLE === 0x464c457f) {
-        if (buf.length < 0x14) return { platform: 'linux', arch: 'unknown' };
-        const eMachine = buf.readUInt16LE(0x12);
-        const arch =
-            eMachine === 0x3e ? 'x64' : eMachine === 0xb7 ? 'arm64' : 'unknown';
-        return { platform: 'linux', arch };
-    }
-
-    return { platform: 'unknown', arch: 'unknown' };
-}
-
-function isBinaryCompatible(binary: BinaryInfo, host: BinaryInfo): boolean {
-    if (binary.platform !== host.platform) return false;
-    if (binary.arch === 'universal') return host.platform === 'darwin';
-    if (binary.arch === 'unknown') return true;
-    return binary.arch === host.arch;
-}
-
-function resolveBetterSqliteBinary(): string | null {
-    try {
-        const requireFromHere = createRequire(import.meta.url);
-        const pkgPath = requireFromHere.resolve('better-sqlite3/package.json');
-        return path.join(
-            path.dirname(pkgPath),
-            'build',
-            'Release',
-            'better_sqlite3.node',
-        );
-    } catch {
-        return null;
-    }
-}
-
-const NATIVE_REMEDY =
-    'Çözüm: Terminalden aşağıdaki komutu çalıştırın ve uygulamayı yeniden başlatın:\n\n' +
-    '    npm run rebuild\n\n' +
-    'Genellikle platformlar arası build aldıktan sonra (npm run build) dev ' +
-    'makinenize geri döndüğünüzde bu yeniden derleme gerekir.';
-
 function validateNativeModules(): FailureDetail | null {
-    const host: BinaryInfo = { platform: process.platform, arch: process.arch };
-    const binaryPath = resolveBetterSqliteBinary();
-
-    // 1) Magic byte sniff (cheap, doesn't trigger dlopen)
-    if (binaryPath && fs.existsSync(binaryPath)) {
-        try {
-            const fd = fs.openSync(binaryPath, 'r');
-            const buf = Buffer.alloc(32);
-            try {
-                fs.readSync(fd, buf, 0, 32, 0);
-            } finally {
-                fs.closeSync(fd);
-            }
-            const binary = parseBinaryMagic(buf);
-            if (!isBinaryCompatible(binary, host)) {
-                return {
-                    title: 'Native Modül Uyumsuz',
-                    message:
-                        'GoWorks başlatılamadı — better-sqlite3 native modülü bu sistemle uyumsuz.',
-                    detail:
-                        `Tespit edilen: ${binary.platform}/${binary.arch}\n` +
-                        `Beklenen:      ${host.platform}/${host.arch}\n\n` +
-                        NATIVE_REMEDY,
-                };
-            }
-        } catch (err) {
-            logger.warn('[boot-check] native binary sniff başarısız:', err);
-            // If the sniff fails, fall through to the require probe.
-        }
-    }
-
-    // 2) Probe load — here we catch the NODE_MODULE_VERSION mismatch the sniff
-    // can't (correct arch, wrong Electron ABI).
     try {
         const requireFromHere = createRequire(import.meta.url);
         requireFromHere('better-sqlite3');
@@ -179,10 +77,15 @@ function validateNativeModules(): FailureDetail | null {
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return {
-            title: 'Native Modül Uyumsuz',
+            title: 'Native Modül Yüklenemedi',
             message:
-                'GoWorks başlatılamadı — better-sqlite3 native modülü bu Electron sürümüyle uyumsuz.',
-            detail: `Hata: ${msg}\n\n${NATIVE_REMEDY}`,
+                'GoWorks başlatılamadı — better-sqlite3 native modülü yüklenemedi.',
+            detail:
+                `Hata: ${msg}\n\n` +
+                'Çözüm: Terminalden bağımlılıkları yeniden kurun ve uygulamayı ' +
+                'yeniden başlatın:\n\n' +
+                '    npm ci\n\n' +
+                'Bu genellikle node_modules eksik ya da bozuk olduğunda görülür.',
         };
     }
 }

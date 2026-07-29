@@ -164,19 +164,13 @@ Produces platform installers under `release/{version}/` — macOS `.dmg` and Win
 
 ## Troubleshooting
 
-### `No handler registered for 'X'` (random IPC errors after building installers)
+### `No handler registered for 'X'` (random IPC errors)
 
-If you ran `npm run build` (which produces both `-m` and `-w` artifacts) and then went back to your dev machine, the native `better-sqlite3` binary in `node_modules/` may be compiled for the wrong platform or Electron ABI. The symptom is a random IPC error in the renderer — `config:set`, `auth:check`, `config:getAll`, etc.
+Historically this meant the native `better-sqlite3` binary in `node_modules/` was built for the wrong platform or the wrong Electron ABI — typically after `npm run build` produced cross-platform artifacts and you went back to developing. The symptom was a random IPC failure in the renderer (`config:set`, `auth:check`, `config:getAll`, …).
 
-Three independent defenses are in place:
+**This class of failure is gone as of better-sqlite3 13.** It is an N-API addon that ships a prebuilt binary for every target and selects one by platform and architecture, so it cannot pick a foreign build, and an N-API binary is not tied to an ABI version — Node and Electron load the same file. No rebuild step, no ABI swapping, no cache.
 
-1. **`npm run dev`** detects ABI mismatch via the `predev` hook and auto-rebuilds. A visible banner is printed so you know why startup is slow (~30–60s).
-2. **Boot-check** — if the mismatch is somehow still present at runtime, an error dialog shows the exact remediation command before the app exits.
-3. **Manual fix** — `npm run rebuild` (alias for `electron-builder install-app-deps`) at any time.
-
-**CI / strict mode**: set `CHECK_NATIVE_ABI_STRICT=1` (or run under `CI=true`, which GitHub Actions and most CI runners set automatically) to make the predev hook fail loudly instead of auto-rebuilding.
-
-You can also run `npm run abi:check` standalone to check the binary without invoking dev.
+What can still happen is a missing or corrupt `node_modules`. The app's boot-check probes the module before touching the database and, if it cannot load, shows a dialog naming `npm ci` as the fix rather than failing later with an opaque error.
 
 ## Changelog
 
