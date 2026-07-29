@@ -50,6 +50,21 @@ export interface CategorizeResult {
 // ---------------------------------------------------------------------------
 
 /**
+ * Escapes a value for interpolation into a single-quoted Google Directory API
+ * query literal.
+ *
+ * Backslashes must be escaped BEFORE quotes. Escaping only quotes turned `\'`
+ * into `\\'`, where the first backslash escapes the second and the quote then
+ * closes the literal — injecting into the query (CodeQL js/incomplete-sanitization).
+ *
+ * Exported so it can be tested without mocking the eight dependencies
+ * `resolveAudience` pulls in.
+ */
+export function escapeQueryLiteral(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
  * Resolves the list of people to audit based on the scope selection.
  * - `all` / `orgUnit`: `listUsers` (SA+DWD, projection=full) — returns a full profile
  * - `group`: `listGroupMembers` → `getUserInfo` for each member
@@ -63,7 +78,7 @@ export async function resolveAudience(scope: AuditScope, adminEmail: string): Pr
         let query: string | undefined;
         if (scope.type === 'orgUnit') {
             if (!scope.value) throw new Error('Kuruluş birimi seçilmedi');
-            query = `orgUnitPath='${scope.value.replace(/'/g, "\\'")}'`;
+            query = `orgUnitPath='${escapeQueryLiteral(scope.value)}'`;
         }
         const users = await listUsers(adminEmail, query);
         for (const u of users) {

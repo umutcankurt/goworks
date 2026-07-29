@@ -133,6 +133,30 @@ describe('sanitizeTemplateHtml — allowedStyles regresyon kilidi (rich signatur
         expect(out).toContain('line-height:1.4');
     });
 
+    it('keeps every text-decoration shorthand the allowlist accepted before', () => {
+        // The ReDoS fix dropped `solid|double|dotted|dashed|wavy` from the alternation
+        // because `[a-z]+` already matches them. These must still survive.
+        for (const value of [
+            'none', 'underline', 'overline', 'line-through',
+            'underline solid', 'underline wavy', 'underline dotted red',
+            'line-through double green', 'overline solid #abc', 'underline #123456ff',
+        ]) {
+            const out = sanitizeTemplateHtml(`<span style="text-decoration:${value}">x</span>`);
+            expect(out, `text-decoration:${value} was dropped`).toContain(`text-decoration:${value}`);
+        }
+    });
+
+    it('does not backtrack exponentially on a crafted text-decoration value', () => {
+        // Before the fix each repeated word had two ways to match, so this input
+        // took 639ms at 24 repeats and quadrupled every further pair. Reachable from
+        // a user's own Gmail signature via signatures:get, which would hang the main
+        // process for the admin viewing them. 30 repeats used to run for ~40s.
+        const hostile = `underline${' solid'.repeat(30)}!`;
+        const started = Date.now();
+        sanitizeTemplateHtml(`<span style="text-decoration:${hostile}">x</span>`);
+        expect(Date.now() - started).toBeLessThan(1000);
+    });
+
     it('preserves box model + border styles used in table signatures', () => {
         const out = sanitizeTemplateHtml(
             '<td style="padding:8px 12px;margin:0;width:120px;height:40px;border:1px solid #cccccc;vertical-align:middle">x</td>',

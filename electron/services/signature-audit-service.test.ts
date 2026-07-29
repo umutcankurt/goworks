@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categorize, normalizeSignatureHtml, type DesiredSignature } from './signature-audit-service';
+import { categorize, escapeQueryLiteral, normalizeSignatureHtml, type DesiredSignature } from './signature-audit-service';
 import { hashSignatureHtml, type SignatureStateRow } from './signature-state-service';
 
 const desired: DesiredSignature = {
@@ -19,6 +19,30 @@ function stateRow(over: Partial<SignatureStateRow>): SignatureStateRow {
         ...over,
     };
 }
+
+describe('escapeQueryLiteral', () => {
+    it('leaves an ordinary org unit path untouched', () => {
+        expect(escapeQueryLiteral('/Ogretmenler/Matematik')).toBe('/Ogretmenler/Matematik');
+    });
+
+    it('escapes a single quote', () => {
+        expect(escapeQueryLiteral("/Ali'nin Birimi")).toBe("/Ali\\'nin Birimi");
+    });
+
+    // The regression: escaping quotes alone turned `\'` into `\\'`, where the first
+    // backslash escapes the second and the quote then closes the literal.
+    it('escapes backslashes before quotes so a quote cannot break out', () => {
+        expect(escapeQueryLiteral("\\'")).toBe("\\\\\\'");
+    });
+
+    it('does not let a crafted path terminate the query literal', () => {
+        const query = `orgUnitPath='${escapeQueryLiteral("\\' OR name='x")}'`;
+        // Every quote that is not the delimiter must stay escaped.
+        expect(query.slice(('orgUnitPath=').length + 1, -1)).not.toMatch(/(^|[^\\])'/);
+        expect(query.startsWith("orgUnitPath='")).toBe(true);
+        expect(query.endsWith("'")).toBe(true);
+    });
+});
 
 describe('hashSignatureHtml', () => {
     it('is deterministic for the same input', () => {
