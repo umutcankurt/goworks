@@ -153,27 +153,6 @@ bulk-job path.
   therefore accepted the patched release all along. Nothing was holding it back
   but the lockfile, so this is a lockfile-only change.
 
-- **Two further advisories were assessed and deliberately left unpatched**, both
-  unreachable here and neither carrying a fix that is not itself a regression:
-
-  - `brace-expansion` GHSA-mh99-v99m-4gvg / CVE-2026-14257 (high, published
-    24 July) — a second, separate DoS in the same package. The advisory names
-    5.0.8 as its only patched release while declaring everything `<= 5.0.7`
-    vulnerable, so npm also flags the 1.x and 2.x maintenance lines even though
-    their backports have shipped. All 20 matches are development-only — the
-    ESLint and electron-builder chains — and none reaches the packaged app.
-    `npm audit fix --force` resolves them by *downgrading*
-    `eslint-plugin-jsx-a11y` 6.10.2 → 6.4.1, which is not a patch.
-
-  - `react-router` GHSA-qwww-vcr4-c8h2 (high) — a CSRF bypass that, by the
-    advisory's own text, "only affects your application if you are using the
-    unstable RSC APIs". GoWorks uses `HashRouter` with navigation hooks, has no
-    server and no RSC call site. The patched release is 8.3.0, a major, with no
-    7.x backport.
-
-  `npm audit --omit=dev` reports the react-router pair and nothing else;
-  production dependencies are otherwise clean.
-
 ### Removed
 
 - The better-sqlite3 dual-ABI apparatus, now that one binary serves both
