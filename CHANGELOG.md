@@ -12,11 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > bump. **v0.7.9 is the first public open-source release**; earlier builds were
 > withdrawn (see below).
 
-## [0.8.1] — 2026-07-29
+## [0.8.1] — 2026-08-05
 
 A four-step dependency modernisation, ordered so that each step could only break
-one thing and the next step started from a green baseline. Nothing about the
-app's behaviour changes; the toolchain underneath it moves forward substantially.
+one thing and the next step started from a green baseline. The toolchain moves
+forward substantially while the app itself stays put — the only behavioural
+changes are two security fixes found alongside it: offboarding reset passwords
+were coming from `Math.random()`, and log records could be forged through the
+bulk-job path.
 
 ### Changed
 
@@ -104,6 +107,41 @@ app's behaviour changes; the toolchain underneath it moves forward substantially
   its existing type and nothing about today's build changes.
 
 ### Security
+
+- **Offboarding generated the departing user's reset password with
+  `Math.random()`.** V8 implements it with xorshift128+, whose internal state is
+  recoverable from a couple of observed outputs, so every password produced
+  after that point was predictable — and this password is set on a live Google
+  Workspace account. `changePasswordAtNextLogin` narrows the window without
+  closing it: the first party to sign in sets the password and owns the account.
+  Because the offboarding steps are individually toggleable, an operator who
+  turns off "suspend" leaves this reset as the only line of defence. Passwords
+  now come from `crypto.getRandomValues()` via a new
+  `src/utils/generatePassword.ts`, with rejection sampling so the alphabet stays
+  uniform (256 % 63 == 4, so a plain modulo would favour the first four
+  symbols). The alphabet (63 ambiguity-free characters) and length (24, ~143
+  bits) are unchanged. A `no-restricted-properties` ESLint rule is the
+  regression guard — lint runs with `--max-warnings 0`, so it is a CI gate — and
+  the two remaining non-secret `Math.random()` uses carry inline disables
+  stating why.
+
+- **Log records could be forged by anything that reached the logger.** `write()`
+  appended formatted arguments to the log file with no sanitisation: no newline
+  handling, no control-character escaping, no length cap. A newline inside any
+  logged string produced a second, fully-formed `[timestamp] [LEVEL] …` record,
+  which is enough to make the log worthless as evidence after an incident. That
+  path is reachable: `validateJobPayload` is asymmetric — `BULK_SUSPEND` and
+  `BULK_DELETE` go through `requireEmailList`, whose `EMAIL_RE` excludes
+  whitespace, but `BULK_GROUP_ADD` and `BULK_SIGNATURE_PUSH` get `requireArray`
+  alone, so raw CSV cell contents reach the log via the bulk workers and
+  `retry.ts`. C0 control characters and DEL are now escaped per argument, and
+  each argument is capped at 8 KB with an explicit truncation marker. The
+  console stream is deliberately untouched — it is ephemeral developer output
+  where readable multi-line stack traces are worth more than the
+  one-record-per-line invariant. Adds `logger.test.ts`, the module's first test.
+  Validating bulk-job row contents is left for later on purpose: the sanitiser
+  closes the logging consequence, and content validation is a separate concern
+  with its own risk of rejecting legitimate data.
 
 - **A stale lockfile entry was still pinning a vulnerable `brace-expansion`.**
   Closes Dependabot alert #8 (GHSA-3jxr-9vmj-r5cp / CVE-2026-13149, high,
