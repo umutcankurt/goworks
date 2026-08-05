@@ -798,6 +798,7 @@ export const handlers: Record<string, Handler> = {
             add_to_group: ['grup_email', 'email'],
         };
         const fields = required[actionType] ?? ['email'];
+        const msg = store.data.profile.csvErrors;
 
         rows.forEach((raw: Record<string, string>, index: number) => {
             const rowNumber = index + 1;
@@ -809,7 +810,7 @@ export const handlers: Record<string, Handler> = {
                     errors.push({
                         field,
                         errorType: 'MISSING_REQUIRED',
-                        message: `"${field}" zorunlu`,
+                        message: msg.missingRequired(field),
                     });
                 }
             }
@@ -817,11 +818,11 @@ export const handlers: Record<string, Handler> = {
             const email = value('email');
             if (email) {
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                    errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: 'Geçersiz e-posta formatı' });
+                    errors.push({ field: 'email', errorType: 'INVALID_FORMAT', message: msg.invalidEmail(email) });
                 } else if (seenEmails.has(email.toLowerCase())) {
-                    errors.push({ field: 'email', errorType: 'DUPLICATE_IN_CSV', message: 'CSV içinde tekrar eden e-posta' });
+                    errors.push({ field: 'email', errorType: 'DUPLICATE_IN_CSV', message: msg.duplicate });
                 } else if (!store.findUser(email)) {
-                    errors.push({ field: 'email', errorType: 'NOT_FOUND', message: 'Kullanıcı dizinde bulunamadı' });
+                    errors.push({ field: 'email', errorType: 'NOT_FOUND', message: msg.userNotFound });
                 }
                 seenEmails.add(email.toLowerCase());
             }
@@ -829,13 +830,13 @@ export const handlers: Record<string, Handler> = {
             const institutionName = value('kurum_adi');
             const institution = store.data.institutions.find((i) => i.name === institutionName);
             if (institutionName && !institution) {
-                errors.push({ field: 'kurum_adi', errorType: 'NOT_FOUND', message: 'Kurum tanımlı değil' });
+                errors.push({ field: 'kurum_adi', errorType: 'NOT_FOUND', message: msg.institutionNotFound(institutionName) });
             }
 
             if (actionType === 'add_to_group') {
                 const groupEmail = value('grup_email');
                 if (groupEmail && !store.findGroup(groupEmail)) {
-                    errors.push({ field: 'grup_email', errorType: 'NOT_FOUND', message: 'Grup bulunamadı' });
+                    errors.push({ field: 'grup_email', errorType: 'NOT_FOUND', message: msg.groupNotFound(groupEmail) });
                 }
             }
 

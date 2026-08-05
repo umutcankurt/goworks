@@ -35,6 +35,20 @@ export interface DemoProfile {
     /** Error strings shown in failed job reports. */
     jobErrors: string[];
     auditReasons: { drift: string; noSignature: string; missingData: string; error: string };
+    /**
+     * CSV validation errors for the bulk-operations analysis step. Mirrors
+     * `MESSAGES` in `electron/services/csv-analysis.ts` — the renderer cannot
+     * import that module (it pulls in institutionService → SQLite), so the
+     * wording is duplicated here deliberately. Keep the two in sync.
+     */
+    csvErrors: {
+        missingRequired: (field: string) => string;
+        invalidEmail: (email: string) => string;
+        duplicate: string;
+        userNotFound: string;
+        institutionNotFound: (name: string) => string;
+        groupNotFound: (email: string) => string;
+    };
 }
 
 export const trProfile: DemoProfile = {
@@ -105,6 +119,14 @@ export const trProfile: DemoProfile = {
         missingData: 'Unvan veya kurum bilgisi eksik',
         error: 'Gmail API erişim hatası',
     },
+    csvErrors: {
+        missingRequired: (field) => `'${field}' alanı zorunludur.`,
+        invalidEmail: (email) => `Geçersiz e-posta formatı: '${email}'`,
+        duplicate: 'Bu kayıt CSV\'de tekrar ediyor.',
+        userNotFound: 'Kullanıcı dizinde bulunamadı.',
+        institutionNotFound: (name) => `Kurum bulunamadı: '${name}'. Lütfen CSV'yi kontrol edin.`,
+        groupNotFound: (email) => `Grup bulunamadı: '${email}'`,
+    },
 };
 
 export const enProfile: DemoProfile = {
@@ -174,6 +196,14 @@ export const enProfile: DemoProfile = {
         noSignature: 'User has no signature set',
         missingData: 'Title or institution data is missing',
         error: 'Gmail API access error',
+    },
+    csvErrors: {
+        missingRequired: (field) => `The '${field}' field is required.`,
+        invalidEmail: (email) => `Invalid email format: '${email}'`,
+        duplicate: 'This record is duplicated in the CSV.',
+        userNotFound: 'User not found in the directory.',
+        institutionNotFound: (name) => `Institution not found: '${name}'. Please check the CSV.`,
+        groupNotFound: (email) => `Group not found: '${email}'`,
     },
 };
 
