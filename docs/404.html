@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found — GoWorks</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/goworks/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/goworks/apple-touch-icon.png">
+<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1416" media="(prefers-color-scheme: dark)">
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('goworks-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<style>
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url('/goworks/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root {
+  --void: #f8fafc; --fg: #0f172a; --fg-dim: #475569; --fg-mute: #64748b;
+  --line: rgba(15, 23, 42, .10); --beam: #0e7490; --on-beam: #ffffff;
+  --glow: rgba(8, 145, 178, .18);
+}
+:root[data-theme='dark'] {
+  --void: #0e1416; --fg: #dee3e6; --fg-dim: #bcc9cd; --fg-mute: #8b9a9e;
+  --line: rgba(222, 227, 230, .10); --beam: #4cd7f6; --on-beam: #00343d;
+  --glow: rgba(76, 215, 246, .20);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --void: #0e1416; --fg: #dee3e6; --fg-dim: #bcc9cd; --fg-mute: #8b9a9e;
+    --line: rgba(222, 227, 230, .10); --beam: #4cd7f6; --on-beam: #00343d;
+    --glow: rgba(76, 215, 246, .20);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh;
+  display: grid; place-items: center; padding: 32px;
+  background: var(--void); color: var(--fg);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px; line-height: 1.65;
+  font-optical-sizing: auto; -webkit-font-smoothing: antialiased;
+}
+main {
+  position: relative; max-width: 44ch; text-align: center;
+}
+main::before {
+  content: ''; position: absolute; inset: -40% -30% auto -30%; height: 420px;
+  background: radial-gradient(520px 260px at 50% 40%, var(--glow), transparent 65%);
+  pointer-events: none;
+}
+main > * { position: relative; }
+.code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg-mute); margin: 0 0 14px;
+}
+h1 { font-size: clamp(2rem, 6vw, 2.75rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1; margin: 0 0 16px; }
+p.lede { color: var(--fg-dim); margin: 0 0 32px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 12px 22px; border-radius: 12px;
+  font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; text-decoration: none;
+  border: 1px solid transparent; transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary { background: var(--beam); color: var(--on-beam); box-shadow: 0 0 22px var(--glow); }
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-ghost { color: var(--fg); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--beam); transform: translateY(-1px); }
+.row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .btn:hover { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="code">Error 404</p>
+  <h1>That page isn't here</h1>
+  <p class="lede">The link may be out of date. Everything about GoWorks lives on one page, or in the repository.</p>
+  <div class="row">
+    <a class="btn btn-primary" href="/goworks/">Back to the start</a>
+    <a class="btn btn-ghost" href="https://github.com/umutcankurt/goworks">View source on GitHub</a>
+  </div>
+</main>
+</body>
+</html>
