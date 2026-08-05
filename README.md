@@ -4,7 +4,11 @@
 
 # GoWorks
 
-**Open-source desktop app for Google Workspace™ administration — bulk user lifecycle management, offboarding, Gmail signature deployment, and group management.**
+**Bulk offboarding, Gmail signature deployment, and group management for Google Workspace™.**
+
+A desktop app that runs entirely on your machine — no server, no vendor backend, no telemetry.
+
+[**⬇ Download for macOS**](https://github.com/umutcankurt/goworks/releases/latest) · [**⬇ Download for Windows**](https://github.com/umutcankurt/goworks/releases/latest) · [Try the demo, no account needed](#try-it-without-a-google-account)
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
@@ -14,6 +18,10 @@
 
 **English** · [Türkçe](README.tr.md)
 
+<img src="docs/demo-bulk.gif" alt="Suspending nine accounts from a CSV: the wizard validates every row, flags one user that does not exist, then runs the job with live progress" width="860">
+
+<sub>Suspending accounts from a CSV — every row validated before anything runs. Recorded in demo mode.</sub>
+
 </div>
 
 ---
@@ -22,11 +30,26 @@
 
 It runs **entirely on your machine** — a local SQLite database and an in-process job queue. There is no server to host, no Docker, no external database. You connect it to your own Google Cloud project, and your data never leaves your computer.
 
+## Try it without a Google account
+
+```bash
+git clone https://github.com/umutcankurt/goworks.git && cd goworks
+npm install && npm run demo:en
+```
+
+Demo mode is a **fully clickable prototype** running against an in-memory fixture — no
+Google Workspace account, no Service Account, no master password, no internet. Sign-in is
+cosmetic; it drops you straight onto the dashboard of a fictional tenant. Use it to judge
+whether GoWorks fits your workflow before you set up a Google Cloud project. See
+[`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
+
 ## Table of Contents
 
-- [Features](#features)
+- [Try it without a Google account](#try-it-without-a-google-account)
 - [Why GoWorks](#why-goworks)
+- [Features](#features)
 - [Screenshots](#screenshots)
+- [Install](#install)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Building Installers](#building-installers)
@@ -39,32 +62,51 @@ It runs **entirely on your machine** — a local SQLite database and an in-proce
 - [Disclaimer](#disclaimer)
 - [AI-Assisted Development](#ai-assisted-development)
 
-## Features
-
-- **🔐 Secure Google OAuth2 sign-in** — loopback OAuth flow with domain and admin-role verification. Only Workspace admins from your configured domain can sign in.
-- **🔒 Master-password vault** — sensitive secrets (the Service Account key and the Google session/refresh token) are encrypted at rest with Argon2id + AES-256-GCM and unlocked by a master password you set during onboarding. Configurable idle auto-lock, in-app password change (no re-upload or re-login), graceful lock that lets running jobs finish, and brute-force lockout with exponential back-off.
-- **👥 User management** — search, view, and edit user profiles and group memberships; suspend, delete, and restore accounts; manage aliases and email forwarding.
-- **📦 Bulk operations** — drive suspend / delete / signature-push / group-add jobs from a CSV file, with a guided wizard, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
-- **🚪 Offboarding wizard** — a guided multi-step flow to safely deprovision a departing employee: suspend, set email forwarding, remove from groups, and more.
-- **🧭 Onboarding wizard** — first-run setup that walks you through terms acceptance, company branding, the Google Cloud project, the Service Account, and Domain-Wide Delegation.
-- **🧹 Factory reset** — securely wipe all data (branding, OAuth credentials, Service Account, signatures, history) behind a type-to-confirm guard: the vault file is overwritten before deletion and the database free pages / WAL are reclaimed, so nothing sensitive is left behind. A lighter wizard restart that preserves your configuration is also available.
-- **✍️ Gmail signature management** — a WYSIWYG HTML template editor with reusable tokens, a formatting toolbar, starter templates, direct image upload with auto media tokens (`{{image_N}}`), and background signature deployment across the domain via a Service Account.
-- **🔎 Signature audit** — scan the organization for signature drift, then review and apply fixes.
-- **👨‍👩‍👧 Google Groups management** — full CRUD for groups, members, roles, aliases, and access settings (Directory API + Groups Settings API), plus bulk member import from a CSV file.
-- **📊 Dashboard & reports** — active job tracking, Google Admin audit log, and Workspace storage/usage reports.
-- **🗂️ Persistent local store** — templates, job titles, institutions, app config, and full job history in a local SQLite database, with crash-safe job resumption.
-- **🎨 Dynamic branding** — company name, sidebar abbreviation, logo, email sender name, and allowed login domain are all configurable in-app. GoWorks is **not tied to any single organization** — re-branding is a settings change.
-- **⚖️ Terms & disclaimer** — a versioned, locale-aware terms-of-use and liability-disclaimer acceptance gate shown during onboarding and re-prompted when the terms change; also viewable from Settings → About.
-- **🌍 Bilingual UI** — full English and Turkish interface, switchable at runtime.
-
 ## Why GoWorks
 
-The Google Admin Console is powerful but slow for repetitive lifecycle work — there is no good bulk CSV workflow, no signature templating, and offboarding is a manual checklist. GoWorks is built for IT admins and Workspace operators who do these tasks every week:
+Google Workspace lifecycle work is repetitive, high-frequency, and unforgiving — and the
+two standard tools sit at opposite extremes.
+
+| | Admin Console | [GAM](https://github.com/GAM-team/GAM) / GAMADV-XTD3 | **GoWorks** |
+|---|---|---|---|
+| Bulk work from a CSV | ✗ | ✓ (write a script) | ✓ (guided wizard) |
+| Preview before executing | ✗ | ✗ | ✓ (row-by-row validation) |
+| Gmail signature templating | ✗ | partial | ✓ (editor + drift audit) |
+| Live progress, cancel, retry | ✗ | ✗ | ✓ |
+| Learning curve | low | **high** — CLI + scripting | low |
+| Runs where | Google's cloud | your terminal | your machine |
+
+GAM is excellent and far broader in scope; if you already have mature GAM automation, keep
+it. GoWorks is for the admin who wants the same bulk reach **without writing and
+maintaining scripts**, and without handing a SaaS vendor domain-wide access to the tenant.
 
 - **No infrastructure** — download, connect your Google Cloud project, done. No server, no database setup.
 - **Bring your own credentials** — you create the OAuth client in *your* Google Cloud project. Your tokens and data stay local.
-- **Multi-tenant by design** — nothing about any customer is hardcoded; one build works for any organization.
-- **Open source** — Apache 2.0 licensed. Audit it, fork it, adapt it.
+- **Nothing leaves your machine** — local SQLite, no telemetry, no GoWorks backend.
+- **Multi-tenant by design** — nothing about any customer is hardcoded; one build works for any organization. Useful if you manage more than one tenant.
+- **Open source** — Apache 2.0 licensed. Audit it, fork it, adapt it. That matters for a tool holding super-admin.
+
+## Features
+
+- **📦 Bulk operations** — drive suspend / delete / signature-push / group-add jobs from a CSV file, with a guided wizard, row-by-row validation before anything runs, cancellable jobs, rate limiting, automatic retry on transient errors, and live progress.
+- **🚪 Offboarding & onboarding wizards** — a guided flow to safely deprovision a departing employee (suspend, set email forwarding, remove from groups), and a first-run setup that walks you through branding, the Google Cloud project, the Service Account, and Domain-Wide Delegation.
+- **✍️ Gmail signatures** — a WYSIWYG HTML template editor with reusable tokens, a formatting toolbar, starter templates, direct image upload with auto media tokens (`{{image_N}}`), domain-wide deployment via a Service Account, and a **drift audit** that finds users whose signature no longer matches the template.
+- **👥 Users & Google Groups** — search, view, and edit profiles and memberships; suspend, delete, and restore accounts; aliases and email forwarding. Full CRUD for groups, members, roles, aliases, and access settings (Directory API + Groups Settings API), plus bulk member import from CSV.
+- **🔒 Master-password vault** — the Service Account key and Google refresh token are encrypted at rest with Argon2id + AES-256-GCM. Configurable idle auto-lock, in-app password change, graceful lock that lets running jobs finish, and brute-force lockout with exponential back-off.
+- **📊 Dashboard & reports** — active job tracking, Google Admin audit log, and Workspace storage/usage reports.
+
+<details>
+<summary><b>More</b> — sign-in, local store, branding, factory reset, i18n</summary>
+<br>
+
+- **🔐 Secure Google OAuth2 sign-in** — loopback OAuth flow with domain and admin-role verification. Only Workspace admins from your configured domain can sign in.
+- **🗂️ Persistent local store** — templates, job titles, institutions, app config, and full job history in a local SQLite database, with crash-safe job resumption.
+- **🎨 Dynamic branding** — company name, sidebar abbreviation, logo, email sender name, and allowed login domain are all configurable in-app. GoWorks is **not tied to any single organization** — re-branding is a settings change.
+- **🧹 Factory reset** — securely wipe all data behind a type-to-confirm guard: the vault file is overwritten before deletion and the database free pages / WAL are reclaimed, so nothing sensitive is left behind. A lighter wizard restart that preserves your configuration is also available.
+- **⚖️ Terms & disclaimer** — a versioned, locale-aware terms-of-use and liability-disclaimer acceptance gate shown during onboarding and re-prompted when the terms change.
+- **🌍 Bilingual UI** — full English and Turkish interface, switchable at runtime.
+
+</details>
 
 ## Screenshots
 
@@ -83,8 +125,16 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 | **Settings** — company name, logo, allowed domain, and language, all configurable in-app | **Login** — Google sign-in, restricted to admins on your configured domain |
 
 <details>
-<summary><b>More screens</b> — setup wizard, vault lock, signature push</summary>
+<summary><b>More screens</b> — offboarding, signature editor, setup wizard, vault lock</summary>
 <br>
+
+**Offboarding** — find the departing employee, then step through org-unit change, suspend, group removal, password reset, and email forwarding as one guided flow.
+
+![Offboarding wizard](docs/demo-offboard.gif)
+
+**Signature editor** — edit the template, watch the preview update, and manage the media library.
+
+![Gmail signature editor](docs/demo-signature.gif)
 
 **Onboarding wizard** — nine guided steps, from terms acceptance through the Google Cloud project, the Service Account, and Domain-Wide Delegation.
 
@@ -101,6 +151,57 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 </details>
 
+## Install
+
+### Download the installer
+
+Grab the latest `.dmg` (macOS) or `.exe` (Windows) from the
+[**Releases page**](https://github.com/umutcankurt/goworks/releases/latest). This is the
+path most people want — no Node.js, no toolchain. On first launch the onboarding wizard
+walks you through connecting your Google Cloud project.
+
+To build from source instead, see [Getting Started](#getting-started).
+
+### The binaries are not code-signed — read this first
+
+GoWorks releases are **not signed with an Apple Developer or Windows code-signing
+certificate**, so your OS will warn you that the developer cannot be verified. That is
+expected, and we would rather say so plainly than have you discover it at the scary dialog.
+
+Because this app asks for Google Workspace **super-admin** access, you should not simply
+click through that warning on our say-so. Verify the download first:
+
+```bash
+# macOS / Linux
+shasum -a 256 GoWorks-Mac-0.8.1-Installer.dmg
+
+# Windows (PowerShell)
+Get-FileHash .\GoWorks-Windows-0.8.1-Setup.exe -Algorithm SHA256
+```
+
+**v0.8.1 checksums**
+
+| File | SHA-256 |
+|---|---|
+| `GoWorks-Mac-0.8.1-Installer.dmg` | `2748beea64f91910b2d406228973688efce69970945b5f214a6975341b43bb8f` |
+| `GoWorks-Windows-0.8.1-Setup.exe` | `f5a73f6a59ce242f19a9f663685b2ccac94fdebdba6c284ca33e06f558f8cb31` |
+
+GitHub also records these digests on the release assets themselves, so you can cross-check
+them against this table.
+
+Once the hash matches:
+
+- **macOS** — the app is quarantined on first open. Either right-click the app → *Open* →
+  *Open*, or clear the flag explicitly:
+  ```bash
+  xattr -d com.apple.quarantine /Applications/GoWorks.app
+  ```
+- **Windows** — SmartScreen shows "Windows protected your PC". Choose *More info* →
+  *Run anyway*.
+
+If you would rather trust nothing at all, that is the better instinct: the source is
+Apache-2.0 and `npm run build` produces the same installers locally.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -116,11 +217,16 @@ The Google Admin Console is powerful but slow for repetitive lifecycle work — 
 
 ## Getting Started
 
+> Setting up your own Google Cloud project is required **whichever way you install** — the
+> installer and a source build both need it. If you only want to look around first, use
+> [demo mode](#try-it-without-a-google-account); it needs none of this.
+
 ### Prerequisites
 
-- **Node.js 22.12+**
 - A **Google Workspace** account with **super-admin** privileges
 - A **Google Cloud project** you control
+- **Node.js 22.12+** — only if you are building from source rather than
+  [downloading the installer](#download-the-installer)
 
 ### 1. Set up a Google Cloud project
 
@@ -136,6 +242,11 @@ GoWorks does not ship with credentials — each deployment uses its own Google C
    > For local development you can still drop the values into `.env` (copy `.env.example`); on first launch they are auto-migrated to encrypted storage and the file is renamed to `.env.migrated` in production builds (kept untouched in dev).
 
 ### 2. Install and run
+
+If you [downloaded an installer](#download-the-installer), just open the app — skip to
+step 3.
+
+To run from source:
 
 ```bash
 git clone https://github.com/umutcankurt/goworks.git
@@ -218,6 +329,7 @@ The job queue is SQLite-backed with an in-process runner: per-job-type concurren
 
 ## Security & Privacy
 
+- **Unsigned releases** — the published installers are not code-signed. Verify the SHA-256 checksum before running one; see [Install](#the-binaries-are-not-code-signed--read-this-first).
 - **Your credentials, your project** — GoWorks ships no API keys. You create the OAuth client; everything is stored locally in your OS user-data directory.
 - **Admin-only** — sign-in is rejected unless the account is a Workspace admin on your configured domain.
 - **Master-password vault** — the truly sensitive secrets (Service Account key and the Google refresh token) live encrypted in a master-password vault (`vault.enc`, Argon2id + AES-256-GCM) and never leave your machine. The access token stays in memory only; the OAuth Client ID/Secret are stored as plain config (a desktop app is a "public client" — the secret is not a true secret). Electron `safeStorage` is retired and read only once to migrate older installs.

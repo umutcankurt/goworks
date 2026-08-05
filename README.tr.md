@@ -4,7 +4,11 @@
 
 # GoWorks
 
-**Google Workspace™ yönetimi için açık kaynaklı masaüstü uygulaması — toplu kullanıcı yaşam döngüsü yönetimi, offboarding, Gmail imza dağıtımı ve grup yönetimi.**
+**Google Workspace™ için toplu offboarding, Gmail imza dağıtımı ve grup yönetimi.**
+
+Tamamen kendi makinenizde çalışan bir masaüstü uygulaması — sunucu yok, tedarikçi arka ucu yok, telemetri yok.
+
+[**⬇ macOS için indir**](https://github.com/umutcankurt/goworks/releases/latest) · [**⬇ Windows için indir**](https://github.com/umutcankurt/goworks/releases/latest) · [Hesapsız demoyu deneyin](#google-hesabı-olmadan-deneyin)
 
 [![Lisans: Apache 2.0](https://img.shields.io/badge/Lisans-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows-lightgrey.svg)]()
@@ -14,6 +18,10 @@
 
 [English](README.md) · **Türkçe**
 
+<img src="docs/demo-bulk.gif" alt="CSV'den dokuz hesabı askıya alma: sihirbaz her satırı doğruluyor, dizinde olmayan kullanıcıyı işaretliyor, ardından işi canlı ilerlemeyle çalıştırıyor" width="860">
+
+<sub>CSV'den toplu askıya alma — hiçbir şey çalışmadan önce her satır doğrulanıyor. Demo modunda kaydedildi.</sub>
+
 </div>
 
 ---
@@ -22,11 +30,26 @@
 
 Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritabanı ve süreç içi bir iş kuyruğu ile. Barındırılacak bir sunucu, Docker ya da harici veritabanı yoktur. Uygulamayı kendi Google Cloud projenize bağlarsınız ve verileriniz bilgisayarınızdan asla dışarı çıkmaz.
 
+## Google hesabı olmadan deneyin
+
+```bash
+git clone https://github.com/umutcankurt/goworks.git && cd goworks
+npm install && npm run demo
+```
+
+Demo modu, bellek içi bir veri kümesiyle çalışan **tamamen tıklanabilir bir prototiptir** —
+Google Workspace hesabı, Service Account, ana parola ve internet gerektirmez. Giriş butonu
+göstermeliktir; sizi doğrudan kurgusal bir kiracının paneline bırakır. Google Cloud projesi
+kurmadan önce GoWorks'ün iş akışınıza uyup uymadığını böyle değerlendirebilirsiniz. Ayrıntı:
+[`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
+
 ## İçindekiler
 
-- [Özellikler](#özellikler)
+- [Google hesabı olmadan deneyin](#google-hesabı-olmadan-deneyin)
 - [Neden GoWorks](#neden-goworks)
+- [Özellikler](#özellikler)
 - [Ekran Görüntüleri](#ekran-görüntüleri)
+- [Kurulum](#kurulum)
 - [Teknoloji Yığını](#teknoloji-yığını)
 - [Başlangıç](#başlangıç)
 - [Kurulum Dosyalarını Derleme](#kurulum-dosyalarını-derleme)
@@ -39,32 +62,51 @@ Uygulama **tamamen sizin makinenizde** çalışır — yerel bir SQLite veritaba
 - [Yasal Uyarı](#yasal-uyarı)
 - [Yapay Zekâ Destekli Geliştirme](#yapay-zekâ-destekli-geliştirme)
 
-## Özellikler
-
-- **🔐 Güvenli Google OAuth2 girişi** — domain ve admin rolü doğrulamalı loopback OAuth akışı. Yalnızca yapılandırdığınız domaindeki Workspace yöneticileri giriş yapabilir.
-- **🔒 Ana parola kasası (vault)** — hassas sırlar (Service Account anahtarı ve Google oturum/refresh token'ı) Argon2id + AES-256-GCM ile şifreli saklanır ve onboarding'de belirlediğiniz bir ana parolayla açılır. Yapılandırılabilir boşta otomatik kilit, uygulama içi parola değiştirme (yeniden yükleme veya giriş gerektirmez), çalışan işlerin bitmesine izin veren nazik (graceful) kilit ve üstel geri çekilmeli kaba kuvvet kilidi.
-- **👥 Kullanıcı yönetimi** — kullanıcı profillerini ve grup üyeliklerini arama, görüntüleme ve düzenleme; hesapları askıya alma, silme ve geri yükleme; alias ve e-posta yönlendirme yönetimi.
-- **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı / gruba üye ekleme işlerini yürütme; rehberli sihirbaz, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
-- **🚪 Offboarding sihirbazı** — ayrılan bir çalışanı güvenle deprovizyon etmek için rehberli, çok adımlı akış: askıya alma, e-posta yönlendirme ayarlama, gruplardan çıkarma ve daha fazlası.
-- **🧭 Onboarding sihirbazı** — ilk açılışta sizi kullanım koşulları onayı, firma markası, Google Cloud projesi, Service Account ve Domain-Wide Delegation adımlarında yönlendiren kurulum akışı.
-- **🧹 Fabrika ayarlarına sıfırlama** — tüm verileri (marka, OAuth kimlik bilgileri, Service Account, imzalar, geçmiş) yazarak-onayla korumasının ardından **güvenli biçimde** silip sıfırdan başlama: kasa dosyası silinmeden önce üzerine yazılır ve veritabanının boş sayfaları / WAL'ı geri kazanılır, böylece geride hassas hiçbir şey kalmaz. Ayrıca yapılandırmanızı koruyan daha hafif bir sihirbaz yeniden başlatma seçeneği de vardır.
-- **✍️ Gmail imza yönetimi** — yeniden kullanılabilir token'lara sahip WYSIWYG HTML şablon editörü, biçimlendirme araç çubuğu, başlangıç şablonları, otomatik medya token'larıyla (`{{image_N}}`) doğrudan görsel yükleme ve Service Account üzerinden domain genelinde arka planda imza dağıtımı.
-- **🔎 İmza denetimi** — kurumdaki imza sapmalarını tarayın, ardından düzeltmeleri inceleyip uygulayın.
-- **👨‍👩‍👧 Google Groups yönetimi** — gruplar, üyeler, roller, alias'lar ve erişim ayarları için tam CRUD (Directory API + Groups Settings API); ayrıca CSV dosyasından toplu üye içe aktarma.
-- **📊 Panel ve raporlar** — aktif iş takibi, Google Admin denetim günlüğü ve Workspace depolama/kullanım raporları.
-- **🗂️ Kalıcı yerel depo** — şablonlar, unvanlar, kurumlar, uygulama yapılandırması ve tüm iş geçmişi yerel bir SQLite veritabanında; çökme sonrası işler kaldığı yerden devam eder.
-- **🎨 Dinamik marka** — firma adı, sidebar kısaltması, logo, e-posta gönderici adı ve izin verilen giriş domaini uygulama içinden yapılandırılır. GoWorks **tek bir kuruma bağlı değildir** — yeniden markalama bir ayar değişikliğidir.
-- **⚖️ Kullanım koşulları ve sorumluluk reddi** — onboarding sırasında gösterilen, koşullar değiştiğinde yeniden sorulan, sürümlenmiş ve dile duyarlı bir kullanım koşulları/sorumluluk reddi onay ekranı; Ayarlar → Hakkında'dan da görüntülenebilir.
-- **🌍 İki dilli arayüz** — tam Türkçe ve İngilizce arayüz, çalışma anında değiştirilebilir.
-
 ## Neden GoWorks
 
-Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri için yavaştır — iyi bir toplu CSV akışı, imza şablonlama yok ve offboarding elle takip edilen bir kontrol listesidir. GoWorks, bu işleri her hafta yapan BT yöneticileri ve Workspace operatörleri için tasarlandı:
+Google Workspace yaşam döngüsü işleri tekrarlayan, sık ve hata affetmeyen işlerdir — ve
+elinizdeki iki standart araç birbirinin tam zıddı uçlarda durur.
+
+| | Admin Konsolu | [GAM](https://github.com/GAM-team/GAM) / GAMADV-XTD3 | **GoWorks** |
+|---|---|---|---|
+| CSV ile toplu işlem | ✗ | ✓ (script yazarak) | ✓ (rehberli sihirbaz) |
+| Çalıştırmadan önce önizleme | ✗ | ✗ | ✓ (satır satır doğrulama) |
+| Gmail imza şablonlama | ✗ | kısmen | ✓ (editör + sapma denetimi) |
+| Canlı ilerleme, iptal, yeniden deneme | ✗ | ✗ | ✓ |
+| Öğrenme eğrisi | düşük | **yüksek** — CLI + scripting | düşük |
+| Nerede çalışır | Google'ın bulutu | terminaliniz | kendi makineniz |
+
+GAM mükemmel bir araçtır ve kapsamı çok daha geniştir; olgun bir GAM otomasyonunuz varsa
+onu koruyun. GoWorks, aynı toplu erişimi **script yazıp bakımını üstlenmeden** isteyen ve
+bunu yaparken bir SaaS tedarikçisine domain geneli yetki vermek istemeyen yönetici içindir.
 
 - **Altyapı yok** — indirin, Google Cloud projenizi bağlayın, hazır. Sunucu yok, veritabanı kurulumu yok.
 - **Kendi kimlik bilgileriniz** — OAuth istemcisini *kendi* Google Cloud projenizde siz oluşturursunuz. Token'larınız ve verileriniz yerelde kalır.
-- **Tasarımı gereği çok kiracılı** — hiçbir müşteriye özel bilgi koda gömülü değildir; tek bir derleme her kurum için çalışır.
-- **Açık kaynak** — Apache 2.0 lisanslı. İnceleyin, fork'layın, uyarlayın.
+- **Hiçbir şey makinenizden çıkmaz** — yerel SQLite, telemetri yok, GoWorks arka ucu yok.
+- **Tasarımı gereği çok kiracılı** — hiçbir müşteriye özel bilgi koda gömülü değildir; tek bir derleme her kurum için çalışır. Birden fazla kiracı yönetiyorsanız işinize yarar.
+- **Açık kaynak** — Apache 2.0 lisanslı. İnceleyin, fork'layın, uyarlayın. Super-admin yetkisi tutan bir araçta bu önemlidir.
+
+## Özellikler
+
+- **📦 Toplu işlemler** — CSV dosyasından suspend / delete / imza dağıtımı / gruba üye ekleme işlerini yürütme; rehberli sihirbaz, hiçbir şey çalışmadan önce satır satır doğrulama, iptal edilebilir işler, hız sınırlama, geçici hatalarda otomatik yeniden deneme ve canlı ilerleme takibi.
+- **🚪 Offboarding ve onboarding sihirbazları** — ayrılan bir çalışanı güvenle deprovizyon etmek için rehberli akış (askıya alma, e-posta yönlendirme, gruplardan çıkarma) ve ilk açılışta sizi marka, Google Cloud projesi, Service Account ve Domain-Wide Delegation adımlarında yönlendiren kurulum akışı.
+- **✍️ Gmail imzaları** — yeniden kullanılabilir token'lara sahip WYSIWYG HTML şablon editörü, biçimlendirme araç çubuğu, başlangıç şablonları, otomatik medya token'larıyla (`{{image_N}}`) doğrudan görsel yükleme, Service Account üzerinden domain geneli dağıtım ve imzası şablondan sapmış kullanıcıları bulan **sapma denetimi**.
+- **👥 Kullanıcılar ve Google Groups** — profilleri ve üyelikleri arama, görüntüleme, düzenleme; hesapları askıya alma, silme, geri yükleme; alias ve e-posta yönlendirme. Gruplar, üyeler, roller, alias'lar ve erişim ayarları için tam CRUD (Directory API + Groups Settings API), ayrıca CSV'den toplu üye içe aktarma.
+- **🔒 Ana parola kasası (vault)** — Service Account anahtarı ve Google refresh token'ı Argon2id + AES-256-GCM ile şifreli saklanır. Yapılandırılabilir boşta otomatik kilit, uygulama içi parola değiştirme, çalışan işlerin bitmesine izin veren nazik kilit ve üstel geri çekilmeli kaba kuvvet kilidi.
+- **📊 Panel ve raporlar** — aktif iş takibi, Google Admin denetim günlüğü ve Workspace depolama/kullanım raporları.
+
+<details>
+<summary><b>Dahası</b> — giriş, yerel depo, marka, fabrika sıfırlama, i18n</summary>
+<br>
+
+- **🔐 Güvenli Google OAuth2 girişi** — domain ve admin rolü doğrulamalı loopback OAuth akışı. Yalnızca yapılandırdığınız domaindeki Workspace yöneticileri giriş yapabilir.
+- **🗂️ Kalıcı yerel depo** — şablonlar, unvanlar, kurumlar, uygulama yapılandırması ve tüm iş geçmişi yerel bir SQLite veritabanında; çökme sonrası işler kaldığı yerden devam eder.
+- **🎨 Dinamik marka** — firma adı, sidebar kısaltması, logo, e-posta gönderici adı ve izin verilen giriş domaini uygulama içinden yapılandırılır. GoWorks **tek bir kuruma bağlı değildir** — yeniden markalama bir ayar değişikliğidir.
+- **🧹 Fabrika ayarlarına sıfırlama** — tüm verileri yazarak-onayla korumasının ardından güvenli biçimde silme: kasa dosyası silinmeden önce üzerine yazılır ve veritabanının boş sayfaları / WAL'ı geri kazanılır, böylece geride hassas hiçbir şey kalmaz. Yapılandırmanızı koruyan daha hafif bir sihirbaz yeniden başlatma seçeneği de vardır.
+- **⚖️ Kullanım koşulları ve sorumluluk reddi** — onboarding sırasında gösterilen, koşullar değiştiğinde yeniden sorulan, sürümlenmiş ve dile duyarlı bir onay ekranı.
+- **🌍 İki dilli arayüz** — tam Türkçe ve İngilizce arayüz, çalışma anında değiştirilebilir.
+
+</details>
 
 ## Ekran Görüntüleri
 
@@ -83,8 +125,16 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 | **Ayarlar** — firma adı, logo, izin verilen domain ve dil; hepsi uygulama içinden | **Giriş** — Google ile oturum açma; yalnızca yapılandırdığınız domaindeki yöneticilere açık |
 
 <details>
-<summary><b>Diğer ekranlar</b> — kurulum sihirbazı, kasa kilidi, imza gönderme</summary>
+<summary><b>Diğer ekranlar</b> — offboarding, imza editörü, kurulum sihirbazı, kasa kilidi</summary>
 <br>
+
+**Offboarding** — ayrılan çalışanı bulun, ardından org birimi değişikliği, askıya alma, gruplardan çıkarma, parola sıfırlama ve e-posta yönlendirmeyi tek rehberli akışta geçin.
+
+![Offboarding sihirbazı](docs/demo-offboard.gif)
+
+**İmza editörü** — şablonu düzenleyin, önizlemenin anında güncellenmesini izleyin, medya kütüphanesini yönetin.
+
+![Gmail imza editörü](docs/demo-signature.gif)
 
 **Onboarding sihirbazı** — kullanım koşulları onayından Google Cloud projesine, Service Account'tan Domain-Wide Delegation'a kadar dokuz rehberli adım.
 
@@ -101,6 +151,57 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 </details>
 
+## Kurulum
+
+### Kurulum dosyasını indirin
+
+En güncel `.dmg` (macOS) veya `.exe` (Windows) dosyasını
+[**Releases sayfasından**](https://github.com/umutcankurt/goworks/releases/latest) indirin.
+Çoğu kişinin isteyeceği yol budur — Node.js ya da derleme zinciri gerekmez. İlk açılışta
+onboarding sihirbazı sizi Google Cloud projenizi bağlama adımlarında yönlendirir.
+
+Bunun yerine kaynaktan derlemek isterseniz [Başlangıç](#başlangıç) bölümüne bakın.
+
+### Dosyalar imzalı değil — önce bunu okuyun
+
+GoWorks sürümleri **Apple Developer veya Windows kod imzalama sertifikasıyla imzalanmıyor**;
+bu yüzden işletim sisteminiz geliştiricinin doğrulanamadığı uyarısını verecek. Bu beklenen
+bir durum ve bunu o korkutucu diyalogda keşfetmeniz yerine burada açıkça söylemeyi tercih
+ediyoruz.
+
+Bu uygulama Google Workspace **super-admin** yetkisi istediği için, o uyarıyı bizim
+sözümüze güvenerek geçmemelisiniz. Önce indirdiğiniz dosyayı doğrulayın:
+
+```bash
+# macOS / Linux
+shasum -a 256 GoWorks-Mac-0.8.1-Installer.dmg
+
+# Windows (PowerShell)
+Get-FileHash .\GoWorks-Windows-0.8.1-Setup.exe -Algorithm SHA256
+```
+
+**v0.8.1 sağlama toplamları**
+
+| Dosya | SHA-256 |
+|---|---|
+| `GoWorks-Mac-0.8.1-Installer.dmg` | `2748beea64f91910b2d406228973688efce69970945b5f214a6975341b43bb8f` |
+| `GoWorks-Windows-0.8.1-Setup.exe` | `f5a73f6a59ce242f19a9f663685b2ccac94fdebdba6c284ca33e06f558f8cb31` |
+
+GitHub bu özetleri sürüm dosyalarının kendisinde de tutar; bu tabloyla karşılaştırabilirsiniz.
+
+Özet eşleştikten sonra:
+
+- **macOS** — uygulama ilk açılışta karantinaya alınır. Ya uygulamaya sağ tıklayıp *Aç* →
+  *Aç* deyin ya da işareti açıkça kaldırın:
+  ```bash
+  xattr -d com.apple.quarantine /Applications/GoWorks.app
+  ```
+- **Windows** — SmartScreen "Windows bilgisayarınızı korudu" uyarısı gösterir.
+  *Ek bilgi* → *Yine de çalıştır* seçin.
+
+Hiçbir şeye güvenmemeyi tercih ediyorsanız, bu daha doğru bir içgüdü: kaynak kod
+Apache-2.0 ve `npm run build` aynı kurulum dosyalarını yerelde üretir.
+
 ## Teknoloji Yığını
 
 | Katman | Teknoloji |
@@ -116,11 +217,17 @@ Google Admin Konsolu güçlüdür ama tekrarlayan yaşam döngüsü işleri içi
 
 ## Başlangıç
 
+> Kendi Google Cloud projenizi kurmak **hangi yolla kurarsanız kurun** gereklidir — hem
+> kurulum dosyası hem kaynaktan derleme buna ihtiyaç duyar. Önce sadece bakmak
+> istiyorsanız [demo modunu](#google-hesabı-olmadan-deneyin) kullanın; hiçbirine ihtiyaç
+> duymaz.
+
 ### Ön Gereksinimler
 
-- **Node.js 22.12+**
 - **Süper yönetici** yetkilerine sahip bir **Google Workspace** hesabı
 - Kontrolünüzde olan bir **Google Cloud projesi**
+- **Node.js 22.12+** — yalnızca [kurulum dosyasını indirmek](#kurulum-dosyasını-indirin)
+  yerine kaynaktan derleyecekseniz
 
 ### 1. Bir Google Cloud projesi hazırlayın
 
@@ -136,6 +243,11 @@ GoWorks kimlik bilgileriyle dağıtılmaz — her kurulum kendi Google Cloud OAu
    > Yerel geliştirme için isterseniz değerleri `.env`'e koyabilirsiniz (`.env.example`'dan kopyalayın); ilk açılışta otomatik şifreli depoya migrate edilir. Production'da `.env` → `.env.migrated` olarak yeniden adlandırılır; geliştirme modunda dokunulmaz.
 
 ### 2. Kurun ve çalıştırın
+
+[Kurulum dosyasını indirdiyseniz](#kurulum-dosyasını-indirin) uygulamayı açmanız yeterli —
+3. adıma geçin.
+
+Kaynaktan çalıştırmak için:
 
 ```bash
 git clone https://github.com/umutcankurt/goworks.git
@@ -218,6 +330,7 @@ React (renderer) → window.electronAPI.invoke(kanal) → ipcMain.handle → ser
 
 ## Güvenlik ve Gizlilik
 
+- **İmzasız sürümler** — yayınlanan kurulum dosyaları kod imzalı değildir. Çalıştırmadan önce SHA-256 sağlama toplamını doğrulayın; bkz. [Kurulum](#dosyalar-imzalı-değil--önce-bunu-okuyun).
 - **Kimlik bilgileri sizin, proje sizin** — GoWorks hiçbir API anahtarı içermez. OAuth istemcisini siz oluşturursunuz; her şey işletim sisteminizin kullanıcı verisi klasöründe yerel olarak saklanır.
 - **Yalnızca yönetici** — hesap, yapılandırdığınız domainde bir Workspace yöneticisi değilse giriş reddedilir.
 - **Ana parola kasası** — gerçekten hassas sırlar (Service Account anahtarı ve Google refresh token'ı) bir ana parola kasasında (`vault.enc`, Argon2id + AES-256-GCM) şifreli durur ve makinenizden asla çıkmaz. Access token yalnızca bellekte tutulur; OAuth Client ID/Secret ise düz yapılandırma olarak saklanır (masaüstü uygulaması "public client"tır — secret gerçek bir sır değildir). Electron `safeStorage` emekliye ayrıldı ve yalnızca eski kurulumları taşımak için bir kez okunur.

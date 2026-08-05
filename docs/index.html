@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoWorks — bulk Google Workspace administration, on your own machine</title>
+<meta name="description" content="Bulk offboarding, Gmail signature deployment, and group management for Google Workspace. A desktop app that runs entirely on your machine — no server, no vendor backend, no telemetry. Apache-2.0.">
+<link rel="icon" href="icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="GoWorks — bulk Google Workspace administration">
+<meta property="og:description" content="Bulk offboarding, Gmail signatures, and group management for Google Workspace. Runs entirely on your machine. No server, no telemetry. Apache-2.0.">
+<meta property="og:url" content="https://umutcankurt.github.io/goworks/">
+<meta property="og:image" content="https://umutcankurt.github.io/goworks/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<!--
+  Deliberately self-contained: no webfonts, no analytics, no third-party requests.
+  A page whose pitch is "nothing leaves your machine" should not phone home either.
+-->
+<style>
+:root {
+  --surface: #f8fafc;
+  --surface-low: #ffffff;
+  --surface-high: #f1f5f9;
+  --on-surface: #0f172a;
+  --on-surface-variant: #475569;
+  --outline: #cbd5e1;
+  --accent: #0891b2;
+  --accent-strong: #06b6d4;
+  --on-accent: #ffffff;
+  --ok: #059669;
+  --no: #94a3b8;
+  --radius: 14px;
+  --maxw: 1080px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0e1416;
+    --surface-low: #090f11;
+    --surface-high: #1b2123;
+    --on-surface: #dee3e6;
+    --on-surface-variant: #bcc9cd;
+    --outline: #3f4849;
+    --accent: #4cd7f6;
+    --accent-strong: #acedff;
+    --on-accent: #00343d;
+    --ok: #4edea3;
+    --no: #6b7a7e;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--on-surface);
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(1200px 600px at 0% 0%, color-mix(in srgb, var(--accent-strong) 6%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 100% 100%, color-mix(in srgb, var(--ok) 5%, transparent), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+section { padding: 72px 0; border-top: 1px solid var(--outline); }
+section:first-of-type { border-top: 0; }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 16px; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 650; }
+p { margin: 0 0 16px; }
+a { color: var(--accent); }
+.muted { color: var(--on-surface-variant); }
+
+/* ---------- hero ---------- */
+header { padding: 64px 0 8px; text-align: center; }
+.logo { width: 76px; height: 76px; border-radius: 18px; }
+.tagline { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--on-surface-variant); max-width: 640px; margin: 0 auto 28px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+.btn {
+  display: inline-block; padding: 12px 22px; border-radius: 10px;
+  font-weight: 620; font-size: 0.98rem; text-decoration: none;
+  border: 1px solid transparent; transition: transform .12s ease, opacity .12s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-ghost { border-color: var(--outline); color: var(--on-surface); }
+.fineprint { font-size: 0.85rem; color: var(--on-surface-variant); }
+
+.shot {
+  margin: 40px auto 0; max-width: 100%; border-radius: var(--radius);
+  border: 1px solid var(--outline); display: block;
+  box-shadow: 0 24px 60px -28px rgba(0,0,0,.45);
+}
+
+/* ---------- comparison ---------- */
+.tablewrap { overflow-x: auto; border: 1px solid var(--outline); border-radius: var(--radius); background: color-mix(in srgb, var(--surface-low) 70%, transparent); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 0.95rem; }
+th, td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--outline); }
+tbody tr:last-child td { border-bottom: 0; }
+thead th { font-weight: 650; font-size: 0.83rem; text-transform: uppercase; letter-spacing: .05em; color: var(--on-surface-variant); }
+thead th:last-child, td:last-child { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+td:first-child { color: var(--on-surface-variant); }
+.y { color: var(--ok); font-weight: 650; }
+.n { color: var(--no); }
+
+/* ---------- features ---------- */
+.grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.card {
+  padding: 22px; border: 1px solid var(--outline); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-low) 60%, transparent);
+}
+.card h3 { margin-bottom: 6px; }
+.card p { margin: 0; font-size: 0.94rem; color: var(--on-surface-variant); }
+
+/* ---------- code ---------- */
+pre {
+  background: var(--surface-low); border: 1px solid var(--outline); border-radius: 10px;
+  padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 0.88rem;
+  line-height: 1.6; margin: 0 0 16px;
+}
+code { font-family: var(--mono); font-size: 0.9em; }
+p code, li code { background: var(--surface-high); padding: 1px 5px; border-radius: 4px; }
+
+/* ---------- shots grid ---------- */
+.shots { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.shots figure { margin: 0; }
+.shots img { width: 100%; border-radius: 10px; border: 1px solid var(--outline); display: block; }
+.shots figcaption { font-size: 0.87rem; color: var(--on-surface-variant); margin-top: 8px; }
+
+/* ---------- note ---------- */
+.note {
+  border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  padding: 18px 22px; margin: 0 0 20px;
+}
+.note p:last-child { margin-bottom: 0; }
+
+footer { padding: 48px 0 64px; border-top: 1px solid var(--outline); font-size: 0.9rem; color: var(--on-surface-variant); }
+footer a { color: var(--on-surface-variant); }
+.footrow { display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between; }
+ul.tight { margin: 0 0 16px; padding-left: 20px; }
+ul.tight li { margin-bottom: 7px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <img class="logo" src="icon.png" alt="GoWorks logo" width="76" height="76">
+    <h1>Bulk Google Workspace admin<br>without writing scripts</h1>
+    <p class="tagline">
+      Offboarding, Gmail signature deployment, and group management — from a desktop app
+      that runs entirely on your machine. No server, no vendor backend, no telemetry.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/umutcankurt/goworks/releases/latest">⬇ Download for macOS &amp; Windows</a>
+      <a class="btn btn-ghost" href="https://github.com/umutcankurt/goworks">View source on GitHub</a>
+    </div>
+    <p class="fineprint">Apache-2.0 · macOS &amp; Windows · installers are unsigned — <a href="#verify">verify the checksum</a></p>
+
+    <img class="shot" src="demo-bulk.gif" alt="Suspending nine accounts from a CSV: the wizard validates every row, flags one user that does not exist, then runs the job with live progress" width="1200" height="655">
+    <p class="fineprint" style="margin-top:12px">Suspending accounts from a CSV — every row validated before anything runs.</p>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <h2>Two tools, opposite extremes</h2>
+    <p class="muted" style="max-width:680px">
+      Google Workspace lifecycle work is repetitive, high-frequency, and unforgiving. The Admin
+      Console is a GUI with no bulk workflow. GAM is enormously capable — and expects you to
+      write and maintain scripts. There is very little in between.
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th></th><th>Admin Console</th><th>GAM / GAMADV-XTD3</th><th>GoWorks</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bulk work from a CSV</td><td class="n">✗</td><td class="y">✓ <span class="muted">(write a script)</span></td><td class="y">✓ guided wizard</td></tr>
+          <tr><td>Preview before executing</td><td class="n">✗</td><td class="n">✗</td><td class="y">✓ row-by-row validation</td></tr>
+          <tr><td>Gmail signature templating</td><td class="n">✗</td><td class="muted">partial</td><td class="y">✓ editor + drift audit</td></tr>
+          <tr><td>Live progress, cancel, retry</td><td class="n">✗</td><td class="n">✗</td><td class="y">✓</td></tr>
+          <tr><td>Learning curve</td><td>low</td><td><strong>high</strong> — CLI + scripting</td><td>low</td></tr>
+          <tr><td>Runs where</td><td>Google's cloud</td><td>your terminal</td><td>your machine</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:20px; max-width:680px; font-size:0.94rem">
+      <a href="https://github.com/GAM-team/GAM">GAM</a> is excellent and far broader in scope — if you
+      already have mature GAM automation, keep it. GoWorks is for the admin who wants the same bulk
+      reach without maintaining scripts, and without granting a SaaS vendor domain-wide access to the tenant.
+    </p>
+  </div>
+</section>
+
+<section id="try">
+  <div class="wrap">
+    <h2>Try it without a Google account</h2>
+    <p class="muted" style="max-width:680px">
+      Demo mode is a fully clickable prototype running against an in-memory fixture — no Workspace
+      account, no Service Account, no master password, no internet. Judge whether it fits your
+      workflow before you set up a Google Cloud project.
+    </p>
+<pre><code>git clone https://github.com/umutcankurt/goworks.git &amp;&amp; cd goworks
+npm install &amp;&amp; npm run demo:en</code></pre>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Bulk operations</h3>
+        <p>Suspend, delete, push signatures, or add to groups from a CSV. Every row is validated
+        before anything runs. Cancellable jobs, rate limiting, automatic retry, live progress.</p>
+      </div>
+      <div class="card">
+        <h3>Offboarding wizard</h3>
+        <p>Deprovision a departing employee as a guided flow instead of a checklist: suspend,
+        set forwarding, remove from groups — without forgetting a step.</p>
+      </div>
+      <div class="card">
+        <h3>Gmail signatures</h3>
+        <p>A template editor with reusable tokens and image upload, domain-wide deployment via a
+        Service Account, and a drift audit that finds users whose signature no longer matches.</p>
+      </div>
+      <div class="card">
+        <h3>Groups &amp; users</h3>
+        <p>Full CRUD for groups, members, roles, aliases, and access settings. Search and edit
+        profiles, manage aliases and forwarding, suspend and restore accounts.</p>
+      </div>
+      <div class="card">
+        <h3>Encrypted local vault</h3>
+        <p>The Service Account key and Google refresh token are encrypted at rest with
+        Argon2id + AES-256-GCM, behind a master password with configurable idle auto-lock.</p>
+      </div>
+      <div class="card">
+        <h3>Multi-tenant by config</h3>
+        <p>Company name, logo, sender name, and allowed domain are settings — not a rebuild.
+        One build works for any organization, which matters if you manage several.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <p class="muted">Captured in demo mode against a fictional tenant — no real customer data.</p>
+    <div class="shots">
+      <figure>
+        <img src="demo-offboard.gif" alt="Offboarding a departing employee: search the user, then step through org-unit change, suspend, group removal, password reset, and email forwarding" loading="lazy" width="900" height="491">
+        <figcaption><strong>Offboarding</strong> — a guided flow instead of a manual checklist</figcaption>
+      </figure>
+      <figure>
+        <img src="demo-signature.gif" alt="Editing a Gmail signature template and watching the live preview update" loading="lazy" width="900" height="491">
+        <figcaption><strong>Signature editor</strong> — reusable tokens, live preview, media library</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/en/dashboard.jpg" alt="Dashboard showing storage usage, user counts, and a running bulk job" loading="lazy">
+        <figcaption><strong>Dashboard</strong> — storage, user counts, and a bulk job reporting live progress</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/en/group-form.jpg" alt="Group edit screen with members, roles, access settings and aliases" loading="lazy">
+        <figcaption><strong>Group edit</strong> — members with per-member role, access settings, aliases</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/en/user-detail.jpg" alt="User detail showing profile, aliases, org unit and last login" loading="lazy">
+        <figcaption><strong>User detail</strong> — profile, aliases, org unit, last login</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <h2>Where your data goes: nowhere</h2>
+    <ul class="tight muted">
+      <li><strong>No GoWorks backend.</strong> There is no service to sign up for, and no server to host. A local SQLite database and an in-process job queue, that's it.</li>
+      <li><strong>Your own OAuth client.</strong> You create it in <em>your</em> Google Cloud project. Your quota, your tokens, your audit log — every action is attributed to the admin who performed it.</li>
+      <li><strong>No telemetry.</strong> The app reports nothing. Neither does this page: no analytics, no webfonts, no third-party requests.</li>
+      <li><strong>Encrypted at rest.</strong> Service Account key and refresh token live in an Argon2id + AES-256-GCM vault. Factory reset overwrites it before deletion and reclaims database free pages and WAL.</li>
+      <li><strong>Auditable.</strong> Apache-2.0. For a tool that holds super-admin, being able to read the source is the point.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="verify">
+  <div class="wrap">
+    <h2>The binaries are not signed — read this first</h2>
+    <div class="note">
+      <p>GoWorks releases are <strong>not signed</strong> with an Apple Developer or Windows
+      code-signing certificate, so your OS will warn you that the developer cannot be verified.
+      That is expected, and we would rather say so here than have you meet it at the dialog.</p>
+      <p>Because this app asks for Google Workspace <strong>super-admin</strong> access, don't click
+      through that warning on our say-so. Verify the download first.</p>
+    </div>
+<pre><code># macOS / Linux
+shasum -a 256 GoWorks-Mac-0.8.1-Installer.dmg
+
+# Windows (PowerShell)
+Get-FileHash .\GoWorks-Windows-0.8.1-Setup.exe -Algorithm SHA256</code></pre>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>v0.8.1 file</th><th>SHA-256</th></tr></thead>
+        <tbody>
+          <tr><td><code>GoWorks-Mac-0.8.1-Installer.dmg</code></td><td><code>2748beea…1b43bb8f</code></td></tr>
+          <tr><td><code>GoWorks-Windows-0.8.1-Setup.exe</code></td><td><code>f5a73f6a…f558f8cb31</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:18px">
+      Full checksums are in the <a href="https://github.com/umutcankurt/goworks#the-binaries-are-not-code-signed--read-this-first">README</a>,
+      and GitHub records the same digests on the release assets. If you would rather trust nothing at
+      all — the better instinct — the source is Apache-2.0 and <code>npm run build</code> produces the
+      same installers locally.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footrow">
+    <div>
+      <strong>GoWorks</strong> · Apache-2.0 ·
+      <a href="https://github.com/umutcankurt/goworks">GitHub</a> ·
+      <a href="https://github.com/umutcankurt/goworks/releases">Releases</a> ·
+      <a href="https://github.com/umutcankurt/goworks/discussions">Discussions</a>
+    </div>
+    <div>
+      Not affiliated with, endorsed by, or sponsored by Google LLC.<br>
+      "Google Workspace", "Google", and "Gmail" are trademarks of Google LLC.
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
